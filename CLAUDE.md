@@ -104,13 +104,40 @@ A neighborhood operating system for Brazil — a "Nextdoor brasileiro" where ver
 <!-- GSD:conventions-start source:CONVENTIONS.md -->
 ## Conventions
 
-Conventions not yet established. Will populate as patterns emerge during development.
+- Commits: conventional commits (`feat()`, `fix()`, `ci()`, `docs()`, `chore()`)
+- Tailwind v4: tokens em `@theme` no `globals.css` — sem `tailwind.config.ts`
+- Flat design: `* { box-shadow: none !important }` global — nunca usar `shadow-*` no frontend web
+- Backend secrets: GitHub Actions Secrets (`SMARTERASP_*`, `HOSTGATOR_*`, `BAIRRONOW_*`)
+- pnpm: symlinks não resolvem no Git Bash Windows — só rodar tsc/jest via CI (Ubuntu)
 <!-- GSD:conventions-end -->
 
 <!-- GSD:architecture-start source:ARCHITECTURE.md -->
 ## Architecture
 
-Architecture not yet mapped. Follow existing patterns found in the codebase.
+**Monorepo pnpm:** `frontend/` (Next.js 15 static export) + `mobile/` (Expo 54 + expo-router) + `src/` (.NET 8 API) + `packages/` (shared types/validators/api-client)
+
+**Deploys:**
+- Frontend web: GitHub Actions → FTP `dangerous-clean-slate` → HostGator `/bairronow.com.br/` (cPanel `cleardesk`)
+- Backend: GitHub Actions → FTP → SmarterASP `/bairronow-api/` (IIS, `app_offline.htm` trick)
+- Mobile: EAS build (workflow_dispatch apenas) → não deployado ainda
+
+**Estado atual (2026-05-16):**
+- `origin/master` = `18b9007` — v1.1 + Wave A mobile completo
+- git tag `v1.1` em `a7585e9`
+- GitHub Milestone #1 "v1.2 Comunidade Completa" com Issues #7-#10 (Waves A-D)
+- Backend healthy: `api.bairronow.com.br/health/ready` → Healthy
+
+**Próximos passos (Wave B):**
+1. `eas init` → gerar projectId real → atualizar `mobile/app.json`
+2. Wave B: Map clustering, Groups RSVP/invite links, notification center
+3. Wave C: PWA manifest + service worker
+4. Cloudflare SSL: mudar Flexible→Full em dash.cloudflare.com (token CF inválido, ação manual)
+
+**CI:**
+- `deploy-backend.yml`: push → dotnet build/test/publish → FTP SmarterASP → smoke `/health/ready`
+- `deploy-frontend.yml`: push → pnpm build → FTP HostGator (`dangerous-clean-slate: true`)
+- `pr-checks.yml`: frontend build + mobile tsc + mobile jest + backend dotnet test
+- `mobile-build.yml`: EAS build (workflow_dispatch apenas)
 <!-- GSD:architecture-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
