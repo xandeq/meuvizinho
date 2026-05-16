@@ -4,6 +4,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using BairroNow.Api.Constants;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.DTOs;
@@ -27,6 +28,7 @@ public class ListingService : IListingService
     private readonly INotificationService _notifications;
     private readonly IMemoryCache _cache;
     private readonly ILogger<ListingService> _logger;
+    private readonly bool _fullTextEnabled;
 
     public ListingService(
         AppDbContext db,
@@ -35,7 +37,8 @@ public class ListingService : IListingService
         IValidator<UpdateListingRequest> updateValidator,
         INotificationService notifications,
         IMemoryCache cache,
-        ILogger<ListingService> logger)
+        ILogger<ListingService> logger,
+        IConfiguration configuration)
     {
         _db = db;
         _files = files;
@@ -44,6 +47,7 @@ public class ListingService : IListingService
         _notifications = notifications;
         _cache = cache;
         _logger = logger;
+        _fullTextEnabled = configuration.GetValue<bool>("Features:FullTextSearchEnabled");
     }
 
     public async Task<ListingDto> CreateAsync(Guid sellerId, CreateListingRequest dto, IFormFileCollection photos, CancellationToken ct = default)
@@ -283,6 +287,46 @@ public class ListingService : IListingService
             .Where(l => l.Status == ListingStatus.Active
                      || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
 
+        // FULLTEXT CATALOG ftListings + INDEX on (Title, Description) were created by
+        // migration Phase4MarketplaceChat with suppressTransaction:true.
+        // Features:FullTextSearchEnabled=false in Development (LIKE fallback for LocalDB/InMemory tests).
+        // Features:FullTextSearchEnabled=true in Production (CONTAINS with prefix matching + stemming).
+        // If the SQL Server instance doesn't have FTS installed (SERVERPROPERTY IsFullTextInstalled=0),
+        // the migration created nothing; the catch block falls back to LIKE with a warning.
+        if (_fullTextEnabled)
+        {
+            var ftsTerm = $"\"{sanitized}*\"";
+            var ftsQ = baseQ.Where(l =>
+                EF.Functions.Contains(EF.Property<string>(l, "Title"), ftsTerm) ||
+                EF.Functions.Contains(EF.Property<string>(l, "Description"), ftsTerm));
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(category)) ftsQ = ftsQ.Where(l => l.CategoryCode == category);
+                if (minPrice.HasValue) ftsQ = ftsQ.Where(l => l.Price >= minPrice.Value);
+                if (maxPrice.HasValue) ftsQ = ftsQ.Where(l => l.Price <= maxPrice.Value);
+                if (verifiedOnly) ftsQ = ftsQ.Where(l => l.Seller!.IsVerified);
+
+                var ftsRows = await ftsQ.OrderByDescending(l => l.CreatedAt).Take(50).ToListAsync(ct);
+                var ftsIds = ftsRows.Select(l => l.Id).ToList();
+                var ftsFavs = await _db.ListingFavorites.AsNoTracking()
+                    .Where(f => f.UserId == currentUserId && ftsIds.Contains(f.ListingId))
+                    .Select(f => f.ListingId).ToListAsync(ct);
+                return new ListingPageResult
+                {
+                    Items = ftsRows.Select(l => MapDto(l, ftsFavs.Contains(l.Id), 0)).ToList(),
+                    NextCursor = null
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex,
+                    "FULLTEXT search failed (FTS may not be installed on this SQL Server instance). " +
+                    "Falling back to LIKE. Set Features:FullTextSearchEnabled=false to suppress this warning.");
+            }
+        }
+
+        // LIKE fallback: used in Development, tests, and as runtime fallback when FTS is unavailable.
         var like = $"%{sanitized}%";
         baseQ = baseQ.Where(l => EF.Functions.Like(l.Title, like) || EF.Functions.Like(l.Description, like));
 
@@ -290,12 +334,6 @@ public class ListingService : IListingService
         if (minPrice.HasValue) baseQ = baseQ.Where(l => l.Price >= minPrice.Value);
         if (maxPrice.HasValue) baseQ = baseQ.Where(l => l.Price <= maxPrice.Value);
         if (verifiedOnly) baseQ = baseQ.Where(l => l.Seller!.IsVerified);
-
-        // CONTAINS branch (SQL Server prod). Tagged for grep acceptance: CONTAINS((Title, Description), {term})
-        // FromSqlInterpolated would be: _db.Listings.FromSqlInterpolated($"SELECT * FROM Listings WHERE CONTAINS((Title, Description), {sanitized})")
-        // We keep the LIKE fallback as the executed path so InMemory + LocalDB tests work; production environments
-        // with FTS get the same correctness via LIKE while CONTAINS is a future optimization (tracked in deferred-items).
-        // Pitfall 3 fallback IS the LIKE branch.
 
         var rows = await baseQ.OrderByDescending(l => l.CreatedAt).Take(50).ToListAsync(ct);
         var ids = rows.Select(l => l.Id).ToList();
