@@ -45,5 +45,8 @@ public class User
     public DateTime? DeletedAt { get; set; }
     public bool IsActive { get; set; } = true;
 
+    // Mobile push (Wave A)
+    public string? ExpoPushToken { get; set; }
+
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

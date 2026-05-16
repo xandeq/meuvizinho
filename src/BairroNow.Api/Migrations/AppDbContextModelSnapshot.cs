@@ -1164,6 +1164,10 @@ namespace BairroNow.Api.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
 
+                    b.Property<string>("ExpoPushToken")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<int>("FailedLoginAttempts")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")

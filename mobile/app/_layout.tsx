@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
+import { usePushNotifications } from '../src/lib/usePushNotifications';
 
 function ThemeToggleButton() {
   const { isDark, toggleTheme, colors } = useTheme();
@@ -15,6 +16,7 @@ function ThemeToggleButton() {
 
 function RootNavigator() {
   const { isDark, colors } = useTheme();
+  usePushNotifications();
 
   return (
     <>
