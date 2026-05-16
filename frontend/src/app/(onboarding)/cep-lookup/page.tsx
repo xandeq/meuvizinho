@@ -57,10 +57,25 @@ export default function CEPLookupPage() {
 
   return (
     <AuthLayout
-      title="Onde voce mora?"
-      subtitle="Passo 1 de 2 — Informe seu CEP"
+      title="Onde você mora?"
+      subtitle="Confirme seu endereço para entrar na comunidade"
     >
       <div className="space-y-5">
+        {/* Step progress */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-extrabold shrink-0">
+            1
+          </div>
+          <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+            <div className="h-full w-1/2 bg-primary rounded-full" />
+          </div>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted text-muted-fg text-sm font-extrabold shrink-0">
+            2
+          </div>
+        </div>
+        <p className="text-xs text-muted-fg font-semibold text-center">
+          CEP → Comprovante
+        </p>
         <FormField
           label="CEP"
           type="text"

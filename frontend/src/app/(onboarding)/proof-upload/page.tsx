@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 import ProofDropzone from "@/components/ProofDropzone";
 import { verificationApi } from "@/lib/api";
 import { useOnboardingStore } from "@/lib/onboarding";
@@ -48,10 +49,25 @@ export default function ProofUploadPage() {
 
   return (
     <AuthLayout
-      title="Comprovante de residencia"
-      subtitle="Passo 2 de 2 — Envie um documento que comprove seu endereco"
+      title="Comprovante de residência"
+      subtitle="Quase lá! Envie um documento que comprove seu endereço"
     >
       <div className="space-y-5">
+        {/* Step progress */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary text-white text-sm font-extrabold shrink-0">
+            ✓
+          </div>
+          <div className="flex-1 h-1.5 rounded-full bg-border overflow-hidden">
+            <div className="h-full w-full bg-primary rounded-full" />
+          </div>
+          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-white text-sm font-extrabold shrink-0">
+            2
+          </div>
+        </div>
+        <p className="text-xs text-muted-fg font-semibold text-center">
+          CEP ✓ → Comprovante
+        </p>
         {address && (
           <div className="rounded-md bg-muted p-3 text-sm font-medium">
             <p className="text-fg/70">Endereco a verificar:</p>
@@ -66,13 +82,12 @@ export default function ProofUploadPage() {
 
         <div>
           <label className="block text-sm font-semibold text-fg mb-1">
-            Numero (opcional)
+            Número (opcional)
           </label>
-          <input
+          <Input
             type="text"
             value={numero}
             onChange={(e) => setNumero(e.target.value.slice(0, 20))}
-            className="w-full rounded-md border-2 border-border bg-bg px-3 py-2 font-medium focus:border-primary focus:outline-none"
             placeholder="Ex: 123 ap 401"
           />
         </div>

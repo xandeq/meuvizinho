@@ -21,7 +21,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
   return (
     <Link
       href={`/marketplace/${listing.id}/`}
-      className="block rounded-lg border-2 border-border bg-bg overflow-hidden hover:shadow-md transition-shadow"
+      className="block rounded-lg border-2 border-border bg-bg overflow-hidden hover:border-primary transition-colors"
     >
       <div className="relative aspect-square w-full bg-muted">
         {cover ? (

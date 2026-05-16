@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import FeedHeader from "@/components/layouts/FeedHeader";
 import PostCard from "@/components/features/PostCard";
 import PostComposer from "@/components/features/PostComposer";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
 import { useFeedStore } from "@/stores/feed-store";
 import { useAuthStore } from "@/lib/auth";
 
@@ -59,13 +61,14 @@ export default function FeedPage() {
       <FeedHeader />
 
       <div className="flex justify-end">
-        <button
+        <Button
           type="button"
+          variant="secondary"
+          size="sm"
           onClick={() => setComposerOpen(true)}
-          className="bg-green-700 hover:bg-green-800 text-white rounded-md px-4 py-2 font-semibold"
         >
-          Novo post
-        </button>
+          + Novo post
+        </Button>
       </div>
 
       {error && (
@@ -73,11 +76,11 @@ export default function FeedPage() {
       )}
 
       {items.length === 0 && !loading ? (
-        <div className="bg-muted border border-border rounded-lg p-8 text-center">
-          <p className="text-fg/60 font-medium">
-            Nenhum post ainda no seu bairro.
-          </p>
-        </div>
+        <EmptyState
+          title="Nenhum post ainda no seu bairro"
+          description="Seja o primeiro a compartilhar uma novidade com a vizinhança."
+          action={{ label: "Criar post", onClick: () => setComposerOpen(true) }}
+        />
       ) : (
         <div className="space-y-4">
           {items.map((post) => (

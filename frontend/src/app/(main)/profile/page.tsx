@@ -5,6 +5,7 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import FormField from "@/components/ui/FormField";
 import Card from "@/components/ui/Card";
+import Avatar from "@/components/ui/Avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { profileApi } from "@/lib/api";
 import { updateProfileSchema } from "@bairronow/shared-validators";
@@ -74,16 +75,30 @@ export default function ProfilePage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-extrabold text-fg">Meu perfil</h1>
-          <VerifiedBadge verified={profile.isVerified} />
+      <header className="flex items-start justify-between">
+        <div className="flex items-center gap-4">
+          <Avatar
+            name={profile.displayName ?? profile.bairroNome ?? "?"}
+            verified={profile.isVerified}
+            size="xl"
+          />
+          <div>
+            <h1 className="text-3xl font-extrabold text-fg leading-tight">
+              {profile.displayName ?? "(sem nome)"}
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-sm text-muted-fg font-medium">
+                {profile.bairroNome ?? "Bairro não definido"}
+              </span>
+              <VerifiedBadge verified={profile.isVerified} />
+            </div>
+          </div>
         </div>
         <Link
           href="/profile/settings/"
-          className="text-sm text-primary font-semibold hover:underline"
+          className="text-sm text-primary font-semibold hover:underline mt-1"
         >
-          Configuracoes
+          Configurações
         </Link>
       </header>
 
@@ -91,21 +106,9 @@ export default function ProfilePage() {
         {!editing ? (
           <div className="space-y-3">
             <div>
-              <p className="text-xs uppercase font-bold text-fg/60">Nome</p>
-              <p className="font-bold text-fg">
-                {profile.displayName ?? "(sem nome)"}
-              </p>
-            </div>
-            <div>
               <p className="text-xs uppercase font-bold text-fg/60">Bio</p>
               <p className="font-medium text-fg">
                 {profile.bio ?? "(sem bio)"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs uppercase font-bold text-fg/60">Bairro</p>
-              <p className="font-medium text-fg">
-                {profile.bairroNome ?? "(nao definido)"}
               </p>
             </div>
             <div className="pt-2">
@@ -136,7 +139,7 @@ export default function ProfilePage() {
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={160}
                 rows={3}
-                className="w-full rounded-md border-2 border-border bg-bg px-3 py-2 font-medium focus:border-primary focus:outline-none"
+                className="w-full px-4 py-2.5 rounded-lg bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none transition-colors duration-150 focus:bg-card focus:border-primary font-medium resize-none"
               />
               <p className="text-xs text-fg/60 mt-1">{bio.length}/160</p>
             </div>

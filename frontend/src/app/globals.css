@@ -33,10 +33,14 @@
   /* ─── Typography ───────────────────────────────────────── */
   --font-sans: var(--font-outfit), 'Inter', system-ui, sans-serif;
 
+  /* ─── Surfaces (elevation hierarchy) ─────────────────── */
+  --color-surface-elevated: #F8FAFC;   /* slate-50 — inner cards, info blocks */
+
   /* ─── Radius ────────────────────────────────────────────── */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
 
   --shadow-none: none;
 }
@@ -72,6 +76,8 @@ html, body {
 
   --color-danger:       #F87171;    /* red-400   */
   --color-danger-hover: #EF4444;    /* red-500   */
+
+  --color-surface-elevated: #1E293B;   /* slate-800 */
 
   --color-muted:  #1E293B;   /* slate-800 */
   --color-border: #334155;   /* slate-700 */

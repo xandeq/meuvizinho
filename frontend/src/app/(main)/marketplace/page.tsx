@@ -7,6 +7,8 @@ import FilterChips from "@/components/features/marketplace/FilterChips";
 import { useMarketplaceStore } from "@/stores/marketplace-store";
 import { useAuthStore } from "@/lib/auth";
 import { listListings, searchListings } from "@/lib/api/marketplace";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
 
 export default function MarketplacePage() {
   const user = useAuthStore((s) => s.user);
@@ -99,19 +101,15 @@ export default function MarketplacePage() {
       </header>
 
       <form onSubmit={onSearchSubmit} className="flex gap-2">
-        <input
+        <Input
           type="search"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           placeholder="Buscar no marketplace..."
-          className="flex-1 border-2 border-border rounded px-3 py-2 font-medium"
         />
-        <button
-          type="submit"
-          className="bg-primary text-white font-bold px-4 py-2 rounded"
-        >
+        <Button type="submit" size="sm">
           Buscar
-        </button>
+        </Button>
       </form>
 
       <FilterChips filters={filters} onChange={setFilters} />
