@@ -40,6 +40,7 @@ jobs:
           local-dir: ./frontend/out/
           server-dir: /bairronow.com.br/
           protocol: ftp
+          dangerous-clean-slate: true
 
       - name: Smoke test
         run: |
