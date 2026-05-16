@@ -92,5 +92,5 @@ jobs:
           sleep 15
           curl -fsSL https://api.bairronow.com.br/health
           echo
-          curl -fsSL -o /dev/null https://api.bairronow.com.br/swagger/index.html
+          curl -fsSL https://api.bairronow.com.br/health/ready
           echo "Backend smoke OK"
