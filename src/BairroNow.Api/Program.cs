@@ -389,8 +389,11 @@ try
         }
     });
 
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BairroNow API v1"));
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseSwagger();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "BairroNow API v1"));
+    }
 
     // Liveness: is the process up? (no dependency checks — always fast, always 200
     // unless Kestrel itself is broken). Used by SmarterASP/K8s-style probes that
