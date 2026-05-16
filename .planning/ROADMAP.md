@@ -87,7 +87,32 @@ Key upgrades:
 
 ## Next Milestone
 
-No milestone planned yet. Start with `/gsd:new-milestone` to define v1.2.
+### 🔵 v1.2 "Comunidade Completa" — In Planning (2026-05-16)
+
+Focus: close the feature gap between web and mobile, complete the Groups/Map UX,
+add PWA basics for retention, and seed the monetization layer.
+
+| Wave | Theme | Key Features |
+|------|-------|-------------|
+| A | Mobile Parity | Marketplace browse+post, Chat, Groups, Push notifications |
+| B | Map + Groups UX | Marker clustering, event RSVP, member roster, invite links |
+| C | PWA + SEO | manifest.json, service worker, Lighthouse ≥ 90, OG meta workaround |
+| D | Monetização seed | Business account type, Business Spotlight in feed |
+
+Full plan: `.planning/milestones/v1.2-ROADMAP.md`
+
+### Pending PRs before v1.2 work begins
+
+All 6 PRs below target `master` and must be merged first:
+
+| PR | Branch | Content |
+|----|--------|---------|
+| #1 | chore/sync-pending-2026-05-16 | .gitignore + STATUS_REPORT |
+| #2 | fix/swagger-dev-only | Swagger dev-only + stdoutLogEnabled=false |
+| #3 | docs/adr-ssr-ssg-decision | ADR-002 static export |
+| #4 | feat/marketplace-sort-selector | FilterChips sort + 5 tests |
+| #5 | feat/fulltext-search | FULLTEXT search + LIKE fallback |
+| #6 | feat/ui-design-system-v1 | Design system v1, 4 pilot screens |
 
 ---
-*Last updated: 2026-04-16 — v1.1 Powerful operational excellence pass completed*
+*Last updated: 2026-05-16 — v1.2 milestone defined, 6 PRs pending merge*
