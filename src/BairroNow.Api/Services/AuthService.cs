@@ -78,7 +78,7 @@ public class AuthService : IAuthService
         if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
             return (null, null, "Conta bloqueada temporariamente. Tente novamente em 15 minutos.");
 
-        if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
             user.FailedLoginAttempts++;
             if (user.FailedLoginAttempts >= MaxFailedAttempts)
