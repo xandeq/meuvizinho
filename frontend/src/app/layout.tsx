@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -39,15 +40,26 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "pt_BR",
+    url: "https://bairronow.com.br",
     siteName: "BairroNow",
-    title: "BairroNow — Conecte-se com seus vizinhos",
+    title: "BairroNow — Sua comunidade de bairro conectada",
     description:
-      "Rede social de bairro para vizinhos verificados: feed local, marketplace, grupos, mapa e chat privado.",
+      "Conecte-se com seus vizinhos, encontre servicos locais, compre e venda no seu bairro.",
+    images: [
+      {
+        url: "https://bairronow.com.br/icons/icon-512x512.png",
+        width: 512,
+        height: 512,
+        alt: "BairroNow",
+      },
+    ],
   },
   twitter: {
-    card: "summary_large_image",
-    title: "BairroNow",
-    description: "Rede social de bairro para vizinhos verificados.",
+    card: "summary",
+    title: "BairroNow — Sua comunidade de bairro conectada",
+    description:
+      "Conecte-se com seus vizinhos, encontre servicos locais, compre e venda no seu bairro.",
+    images: ["https://bairronow.com.br/icons/icon-512x512.png"],
   },
   robots: {
     index: true,
@@ -55,6 +67,12 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+  },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'BairroNow',
   },
 };
 
@@ -90,6 +108,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans bg-bg text-fg">
         <Providers>{children}</Providers>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );

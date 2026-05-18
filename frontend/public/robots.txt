@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /onboarding/
+Disallow: /auth/
+
+Sitemap: https://bairronow.com.br/sitemap.xml
