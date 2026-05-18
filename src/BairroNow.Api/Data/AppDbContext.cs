@@ -50,6 +50,9 @@ public class AppDbContext : DbContext
     // Wave J — Business Photos
     public DbSet<BusinessPhoto> BusinessPhotos => Set<BusinessPhoto>();
 
+    // Wave K — Profile Views (Analytics)
+    public DbSet<ProfileView> ProfileViews => Set<ProfileView>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -543,6 +546,20 @@ public class AppDbContext : DbContext
         // Wave J — IsBanned on User
         modelBuilder.Entity<User>()
             .Property(u => u.IsBanned).HasDefaultValue(false);
+
+        // Wave K — ProfileView
+        modelBuilder.Entity<ProfileView>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.ViewerIp).HasMaxLength(64);
+            entity.Property(e => e.ViewedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.HasOne(e => e.BusinessUser)
+                .WithMany()
+                .HasForeignKey(e => e.BusinessUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.BusinessUserId, e.ViewedAt });
+        });
 
         // Wave F — BusinessRating
         modelBuilder.Entity<BusinessRating>(e => {

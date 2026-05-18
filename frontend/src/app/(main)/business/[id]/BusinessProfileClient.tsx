@@ -205,6 +205,11 @@ export default function BusinessProfileClient({ userId }: Props) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // Record view (fire and forget, anonymous)
+  useEffect(() => {
+    fetch(`${API}/api/v1/users/${userId}/analytics/view`, { method: "POST" }).catch(() => {});
+  }, [userId, API]);
+
   useEffect(() => {
     if (!token) return;
     setLoading(true);
