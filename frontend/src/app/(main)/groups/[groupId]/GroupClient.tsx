@@ -75,22 +75,29 @@ export default function GroupClient({ groupId }: Props) {
 
   // SignalR — join group room, listen for new posts
   useEffect(() => {
-    let cleanup = false;
+    let cancelled = false;
     getHubConnection().then((hub) => {
-      if (cleanup) return;
+      if (cancelled) return;
       hub.invoke('JoinGroup', groupId).catch(console.error);
-      hub.on('NewGroupPost', (post: GroupPost) => prependPost(post));
+
+      // off() before on() — idempotent on fast nav away/back
+      hub.off('NewGroupPost');
+      hub.off('GroupEventReminder');
+      hub.on('NewGroupPost', (post: GroupPost) => { if (!cancelled) prependPost(post); });
       hub.on('GroupEventReminder', (ev: { id: number; title: string; startsAt: string }) => {
-        console.info('GroupEventReminder', ev);
+        if (!cancelled) console.info('GroupEventReminder', ev);
       });
 
-      // Reconnect: re-join after hub reconnects (Pitfall 6)
-      const onReconnected = () => hub.invoke('JoinGroup', groupId).catch(console.error);
-      hub.onreconnected(onReconnected);
+      // Guard with `cancelled` — onreconnected has no off() equivalent, so old
+      // handlers from prior mounts become no-ops via the closure flag.
+      hub.onreconnected(() => {
+        if (cancelled) return;
+        hub.invoke('JoinGroup', groupId).catch(console.error);
+      });
     });
 
     return () => {
-      cleanup = true;
+      cancelled = true;
       getHubConnection().then((hub) => {
         hub.invoke('LeaveGroup', groupId).catch(console.error);
         hub.off('NewGroupPost');

@@ -117,6 +117,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
       // Re-join active conversation group after reconnect so messages keep arriving
       hub.onreconnected(async () => {
+        set({ connected: true });
         const { activeConversationId } = get();
         if (activeConversationId != null) {
           try {
@@ -126,6 +127,9 @@ export const useChatStore = create<ChatState>((set, get) => ({
           }
         }
       });
+
+      // Update connected state when hub permanently closes (all reconnect attempts exhausted)
+      hub.onclose(() => set({ connected: false }));
 
       set({ connected: true, handlersWired: true });
     } catch {

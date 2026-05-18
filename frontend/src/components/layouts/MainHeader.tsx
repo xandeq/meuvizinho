@@ -104,6 +104,7 @@ export default function MainHeader() {
   const user = useAuthStore((s) => s.user);
   const isAdmin = user?.isAdmin === true;
   const connect = useChatStore((s) => s.connect);
+  const disconnect = useChatStore((s) => s.disconnect);
   const loadUnread = useChatStore((s) => s.loadUnread);
   const unreadTotal = useChatStore((s) => s.unreadTotal);
   const [scrolled, setScrolled] = useState(false);
@@ -122,6 +123,7 @@ export default function MainHeader() {
 
   const handleLogout = () => {
     logout();
+    void disconnect();
     router.push("/login/");
   };
 

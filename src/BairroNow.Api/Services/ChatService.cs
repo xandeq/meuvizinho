@@ -175,6 +175,9 @@ public class ChatService : IChatService
         string? imagePath = null;
         if (image != null && image.Length > 0)
         {
+            // Guard against OOM before streaming to FileStorageService's MemoryStream copy
+            if (image.Length > 5 * 1024 * 1024)
+                throw new ChatValidationException("Imagem excede 5MB.");
             if (!IsAllowedImageType(image.ContentType, image.FileName))
                 throw new ChatValidationException("Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF.");
 

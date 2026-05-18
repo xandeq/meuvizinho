@@ -87,6 +87,21 @@ try
                     QueueLimit = 0
                 }));
 
+        // Dedicated policy for chat messages — higher than feed-write (10/min) since
+        // chat is conversational and users expect faster back-and-forth.
+        options.AddPolicy("message-send", context =>
+            RateLimitPartition.GetSlidingWindowLimiter(
+                context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1),
+                    SegmentsPerWindow = 6,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+
         options.AddPolicy("public", context =>
             RateLimitPartition.GetSlidingWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",

@@ -56,7 +56,7 @@ public class ChatController : ControllerBase
 
     [HttpPost("conversations/{id:int}/messages")]
     [Idempotent]
-    [EnableRateLimiting("feed-write")]
+    [EnableRateLimiting("message-send")]
     [RequestSizeLimit(10_000_000)]
     public async Task<IActionResult> Send(int id, CancellationToken ct)
     {

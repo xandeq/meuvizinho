@@ -11,10 +11,12 @@ namespace BairroNow.Api.Hubs;
 public class NotificationHub : Hub
 {
     private readonly AppDbContext _db;
+    private readonly ILogger<NotificationHub> _logger;
 
-    public NotificationHub(AppDbContext db)
+    public NotificationHub(AppDbContext db, ILogger<NotificationHub> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     public async Task JoinBairro(string bairroId)
@@ -33,8 +35,14 @@ public class NotificationHub : Hub
             .AsNoTracking()
             .AnyAsync(p => p.ConversationId == conversationId && p.UserId == userId.Value && !p.SoftDeleted);
 
-        if (!isParticipant) throw new HubException("Not a participant");
+        if (!isParticipant)
+        {
+            _logger.LogWarning("Unauthorized JoinConversation attempt: userId={UserId} conversationId={ConvId}", userId, conversationId);
+            throw new HubException("Not a participant");
+        }
 
+        _logger.LogDebug("JoinConversation: userId={UserId} convId={ConvId} connId={ConnId}",
+            userId, conversationId, Context.ConnectionId);
         await Groups.AddToGroupAsync(Context.ConnectionId, $"conv:{conversationId}");
     }
 
