@@ -56,8 +56,11 @@ export async function getHubConnection(): Promise<HubConnection> {
       }
       return _connection!;
     } catch (err) {
-      _startPromise = null;
       throw err;
+    } finally {
+      // Always clear so subsequent calls re-evaluate connection state
+      // instead of returning a stale resolved promise.
+      _startPromise = null;
     }
   })();
 

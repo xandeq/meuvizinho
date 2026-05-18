@@ -96,7 +96,7 @@ public class ChatController : ControllerBase
     // Direct DM — creates or returns existing conversation without a listing.
     // Route lives here (not UserController) because it returns a ConversationDto.
     [HttpPost("/api/v1/users/{recipientId:guid}/conversation")]
-    [EnableRateLimiting("authenticated")]
+    [EnableRateLimiting("dm-create")]
     public async Task<IActionResult> CreateDirect(Guid recipientId, CancellationToken ct)
     {
         var userId = GetUserId();

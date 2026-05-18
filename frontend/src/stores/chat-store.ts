@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getHubConnection } from "@/lib/signalr";
+import { getHubConnection, resetHubConnection } from "@/lib/signalr";
 import type {
   ConversationDto,
   MessageDto,
@@ -25,10 +25,12 @@ interface ChatState {
   activeConversationId: number | null;
   connected: boolean;
   loading: boolean;
+  handlersWired: boolean;
 
   loadConversations: () => Promise<void>;
   loadUnread: () => Promise<void>;
   connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
   setActive: (id: number | null) => void;
   appendMessage: (conversationId: number, msg: MessageDto) => void;
   setMessages: (conversationId: number, msgs: MessageDto[]) => void;
@@ -37,11 +39,9 @@ interface ChatState {
     conversationId: number,
     text?: string,
     image?: File
-  ) => Promise<MessageDto | null>;
+  ) => Promise<MessageDto>;
   markRead: (conversationId: number) => Promise<void>;
 }
-
-let _wiredHandlers = false;
 
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
@@ -50,6 +50,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
   activeConversationId: null,
   connected: false,
   loading: false,
+  handlersWired: false,
 
   loadConversations: async () => {
     set({ loading: true });
@@ -75,50 +76,66 @@ export const useChatStore = create<ChatState>((set, get) => ({
   },
 
   connect: async () => {
-    if (_wiredHandlers && get().connected) return;
+    if (get().handlersWired && get().connected) return;
     try {
       const hub = await getHubConnection();
 
-      if (!_wiredHandlers) {
-        hub.on("MessageReceived", (msg: MessageDto) => {
-          const { messagesByConversation, activeConversationId } = get();
-          const list = messagesByConversation[msg.conversationId] ?? [];
-          // Dedupe by id
-          if (list.some((m) => m.id === msg.id)) return;
-          set({
-            messagesByConversation: {
-              ...messagesByConversation,
-              [msg.conversationId]: [...list, msg],
-            },
-          });
-          // Auto mark-read if currently viewing this conversation
-          if (activeConversationId === msg.conversationId) {
-            void get().markRead(msg.conversationId);
+      // off() before on() — idempotent across logout/re-login cycles
+      hub.off("MessageReceived");
+      hub.off("UnreadChanged");
+      hub.off("ConversationRead");
+
+      hub.on("MessageReceived", (msg: MessageDto) => {
+        const { messagesByConversation, activeConversationId } = get();
+        const list = messagesByConversation[msg.conversationId] ?? [];
+        if (list.some((m) => m.id === msg.id)) return;
+        set({
+          messagesByConversation: {
+            ...messagesByConversation,
+            [msg.conversationId]: [...list, msg],
+          },
+        });
+        if (activeConversationId === msg.conversationId) {
+          void get().markRead(msg.conversationId);
+        }
+      });
+
+      hub.on("UnreadChanged", (payload: { total: number }) => {
+        if (typeof payload?.total === "number") {
+          set({ unreadTotal: payload.total });
+        }
+      });
+
+      hub.on("ConversationRead", (payload: { conversationId: number }) => {
+        const { conversations } = get();
+        set({
+          conversations: conversations.map((c) =>
+            c.id === payload.conversationId ? { ...c, unreadCount: 0 } : c
+          ),
+        });
+      });
+
+      // Re-join active conversation group after reconnect so messages keep arriving
+      hub.onreconnected(async () => {
+        const { activeConversationId } = get();
+        if (activeConversationId != null) {
+          try {
+            await hub.invoke("JoinConversation", activeConversationId);
+          } catch {
+            // best-effort
           }
-        });
+        }
+      });
 
-        hub.on("UnreadChanged", (payload: { total: number }) => {
-          if (typeof payload?.total === "number") {
-            set({ unreadTotal: payload.total });
-          }
-        });
-
-        hub.on("ConversationRead", (payload: { conversationId: number }) => {
-          const { conversations } = get();
-          set({
-            conversations: conversations.map((c) =>
-              c.id === payload.conversationId ? { ...c, unreadCount: 0 } : c
-            ),
-          });
-        });
-
-        _wiredHandlers = true;
-      }
-
-      set({ connected: true });
+      set({ connected: true, handlersWired: true });
     } catch {
       set({ connected: false });
     }
+  },
+
+  disconnect: async () => {
+    await resetHubConnection();
+    set({ connected: false, handlersWired: false });
   },
 
   setActive: (id) => set({ activeConversationId: id }),
@@ -160,13 +177,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }),
 
   sendMessage: async (conversationId, text, image) => {
-    try {
-      const msg = await sendMessageApi(conversationId, { text, image });
-      get().appendMessage(conversationId, msg);
-      return msg;
-    } catch {
-      return null;
-    }
+    // Propagates errors — callers (ChatRoom) handle UX; MessageComposer preserves
+    // input text automatically when the onSend promise rejects.
+    const msg = await sendMessageApi(conversationId, { text, image });
+    get().appendMessage(conversationId, msg);
+    return msg;
   },
 
   markRead: async (conversationId) => {

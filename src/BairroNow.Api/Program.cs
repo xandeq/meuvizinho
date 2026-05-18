@@ -63,10 +63,24 @@ try
 
         options.AddPolicy("authenticated", context =>
             RateLimitPartition.GetSlidingWindowLimiter(
-                context.User?.Identity?.Name ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                 _ => new SlidingWindowRateLimiterOptions
                 {
                     PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1),
+                    SegmentsPerWindow = 6,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+
+        options.AddPolicy("dm-create", context =>
+            RateLimitPartition.GetSlidingWindowLimiter(
+                context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
                     Window = TimeSpan.FromMinutes(1),
                     SegmentsPerWindow = 6,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,

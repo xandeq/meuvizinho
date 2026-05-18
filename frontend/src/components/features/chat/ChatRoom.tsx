@@ -30,6 +30,7 @@ export default function ChatRoom({
 
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [sendError, setSendError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Join the SignalR group for this conversation (reuses shared hub).
@@ -160,9 +161,20 @@ export default function ChatRoom({
         )}
       </div>
 
+      {sendError && (
+        <p className="text-xs text-red-600 font-semibold text-center py-1 bg-red-50">
+          {sendError}
+        </p>
+      )}
       <MessageComposer
         onSend={async (text, image) => {
-          await sendMessage(conversationId, text, image);
+          setSendError(null);
+          try {
+            await sendMessage(conversationId, text, image);
+          } catch {
+            setSendError("Falha ao enviar. Tente novamente.");
+            throw new Error("send failed");
+          }
         }}
       />
     </div>
