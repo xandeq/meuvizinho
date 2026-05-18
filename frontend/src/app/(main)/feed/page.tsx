@@ -11,6 +11,7 @@ import { useFeedStore } from "@/stores/feed-store";
 import { useAuthStore } from "@/lib/auth";
 import { getPins } from "@/lib/api/map";
 import type { MapPin } from "@/lib/types/map";
+import EventsUpcoming from "@/components/features/EventsUpcoming";
 
 function PlusIcon() {
   return (
@@ -117,7 +118,7 @@ function BusinessSpotlight({ bairroId }: { bairroId: number }) {
           {businesses.map((biz) => (
             <Link
               key={biz.userId}
-              href="/map/"
+              href={`/business/${biz.userId}/`}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/70 bg-muted hover:border-accent/50 hover:bg-accent/5 transition-colors duration-150"
             >
               <BusinessAvatarCircle name={biz.displayName ?? "N"} />
@@ -186,6 +187,8 @@ export default function FeedPage() {
       <FeedHeader />
 
       {bairroId !== null && <BusinessSpotlight bairroId={bairroId} />}
+
+      <EventsUpcoming bairroId={bairroId} />
 
       {error && (
         <div className="mb-4 p-4 rounded-2xl bg-danger-light border border-danger/20 text-sm font-semibold text-danger">
