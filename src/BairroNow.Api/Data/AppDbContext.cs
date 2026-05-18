@@ -337,6 +337,7 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Listing)
                 .WithMany()
                 .HasForeignKey(e => e.ListingId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Buyer)
                 .WithMany()
@@ -346,7 +347,14 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.SellerId)
                 .OnDelete(DeleteBehavior.Restrict);
-            entity.HasIndex(e => new { e.ListingId, e.BuyerId, e.SellerId }).IsUnique();
+            // Listing-based conversations: unique per (ListingId, BuyerId, SellerId) where listing exists
+            entity.HasIndex(e => new { e.ListingId, e.BuyerId, e.SellerId })
+                .IsUnique()
+                .HasFilter("[ListingId] IS NOT NULL");
+            // Direct conversations: unique per (BuyerId, SellerId) where no listing
+            entity.HasIndex(e => new { e.BuyerId, e.SellerId })
+                .IsUnique()
+                .HasFilter("[ListingId] IS NULL");
             entity.HasIndex(e => e.LastMessageAt);
         });
 

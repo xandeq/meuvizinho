@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { PostDto } from "@bairronow/shared-types";
 import FeedHeader from "@/components/layouts/FeedHeader";
 import PostCard from "@/components/features/PostCard";
@@ -9,6 +10,7 @@ import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import { feedClient } from "@/lib/feed";
 import { useAuthStore } from "@/lib/auth";
+import type { ConversationDto } from "@/lib/types/marketplace";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 
@@ -67,6 +69,7 @@ function formatPrice(price: number): string {
 
 export default function SearchPage() {
   const token = useAuthStore((s) => s.accessToken);
+  const router = useRouter();
 
   const [q, setQ] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("posts");
@@ -78,7 +81,26 @@ export default function SearchPage() {
   const [listingResults, setListingResults] = useState<ListingResult[]>([]);
 
   const [searched, setSearched] = useState(false);
+  const [sendingDmFor, setSendingDmFor] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMessage = async (recipientId: string) => {
+    if (!token) { router.push("/login"); return; }
+    setSendingDmFor(recipientId);
+    try {
+      const res = await fetch(`${API}/api/v1/users/${recipientId}/conversation`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("failed");
+      const conv: ConversationDto = await res.json();
+      router.push(`/chat/${conv.id}/`);
+    } catch {
+      // best-effort
+    } finally {
+      setSendingDmFor(null);
+    }
+  };
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -230,29 +252,41 @@ export default function SearchPage() {
           <ul className="space-y-3">
             {userResults.map((user) => (
               <li key={user.id} className="flex items-center gap-3">
-                <Avatar
-                  src={user.photoUrl}
-                  name={user.displayName}
-                  size="md"
-                  verified={user.isVerified}
-                />
+                <Link href={`/business/${user.id}/`} className="shrink-0">
+                  <Avatar
+                    src={user.photoUrl}
+                    name={user.displayName}
+                    size="md"
+                    verified={user.isVerified}
+                  />
+                </Link>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-sm text-fg truncate">
-                      {user.displayName ?? "Vizinho"}
-                    </span>
-                    {user.isVerified && (
-                      <Badge variant="verified" size="sm" dot>
-                        Verificado
-                      </Badge>
+                  <Link href={`/business/${user.id}/`} className="block hover:opacity-80">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-sm text-fg truncate">
+                        {user.displayName ?? "Vizinho"}
+                      </span>
+                      {user.isVerified && (
+                        <Badge variant="verified" size="sm" dot>
+                          Verificado
+                        </Badge>
+                      )}
+                    </div>
+                    {user.isBusinessAccount && (
+                      <p className="text-xs text-accent font-semibold mt-0.5 truncate">
+                        {user.businessName ?? user.businessCategory ?? "Negócio local"}
+                      </p>
                     )}
-                  </div>
-                  {user.isBusinessAccount && (
-                    <p className="text-xs text-accent font-semibold mt-0.5 truncate">
-                      {user.businessName ?? user.businessCategory ?? "Negócio local"}
-                    </p>
-                  )}
+                  </Link>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => handleMessage(user.id)}
+                  disabled={sendingDmFor === user.id}
+                  className="shrink-0 px-3 py-1.5 rounded-full border-2 border-primary text-primary text-xs font-semibold hover:bg-primary hover:text-white disabled:opacity-60 transition-colors"
+                >
+                  {sendingDmFor === user.id ? "..." : "Mensagem"}
+                </button>
               </li>
             ))}
           </ul>

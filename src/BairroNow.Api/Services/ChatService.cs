@@ -119,12 +119,16 @@ public class ChatService : IChatService
             ?? throw new ChatNotFoundException();
         await EnsureParticipantAsync(senderId, conversationId, ct);
 
-        // Pitfall 7: re-verify bairro match against the listing
-        var listing = await _db.Listings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == conv.ListingId, ct)
-            ?? throw new ChatNotFoundException("Anúncio não encontrado.");
-        var sender = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == senderId, ct);
-        if (sender == null || sender.BairroId != listing.BairroId)
-            throw new ChatForbiddenException("Anúncio fora do seu bairro.");
+        // For listing-based conversations, re-verify the sender is in the same bairro.
+        // Direct DMs (ListingId == null) skip this guard.
+        if (conv.ListingId.HasValue)
+        {
+            var listing = await _db.Listings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == conv.ListingId.Value, ct)
+                ?? throw new ChatNotFoundException("Anúncio não encontrado.");
+            var sender = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == senderId, ct);
+            if (sender == null || sender.BairroId != listing.BairroId)
+                throw new ChatForbiddenException("Anúncio fora do seu bairro.");
+        }
 
         string? imagePath = null;
         if (image != null && image.Length > 0)
@@ -203,6 +207,42 @@ public class ChatService : IChatService
         return total;
     }
 
+    public async Task<ConversationDto> CreateDirectAsync(Guid initiatorId, Guid recipientId, CancellationToken ct = default)
+    {
+        if (initiatorId == recipientId)
+            throw new ChatForbiddenException("Não é possível iniciar conversa consigo mesmo.");
+
+        var recipient = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == recipientId, ct)
+            ?? throw new ChatNotFoundException("Usuário não encontrado.");
+
+        // Dedupe: check both directions (A→B and B→A) since BuyerId/SellerId are semantic, not ordered.
+        var existing = await _db.Conversations.AsNoTracking()
+            .FirstOrDefaultAsync(c => c.ListingId == null &&
+                ((c.BuyerId == initiatorId && c.SellerId == recipientId) ||
+                 (c.BuyerId == recipientId && c.SellerId == initiatorId)), ct);
+        if (existing != null)
+            return await BuildConvDtoAsync(existing.Id, initiatorId, ct) ?? throw new ChatNotFoundException();
+
+        var conv = new Conversation
+        {
+            ListingId = null,
+            BuyerId = initiatorId,
+            SellerId = recipientId,
+            CreatedAt = DateTime.UtcNow,
+            LastMessageAt = DateTime.UtcNow,
+        };
+        _db.Conversations.Add(conv);
+        await _db.SaveChangesAsync(ct);
+
+        _db.ConversationParticipants.AddRange(
+            new ConversationParticipant { ConversationId = conv.Id, UserId = initiatorId },
+            new ConversationParticipant { ConversationId = conv.Id, UserId = recipientId }
+        );
+        await _db.SaveChangesAsync(ct);
+
+        return await BuildConvDtoAsync(conv.Id, initiatorId, ct) ?? throw new ChatNotFoundException();
+    }
+
     // ─── helpers ───
     private async Task EnsureParticipantAsync(Guid userId, int conversationId, CancellationToken ct)
     {
@@ -245,10 +285,11 @@ public class ChatService : IChatService
         {
             Id = c.Id,
             ListingId = c.ListingId,
-            ListingTitle = c.Listing?.Title ?? string.Empty,
+            ListingTitle = c.Listing?.Title,
             ListingThumbnailUrl = thumb,
             OtherUserId = isBuyer ? c.SellerId : c.BuyerId,
             OtherUserDisplayName = other?.DisplayName,
+            OtherUserPhotoUrl = other?.PhotoUrl,
             OtherUserIsVerified = other?.IsVerified ?? false,
             LastMessageAt = c.LastMessageAt,
             UnreadCount = unread,

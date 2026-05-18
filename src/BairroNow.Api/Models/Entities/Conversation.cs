@@ -3,7 +3,7 @@ namespace BairroNow.Api.Models.Entities;
 public class Conversation
 {
     public int Id { get; set; }
-    public int ListingId { get; set; }
+    public int? ListingId { get; set; }
     public Listing? Listing { get; set; }
     public Guid BuyerId { get; set; }
     public User? Buyer { get; set; }

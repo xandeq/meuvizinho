@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/auth";
 import BusinessRating from "@/components/features/BusinessRating";
+import type { ConversationDto } from "@/lib/types/marketplace";
 
 interface BusinessPhoto {
   id: number;
@@ -199,11 +200,31 @@ interface Props {
 export default function BusinessProfileClient({ userId }: Props) {
   const router = useRouter();
   const token = useAuthStore((s) => s.accessToken);
+  const currentUserId = useAuthStore((s) => s.user?.id);
   const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 
   const [data, setData] = useState<PublicProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [sendingDm, setSendingDm] = useState(false);
+
+  const handleMessage = async () => {
+    if (!token) { router.push("/login"); return; }
+    setSendingDm(true);
+    try {
+      const res = await fetch(`${API}/api/v1/users/${userId}/conversation`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("failed");
+      const conv: ConversationDto = await res.json();
+      router.push(`/chat/${conv.id}/`);
+    } catch {
+      // best-effort — stay on page
+    } finally {
+      setSendingDm(false);
+    }
+  };
 
   // Record view (fire and forget, anonymous)
   useEffect(() => {
@@ -287,6 +308,20 @@ export default function BusinessProfileClient({ userId }: Props) {
             )}
 
             <StarDisplay average={data.ratingAverage} total={data.ratingTotal} />
+
+            {currentUserId !== userId && (
+              <button
+                type="button"
+                onClick={handleMessage}
+                disabled={sendingDm}
+                className="mt-1 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                {sendingDm ? "Abrindo..." : "Mensagem"}
+              </button>
+            )}
           </div>
         </div>
       </div>

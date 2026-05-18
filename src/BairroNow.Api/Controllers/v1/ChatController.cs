@@ -93,6 +93,23 @@ public class ChatController : ControllerBase
         return Ok(new UnreadCountResponse { Total = total });
     }
 
+    // Direct DM — creates or returns existing conversation without a listing.
+    // Route lives here (not UserController) because it returns a ConversationDto.
+    [HttpPost("/api/v1/users/{recipientId:guid}/conversation")]
+    [EnableRateLimiting("authenticated")]
+    public async Task<IActionResult> CreateDirect(Guid recipientId, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+        try
+        {
+            var conv = await _chat.CreateDirectAsync(userId.Value, recipientId, ct);
+            return Ok(conv);
+        }
+        catch (ChatNotFoundException ex) { return NotFound(new { error = ex.Message }); }
+        catch (ChatForbiddenException ex) { return StatusCode(403, new { error = ex.Message }); }
+    }
+
     private Guid? GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;

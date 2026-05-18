@@ -86,27 +86,53 @@ export default function ChatRoom({
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] bg-bg border-2 border-border rounded-lg overflow-hidden">
       {conversation && (
-        <Link
-          href={`/marketplace/${conversation.listingId}/`}
-          className="flex items-center gap-3 p-3 border-b-2 border-border hover:bg-muted"
-        >
-          {conversation.listingThumbnailUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={conversation.listingThumbnailUrl}
-              alt={conversation.listingTitle}
-              className="w-12 h-12 rounded object-cover"
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-fg truncate">
-              {conversation.listingTitle}
-            </p>
-            <p className="text-xs text-fg/60 font-medium truncate">
-              com {conversation.otherUserDisplayName ?? "Vizinho"}
-            </p>
-          </div>
-        </Link>
+        conversation.listingId != null ? (
+          <Link
+            href={`/marketplace/${conversation.listingId}/`}
+            className="flex items-center gap-3 p-3 border-b-2 border-border hover:bg-muted"
+          >
+            {conversation.listingThumbnailUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={conversation.listingThumbnailUrl}
+                alt={conversation.listingTitle ?? "Anúncio"}
+                className="w-12 h-12 rounded object-cover"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-fg truncate">
+                {conversation.listingTitle ?? "Anúncio"}
+              </p>
+              <p className="text-xs text-fg/60 font-medium truncate">
+                com {conversation.otherUserDisplayName ?? "Vizinho"}
+              </p>
+            </div>
+          </Link>
+        ) : (
+          <Link
+            href={`/business/${conversation.otherUserId}/`}
+            className="flex items-center gap-3 p-3 border-b-2 border-border hover:bg-muted"
+          >
+            {conversation.otherUserPhotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={conversation.otherUserPhotoUrl}
+                alt={conversation.otherUserDisplayName ?? "Usuário"}
+                className="w-12 h-12 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-extrabold text-base flex items-center justify-center shrink-0">
+                {(conversation.otherUserDisplayName ?? "?")[0].toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-fg truncate">
+                {conversation.otherUserDisplayName ?? "Vizinho"}
+              </p>
+              <p className="text-xs text-fg/60 font-medium">Mensagem direta</p>
+            </div>
+          </Link>
+        )
       )}
 
       <div

@@ -10,6 +10,7 @@ public class ChatValidationException : Exception { public ChatValidationExceptio
 public interface IChatService
 {
     Task<ConversationDto> CreateOrGetAsync(Guid buyerId, CreateConversationRequest dto, CancellationToken ct = default);
+    Task<ConversationDto> CreateDirectAsync(Guid initiatorId, Guid recipientId, CancellationToken ct = default);
     Task<List<ConversationDto>> ListAsync(Guid userId, CancellationToken ct = default);
     Task<List<MessageDto>> GetHistoryAsync(Guid userId, int conversationId, DateTime? before, int limit, CancellationToken ct = default);
     Task<MessageDto> SendAsync(Guid senderId, int conversationId, string? text, IFormFile? image, CancellationToken ct = default);

@@ -109,11 +109,12 @@ export interface MessageDto {
 
 export interface ConversationDto {
   id: number;
-  listingId: number;
-  listingTitle: string;
+  listingId: number | null;
+  listingTitle: string | null;
   listingThumbnailUrl: string | null;
   otherUserId: string;
   otherUserDisplayName: string | null;
+  otherUserPhotoUrl: string | null;
   otherUserIsVerified: boolean;
   lastMessageAt: string;
   unreadCount: number;
