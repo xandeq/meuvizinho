@@ -44,6 +44,7 @@ export default function NotificationBell() {
   const load = useNotificationStore((s) => s.load);
   const prepend = useNotificationStore((s) => s.prepend);
   const markRead = useNotificationStore((s) => s.markRead);
+  const markAllRead = useNotificationStore((s) => s.markAllRead);
 
   useEffect(() => {
     let mounted = true;
@@ -94,7 +95,13 @@ export default function NotificationBell() {
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <p className="text-sm font-bold text-fg">Notificações</p>
             {unread > 0 && (
-              <span className="text-xs font-semibold text-primary">{unread} novas</span>
+              <button
+                type="button"
+                onClick={() => void markAllRead()}
+                className="text-xs text-primary hover:underline"
+              >
+                Marcar tudo lido
+              </button>
             )}
           </div>
 

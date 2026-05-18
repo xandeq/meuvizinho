@@ -48,5 +48,8 @@ public class User
     // Mobile push (Wave A)
     public string? ExpoPushToken { get; set; }
 
+    // Wave B: Business account type
+    public bool IsBusinessAccount { get; set; }
+
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

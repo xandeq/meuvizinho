@@ -9,6 +9,20 @@ import { useAuthStore } from '@/lib/auth';
 import { getPins, getPois, updateMapPreference } from '@/lib/api/map';
 import type { MapPin, PointOfInterest, MapFilter } from '@/lib/types/map';
 
+// Custom marker icons for resident vs business accounts
+function createMarkerIcon(isBusinessAccount?: boolean) {
+  const color = isBusinessAccount ? '#D97706' : '#2563EB';
+  const svgPath = isBusinessAccount
+    ? 'M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z M3 6h18 M16 10a4 4 0 0 1-8 0'
+    : 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10';
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:32px;height:32px;border-radius:${isBusinessAccount ? '6px' : '50%'};background:${color};display:flex;align-items:center;justify-content:center;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="${svgPath}"/></svg></div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+  });
+}
+
 // Fix webpack-broken default icon paths (MAP-001 pitfall)
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -87,7 +101,7 @@ export default function MapClient() {
         {/* MAP-003 User pins with mini-profile popup */}
         <MarkerClusterGroup chunkedLoading>
           {pins.map((pin) => (
-            <Marker key={pin.userId} position={[pin.lat, pin.lng]}>
+            <Marker key={pin.userId} position={[pin.lat, pin.lng]} icon={createMarkerIcon(pin.isBusinessAccount)}>
               <Popup>
                 <div className="min-w-[180px] space-y-1">
                   <div className="flex items-center gap-2">
@@ -107,6 +121,12 @@ export default function MapClient() {
                       {pin.isVerified && (
                         <span className="inline-flex items-center gap-1 bg-secondary text-secondary-fg text-xs px-2 py-0.5 rounded-full">
                           Verificado
+                        </span>
+                      )}
+                      {pin.isBusinessAccount && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-amber-100 text-amber-700 rounded px-1.5 py-0.5 mt-1">
+                          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
+                          Negócio local
                         </span>
                       )}
                     </div>

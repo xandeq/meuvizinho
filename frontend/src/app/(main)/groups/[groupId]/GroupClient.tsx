@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react';
 import { getHubConnection } from '@/lib/signalr';
 import { useGroupStore } from '@/stores/group-store';
-import { getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent } from '@/lib/api/groups';
+import { getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent, getGroupMembers } from '@/lib/api/groups';
+import type { GroupMember } from '@/lib/api/groups';
 import type { GroupPost, GroupEvent } from '@/lib/types/groups';
+import Avatar from '@/components/ui/Avatar';
 
 interface Props {
   groupId: number;
@@ -23,7 +25,12 @@ export default function GroupClient({ groupId }: Props) {
   } = useGroupStore();
   const [composerBody, setComposerBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'feed' | 'events'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'events' | 'members'>('feed');
+
+  // Members tab state
+  const [members, setMembers] = useState<GroupMember[]>([]);
+  const [membersTotal, setMembersTotal] = useState(0);
+  const [membersLoading, setMembersLoading] = useState(false);
 
   // Load group detail and initial posts
   useEffect(() => {
@@ -69,6 +76,19 @@ export default function GroupClient({ groupId }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
+  // Load members only when members tab is active
+  useEffect(() => {
+    if (activeTab !== 'members') return;
+    setMembersLoading(true);
+    getGroupMembers(groupId)
+      .then((d) => {
+        setMembers(d.items);
+        setMembersTotal(d.total);
+      })
+      .finally(() => setMembersLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, groupId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!composerBody.trim()) return;
@@ -93,15 +113,33 @@ export default function GroupClient({ groupId }: Props) {
 
       {/* Tab nav */}
       <div className="flex gap-4 border-b border-border mb-4">
-        {(['feed', 'events'] as const).map((tab) => (
+        {(
+          [
+            { key: 'feed', label: 'Feed', icon: null },
+            { key: 'events', label: 'Eventos', icon: null },
+            {
+              key: 'members',
+              label: 'Membros',
+              icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              ),
+            },
+          ] as { key: 'feed' | 'events' | 'members'; label: string; icon: React.ReactNode }[]
+        ).map(({ key, label, icon }) => (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-2 text-sm font-medium ${
-              activeTab === tab ? 'border-b-2 border-primary text-primary' : 'text-muted-fg'
+            key={key}
+            onClick={() => setActiveTab(key)}
+            className={`pb-2 text-sm font-medium flex items-center gap-1.5 ${
+              activeTab === key ? 'border-b-2 border-primary text-primary' : 'text-muted-fg'
             }`}
           >
-            {tab === 'feed' ? 'Feed' : 'Eventos'}
+            {icon}
+            {label}
           </button>
         ))}
       </div>
@@ -163,6 +201,62 @@ export default function GroupClient({ groupId }: Props) {
       )}
 
       {activeTab === 'events' && <GroupEventsTab groupId={groupId} />}
+
+      {activeTab === 'members' && (
+        <div className="space-y-3">
+          {/* Header with total count */}
+          <p className="text-sm font-medium text-muted-fg">
+            {membersLoading ? 'Carregando...' : `${membersTotal} membros`}
+          </p>
+
+          {/* Skeleton loader */}
+          {membersLoading && (
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-card rounded-xl border border-border shadow-sm p-4 flex items-center gap-3 animate-pulse">
+                  <div className="w-10 h-10 rounded-full bg-muted shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 bg-muted rounded w-32" />
+                    <div className="h-2.5 bg-muted rounded w-20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty state */}
+          {!membersLoading && members.length === 0 && (
+            <p className="text-sm text-muted-fg text-center py-8">Nenhum membro encontrado.</p>
+          )}
+
+          {/* Members list */}
+          {!membersLoading && members.map((m) => (
+            <div key={m.userId} className="bg-card rounded-xl border border-border shadow-sm p-4 flex items-center gap-3">
+              <Avatar src={m.photoUrl} name={m.displayName} size="sm" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-fg truncate">
+                  {m.displayName ?? 'Vizinho'}
+                </p>
+                <p className="text-xs text-muted-fg">
+                  Entrou em {new Date(m.joinedAt).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+              <span
+                className={[
+                  'text-xs font-semibold px-2 py-0.5 rounded-full',
+                  m.role === 'owner'
+                    ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
+                    : m.role === 'admin'
+                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+                    : 'bg-muted text-muted-fg',
+                ].join(' ')}
+              >
+                {m.role === 'owner' ? 'Criador' : m.role === 'admin' ? 'Admin' : 'Membro'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

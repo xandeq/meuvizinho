@@ -55,3 +55,19 @@ export async function createGroupEvent(groupId: number, body: Partial<GroupEvent
 export async function rsvpEvent(groupId: number, eventId: number, isAttending: boolean): Promise<void> {
   await api.post(`/api/v1/groups/${groupId}/events/${eventId}/rsvp`, { isAttending });
 }
+
+export interface GroupMember {
+  userId: string;
+  displayName: string | null;
+  photoUrl: string | null;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+}
+
+export async function getGroupMembers(groupId: number, page = 0, pageSize = 20) {
+  const res = await api.get<{ items: GroupMember[]; total: number }>(
+    `/api/v1/groups/${groupId}/members`,
+    { params: { page, pageSize } }
+  );
+  return res.data;
+}

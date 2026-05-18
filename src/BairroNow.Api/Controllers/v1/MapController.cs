@@ -36,6 +36,8 @@ public class MapController : ControllerBase
             query = query.Where(u => u.IsVerified);
         else if (filter == "new")
             query = query.Where(u => u.CreatedAt >= DateTime.UtcNow.AddMonths(-1));
+        else if (filter == "businesses")
+            query = query.Where(u => u.IsBusinessAccount);
 
         // Join to get stored coordinates from Verification (no live geocoding)
         var pins = await query
@@ -47,6 +49,7 @@ public class MapController : ControllerBase
                       u.DisplayName,
                       u.PhotoUrl,
                       u.IsVerified,
+                      u.IsBusinessAccount,
                       u.Bio,
                       RawLat = v.ApprovedLat,
                       RawLng = v.ApprovedLng
@@ -63,6 +66,7 @@ public class MapController : ControllerBase
                 p.DisplayName,
                 p.PhotoUrl,
                 p.IsVerified,
+                p.IsBusinessAccount,
                 p.Bio,
                 Lat = fLat,
                 Lng = fLng

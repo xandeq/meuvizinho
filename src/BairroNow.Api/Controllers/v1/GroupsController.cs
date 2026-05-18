@@ -531,6 +531,9 @@ public class GroupsController : ControllerBase
     [HttpGet("{id:int}/events")]
     public async Task<IActionResult> GetEvents(int id)
     {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
         var events = await _db.GroupEvents
             .AsNoTracking()
             .Where(e => e.GroupId == id && e.DeletedAt == null)
@@ -544,7 +547,11 @@ public class GroupsController : ControllerBase
                 e.StartsAt,
                 e.EndsAt,
                 e.ReminderAt,
-                AttendingCount = e.Rsvps.Count(r => r.IsAttending)
+                AttendingCount = e.Rsvps.Count(r => r.IsAttending),
+                MyRsvp = e.Rsvps
+                    .Where(r => r.UserId == userId)
+                    .Select(r => (bool?)r.IsAttending)
+                    .FirstOrDefault()
             })
             .ToListAsync();
 
