@@ -63,7 +63,7 @@ public class BusinessesController : ControllerBase
                 RatingTotal = _db.BusinessRatings
                     .Count(r => r.BusinessUserId == u.Id),
             })
-            .OrderByDescending(u => u.RatingAverage.HasValue ? u.RatingAverage : null)
+            .OrderByDescending(u => u.RatingAverage)
             .ThenBy(u => u.BusinessName)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
