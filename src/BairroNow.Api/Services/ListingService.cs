@@ -123,6 +123,10 @@ public class ListingService : IListingService
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == listingId, ct)
             ?? throw new ListingNotFoundException();
         if (listing.SellerId != sellerId) throw new ListingForbiddenException("Apenas o vendedor pode editar.");
+        if (listing.Status == ListingStatus.Removed)
+            throw new ListingValidationException("Anúncios removidos não podem ser editados.");
+        if (listing.Status == ListingStatus.Sold)
+            throw new ListingValidationException("Anúncios vendidos não podem ser editados.");
 
         var validation = await _updateValidator.ValidateAsync(dto, ct);
         if (!validation.IsValid)
@@ -253,13 +257,16 @@ public class ListingService : IListingService
         bool verifiedOnly, string? sort, string? cursor, int take, CancellationToken ct = default)
     {
         take = Math.Clamp(take, 1, 50);
-        var graceCutoff = DateTime.UtcNow.Subtract(SoldGracePeriod);
+        // Capture now as a local variable so EF Core translates it to a SQL parameter
+        // instead of inlining the value — prevents query plan cache pollution.
+        var now = DateTime.UtcNow;
+        var graceCutoff = now.Subtract(SoldGracePeriod);
 
         var q = _db.Listings.AsNoTracking()
             .Include(l => l.Seller)
             .Include(l => l.Photos)
             .Where(l => l.BairroId == bairroId)
-            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > DateTime.UtcNow))
+            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > now))
                      || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
 
         if (!string.IsNullOrWhiteSpace(category)) q = q.Where(l => l.CategoryCode == category);
@@ -313,12 +320,13 @@ public class ListingService : IListingService
 
         // RESEARCH §Pattern 3: prefer SQL Server CONTAINS() when available, fall back to LIKE.
         // For LocalDB / non-FTS environments, fall back to LIKE so tests still pass.
-        var graceCutoff = DateTime.UtcNow.Subtract(SoldGracePeriod);
+        var now = DateTime.UtcNow;
+        var graceCutoff = now.Subtract(SoldGracePeriod);
         IQueryable<Listing> baseQ = _db.Listings.AsNoTracking()
             .Include(l => l.Seller)
             .Include(l => l.Photos)
             .Where(l => l.BairroId == bairroId)
-            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > DateTime.UtcNow))
+            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > now))
                      || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
 
         // FULLTEXT CATALOG ftListings + INDEX on (Title, Description) were created by
@@ -394,17 +402,20 @@ public class ListingService : IListingService
         var listing = await _db.Listings.AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == listingId, ct)
             ?? throw new ListingNotFoundException();
-        if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
-            throw new ListingValidationException("Não é possível favoritar anúncios expirados ou removidos.");
-        // `existing` below MUST stay tracked — it may be Remove()d.
+
+        // `existing` MUST stay tracked — it may be Remove()d.
         var existing = await _db.ListingFavorites
             .FirstOrDefaultAsync(f => f.ListingId == listingId && f.UserId == userId, ct);
+
+        // Unfavoriting is always allowed (cleanup). Block only adding to expired/removed.
         if (existing != null)
         {
             _db.ListingFavorites.Remove(existing);
             await _db.SaveChangesAsync(ct);
             return false;
         }
+        if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
+            throw new ListingValidationException("Não é possível favoritar anúncios expirados ou removidos.");
         _db.ListingFavorites.Add(new ListingFavorite
         {
             ListingId = listingId,

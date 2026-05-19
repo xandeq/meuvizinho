@@ -57,7 +57,6 @@ public class ListingExpiryService : BackgroundService
                 .SetProperty(l => l.Status, ListingStatus.Expired)
                 .SetProperty(l => l.UpdatedAt, now), ct);
 
-        if (count > 0)
-            _logger.LogInformation("Expired {Count} listings at {Time}", count, now);
+        _logger.LogInformation("ExpiryService scan complete: {Count} listings expired at {Time}", count, now);
     }
 }

@@ -167,6 +167,7 @@ public class ListingsController : ControllerBase
             return Ok(new { favorited });
         }
         catch (ListingNotFoundException) { return NotFound(); }
+        catch (ListingValidationException ex) { return BadRequest(new { error = ex.Message }); }
     }
 
     [HttpPost("{id:int}/report")]

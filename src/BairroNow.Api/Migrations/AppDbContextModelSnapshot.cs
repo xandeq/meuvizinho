@@ -646,6 +646,9 @@ namespace BairroNow.Api.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(12,2)");
 
@@ -680,6 +683,9 @@ namespace BairroNow.Api.Migrations
                     b.HasIndex("SellerId");
 
                     b.HasIndex("BairroId", "Status", "CreatedAt");
+
+                    b.HasIndex("Status", "ExpiresAt")
+                        .HasDatabaseName("IX_Listings_Status_ExpiresAt");
 
                     b.ToTable("Listings");
                 });

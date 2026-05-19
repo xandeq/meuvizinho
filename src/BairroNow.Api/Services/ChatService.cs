@@ -168,6 +168,8 @@ public class ChatService : IChatService
         {
             var listing = await _db.Listings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == conv.ListingId.Value, ct)
                 ?? throw new ChatNotFoundException("Anúncio não encontrado.");
+            if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
+                throw new ChatForbiddenException("Não é possível enviar mensagens em anúncios expirados ou removidos.");
             var sender = await _db.Users.AsNoTracking()
                 .Select(u => new { u.Id, u.BairroId })
                 .FirstOrDefaultAsync(u => u.Id == senderId, ct);
