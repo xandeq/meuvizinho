@@ -41,6 +41,8 @@ public class ListingDto
     public string Status { get; set; } = "active";
     public DateTime CreatedAt { get; set; }
     public DateTime? SoldAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }
+    public int? DaysUntilExpiry { get; set; }
     public List<ListingPhotoDto> Photos { get; set; } = new();
     public int FavoriteCount { get; set; }
     public bool IsFavoritedByCurrentUser { get; set; }

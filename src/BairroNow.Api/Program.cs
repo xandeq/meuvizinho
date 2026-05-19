@@ -319,6 +319,7 @@ try
     builder.Services.AddHostedService<DigestSchedulerService>();
     builder.Services.AddHostedService<DocumentRetentionService>();
     builder.Services.AddHostedService<AnonymizationSchedulerService>();
+    builder.Services.AddHostedService<ListingExpiryService>();
     builder.Services.AddScoped<AccountService>();
     builder.Services.AddScoped<OcrService>();
     builder.Services.AddHttpClient();

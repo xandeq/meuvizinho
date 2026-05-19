@@ -78,6 +78,7 @@ public class ListingService : IListingService
             Status = ListingStatus.Active,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
         };
         _db.Listings.Add(listing);
         await _db.SaveChangesAsync(ct);
@@ -195,6 +196,33 @@ public class ListingService : IListingService
         return await BuildDtoAsync(listing.Id, sellerId, ct) ?? throw new ListingNotFoundException();
     }
 
+    public async Task<ListingDto> RenewAsync(Guid sellerId, int listingId, CancellationToken ct = default)
+    {
+        var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == listingId, ct)
+            ?? throw new ListingNotFoundException();
+        if (listing.SellerId != sellerId) throw new ListingForbiddenException("Apenas o vendedor pode renovar.");
+        if (listing.Status == ListingStatus.Sold || listing.Status == ListingStatus.Removed)
+            throw new ListingValidationException("Anúncios vendidos ou removidos não podem ser renovados.");
+
+        listing.ExpiresAt = DateTime.UtcNow.AddDays(30);
+        if (listing.Status == ListingStatus.Expired)
+            listing.Status = ListingStatus.Active;
+        listing.UpdatedAt = DateTime.UtcNow;
+
+        _db.AuditLogs.Add(new AuditLog
+        {
+            Action = "listing.renew",
+            EntityType = "Listing",
+            EntityId = listing.Id.ToString(),
+            UserId = sellerId,
+            IpAddress = "system",
+            Details = $"newExpiresAt={listing.ExpiresAt:O}"
+        });
+        await _db.SaveChangesAsync(ct);
+        InvalidateGridCache(listing.BairroId);
+        return await BuildDtoAsync(listing.Id, sellerId, ct) ?? throw new ListingNotFoundException();
+    }
+
     public async Task DeleteAsync(Guid sellerId, int listingId, CancellationToken ct = default)
     {
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == listingId, ct)
@@ -225,7 +253,7 @@ public class ListingService : IListingService
             .Include(l => l.Seller)
             .Include(l => l.Photos)
             .Where(l => l.BairroId == bairroId)
-            .Where(l => l.Status == ListingStatus.Active
+            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > DateTime.UtcNow))
                      || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
 
         if (!string.IsNullOrWhiteSpace(category)) q = q.Where(l => l.CategoryCode == category);
@@ -284,7 +312,7 @@ public class ListingService : IListingService
             .Include(l => l.Seller)
             .Include(l => l.Photos)
             .Where(l => l.BairroId == bairroId)
-            .Where(l => l.Status == ListingStatus.Active
+            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > DateTime.UtcNow))
                      || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
 
         // FULLTEXT CATALOG ftListings + INDEX on (Title, Description) were created by
@@ -427,6 +455,10 @@ public class ListingService : IListingService
         Status = l.Status,
         CreatedAt = l.CreatedAt,
         SoldAt = l.SoldAt,
+        ExpiresAt = l.ExpiresAt,
+        DaysUntilExpiry = l.ExpiresAt.HasValue
+            ? (int?)Math.Max(0, (int)(l.ExpiresAt.Value - DateTime.UtcNow).TotalDays)
+            : null,
         Photos = l.Photos.OrderBy(p => p.OrderIndex).Select(p => new ListingPhotoDto
         {
             Id = p.Id,

@@ -2,7 +2,7 @@
 // Mirror BairroNow.Api.Models.DTOs.MarketplaceDtos / ChatDtos (04-01 backend).
 // Note: backend uses int for Listing/Conversation/Message ids and Guid for user ids.
 
-export type ListingStatus = "active" | "sold" | "removed";
+export type ListingStatus = "active" | "sold" | "removed" | "expired";
 
 export interface ListingPhoto {
   id: number;
@@ -25,6 +25,8 @@ export interface ListingDto {
   status: ListingStatus;
   createdAt: string;
   soldAt: string | null;
+  expiresAt: string | null;
+  daysUntilExpiry: number | null;
   photos: ListingPhoto[];
   favoriteCount: number;
   isFavoritedByCurrentUser: boolean;

@@ -130,6 +130,22 @@ public class ListingsController : ControllerBase
         catch (ListingForbiddenException ex) { return StatusCode(403, new { error = ex.Message }); }
     }
 
+    [HttpPost("{id:int}/renew")]
+    [EnableRateLimiting("feed-write")]
+    public async Task<IActionResult> Renew(int id, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+        try
+        {
+            var result = await _listings.RenewAsync(userId.Value, id, ct);
+            return Ok(result);
+        }
+        catch (ListingNotFoundException) { return NotFound(); }
+        catch (ListingForbiddenException ex) { return StatusCode(403, new { error = ex.Message }); }
+        catch (ListingValidationException ex) { return BadRequest(new { error = ex.Message }); }
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {

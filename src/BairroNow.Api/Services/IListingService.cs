@@ -18,4 +18,5 @@ public interface IListingService
     Task<ListingDto?> GetByIdAsync(Guid currentUserId, int listingId, CancellationToken ct = default);
     Task<bool> ToggleFavoriteAsync(Guid userId, int listingId, CancellationToken ct = default);
     Task ReportAsync(Guid reporterId, int listingId, ReportListingRequest dto, CancellationToken ct = default);
+    Task<ListingDto> RenewAsync(Guid sellerId, int listingId, CancellationToken ct = default);
 }

@@ -17,6 +17,12 @@ export interface ListingCardProps {
 export default function ListingCard({ listing }: ListingCardProps) {
   const cover = listing.photos?.[0];
   const isSold = listing.status === "sold";
+  const isExpired = listing.status === "expired";
+  const expiringSoon =
+    !isSold &&
+    !isExpired &&
+    listing.daysUntilExpiry != null &&
+    listing.daysUntilExpiry <= 3;
 
   return (
     <Link
@@ -41,6 +47,20 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
             <span className="bg-red-600 text-white text-lg font-extrabold px-4 py-2 rounded-md border-2 border-white">
               VENDIDO
+            </span>
+          </div>
+        )}
+        {isExpired && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span className="bg-gray-700 text-white text-lg font-extrabold px-4 py-2 rounded-md border-2 border-white">
+              EXPIRADO
+            </span>
+          </div>
+        )}
+        {expiringSoon && (
+          <div className="absolute top-2 left-2">
+            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
+              Expira em {listing.daysUntilExpiry}d
             </span>
           </div>
         )}

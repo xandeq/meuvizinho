@@ -140,6 +140,14 @@ export async function markSold(id: number): Promise<ListingDto> {
   return data;
 }
 
+export async function renewListing(id: number): Promise<ListingDto> {
+  const { data } = await api.post<ListingDto>(
+    `${BASE}/listings/${id}/renew`,
+    {}
+  );
+  return data;
+}
+
 export async function deleteListing(id: number): Promise<void> {
   await api.delete(`${BASE}/listings/${id}`);
 }

@@ -14,6 +14,7 @@ import {
   markSold,
   deleteListing,
   getSellerRatings,
+  renewListing,
 } from "@/lib/api/marketplace";
 import { createConversation } from "@/lib/api/chat";
 import type {
@@ -78,6 +79,7 @@ export default function ListingDetailClient() {
 
   const isOwner = user?.id === listing.sellerId;
   const isSold = listing.status === "sold";
+  const isExpired = listing.status === "expired";
 
   const startChat = async () => {
     setBusy(true);
@@ -110,6 +112,18 @@ export default function ListingDetailClient() {
     }
   };
 
+  const onRenew = async () => {
+    setBusy(true);
+    try {
+      const updated = await renewListing(listing.id);
+      setListing(updated);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro ao renovar");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const onDelete = async () => {
     if (!confirm("Remover este anúncio?")) return;
     setBusy(true);
@@ -135,6 +149,11 @@ export default function ListingDetailClient() {
               VENDIDO
             </span>
           )}
+          {isExpired && (
+            <span className="bg-gray-600 text-white font-extrabold px-3 py-1 rounded-xl">
+              EXPIRADO
+            </span>
+          )}
         </div>
         <p className="text-3xl text-primary font-extrabold">
           {BRL.format(listing.price)}
@@ -142,6 +161,18 @@ export default function ListingDetailClient() {
         <p className="text-sm text-fg/60 font-medium">
           Publicado em {new Date(listing.createdAt).toLocaleDateString("pt-BR")}
         </p>
+        {listing.daysUntilExpiry != null && !isSold && !isExpired && (
+          <p className={`text-sm font-semibold ${listing.daysUntilExpiry <= 3 ? "text-amber-600" : "text-fg/50"}`}>
+            {listing.daysUntilExpiry === 0
+              ? "Expira hoje"
+              : `Expira em ${listing.daysUntilExpiry} dia${listing.daysUntilExpiry !== 1 ? "s" : ""}`}
+          </p>
+        )}
+        {isExpired && (
+          <p className="text-sm font-semibold text-danger">
+            Este anúncio expirou. Renove para reativá-lo.
+          </p>
+        )}
       </div>
 
       <div className="bg-bg border-2 border-border rounded-xl p-4 space-y-2">
@@ -164,7 +195,7 @@ export default function ListingDetailClient() {
         <p className="text-fg/80 whitespace-pre-wrap">{listing.description}</p>
       </div>
 
-      {!isOwner && !isSold && (
+      {!isOwner && !isSold && !isExpired && (
         <div className="flex gap-2">
           <button
             type="button"
@@ -200,7 +231,17 @@ export default function ListingDetailClient() {
           >
             Editar
           </Link>
-          {!isSold && (
+          {(isExpired || (listing.daysUntilExpiry != null && listing.daysUntilExpiry <= 7)) && !isSold && (
+            <button
+              type="button"
+              onClick={onRenew}
+              disabled={busy}
+              className="bg-amber-500 text-white font-extrabold px-4 py-2 rounded-xl disabled:opacity-50"
+            >
+              {isExpired ? "Reativar anúncio" : "Renovar (+30 dias)"}
+            </button>
+          )}
+          {!isSold && !isExpired && (
             <button
               type="button"
               onClick={onMarkSold}

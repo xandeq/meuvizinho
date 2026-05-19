@@ -5,6 +5,7 @@ public static class ListingStatus
     public const string Active = "active";
     public const string Sold = "sold";
     public const string Removed = "removed";
+    public const string Expired = "expired";
 }
 
 public class Listing
@@ -25,6 +26,7 @@ public class Listing
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? SoldAt { get; set; }
+    public DateTime? ExpiresAt { get; set; }
     public DateTime? DeletedAt { get; set; }
 
     public ICollection<ListingPhoto> Photos { get; set; } = new List<ListingPhoto>();
