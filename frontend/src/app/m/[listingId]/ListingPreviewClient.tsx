@@ -21,6 +21,8 @@ interface ListingPreview {
   sellerDisplayName: string;
   sellerIsVerified: boolean;
   photos: Array<{ url: string; thumbnailUrl?: string }>;
+  expiresAt: string | null;
+  daysUntilExpiry: number | null;
 }
 
 export default function ListingPreviewClient({
@@ -132,8 +134,13 @@ export default function ListingPreviewClient({
                 </p>
               </div>
               {listing.status === "sold" && (
-                <span className="bg-red-600 text-white font-extrabold px-3 py-1 rounded shrink-0">
+                <span role="status" aria-label="Anuncio vendido" className="bg-red-600 text-white font-extrabold px-3 py-1 rounded shrink-0">
                   VENDIDO
+                </span>
+              )}
+              {listing.status === "expired" && (
+                <span role="status" aria-label="Anuncio expirado" className="bg-gray-600 text-white font-extrabold px-3 py-1 rounded shrink-0">
+                  EXPIRADO
                 </span>
               )}
             </div>

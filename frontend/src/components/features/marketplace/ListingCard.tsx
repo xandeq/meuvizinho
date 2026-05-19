@@ -18,11 +18,9 @@ export default function ListingCard({ listing }: ListingCardProps) {
   const cover = listing.photos?.[0];
   const isSold = listing.status === "sold";
   const isExpired = listing.status === "expired";
-  const expiringSoon =
-    !isSold &&
-    !isExpired &&
-    listing.daysUntilExpiry != null &&
-    listing.daysUntilExpiry <= 3;
+  const expiresInDays = listing.daysUntilExpiry;
+  const expiringUrgent = !isSold && !isExpired && expiresInDays != null && expiresInDays <= 3;
+  const expiringWarning = !isSold && !isExpired && expiresInDays != null && expiresInDays > 3 && expiresInDays <= 7;
 
   return (
     <Link
@@ -45,22 +43,29 @@ export default function ListingCard({ listing }: ListingCardProps) {
         )}
         {isSold && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-red-600 text-white text-lg font-extrabold px-4 py-2 rounded-md border-2 border-white">
+            <span role="status" aria-label="Anuncio vendido" className="bg-red-600 text-white text-lg font-extrabold px-4 py-2 rounded-md border-2 border-white">
               VENDIDO
             </span>
           </div>
         )}
         {isExpired && (
           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <span className="bg-gray-700 text-white text-lg font-extrabold px-4 py-2 rounded-md border-2 border-white">
+            <span role="status" aria-label="Anuncio expirado" className="bg-gray-700 text-white text-lg font-extrabold px-4 py-2 rounded-md border-2 border-white">
               EXPIRADO
             </span>
           </div>
         )}
-        {expiringSoon && (
+        {expiringUrgent && (
           <div className="absolute top-2 left-2">
-            <span className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
-              Expira em {listing.daysUntilExpiry}d
+            <span role="status" aria-label={`Expira em ${expiresInDays} dias`} className="bg-amber-500 text-white text-xs font-bold px-2 py-1 rounded">
+              Expira em {expiresInDays}d
+            </span>
+          </div>
+        )}
+        {expiringWarning && (
+          <div className="absolute top-2 left-2">
+            <span role="status" aria-label={`Expira em ${expiresInDays} dias`} className="bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded">
+              {expiresInDays}d restantes
             </span>
           </div>
         )}
