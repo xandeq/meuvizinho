@@ -45,21 +45,19 @@ public class ListingExpiryService : BackgroundService
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var now = DateTime.UtcNow;
-        var expired = await db.Listings
+
+        // ExecuteUpdateAsync generates a single atomic UPDATE — no load-then-save race condition.
+        // A concurrent RenewAsync that commits between our read and write can't be overwritten
+        // because the WHERE clause re-checks Status=Active AND ExpiresAt < now at the DB level.
+        int count = await db.Listings
             .Where(l => l.Status == ListingStatus.Active
                      && l.ExpiresAt != null
                      && l.ExpiresAt < now)
-            .ToListAsync(ct);
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(l => l.Status, ListingStatus.Expired)
+                .SetProperty(l => l.UpdatedAt, now), ct);
 
-        if (expired.Count == 0) return;
-
-        foreach (var l in expired)
-        {
-            l.Status = ListingStatus.Expired;
-            l.UpdatedAt = now;
-        }
-
-        await db.SaveChangesAsync(ct);
-        _logger.LogInformation("Expired {Count} listings at {Time}", expired.Count, now);
+        if (count > 0)
+            _logger.LogInformation("Expired {Count} listings at {Time}", count, now);
     }
 }

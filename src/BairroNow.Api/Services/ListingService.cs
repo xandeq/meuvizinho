@@ -204,6 +204,12 @@ public class ListingService : IListingService
         if (listing.Status == ListingStatus.Sold || listing.Status == ListingStatus.Removed)
             throw new ListingValidationException("Anúncios vendidos ou removidos não podem ser renovados.");
 
+        // Only allow renewal when ≤7 days remain (or already expired) — prevents padding a fresh listing to 60 days.
+        if (listing.Status == ListingStatus.Active
+            && listing.ExpiresAt.HasValue
+            && listing.ExpiresAt.Value > DateTime.UtcNow.AddDays(7))
+            throw new ListingValidationException("A renovação só é permitida com 7 dias ou menos de validade.");
+
         listing.ExpiresAt = DateTime.UtcNow.AddDays(30);
         if (listing.Status == ListingStatus.Expired)
             listing.Status = ListingStatus.Active;
@@ -388,6 +394,8 @@ public class ListingService : IListingService
         var listing = await _db.Listings.AsNoTracking()
             .FirstOrDefaultAsync(l => l.Id == listingId, ct)
             ?? throw new ListingNotFoundException();
+        if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
+            throw new ListingValidationException("Não é possível favoritar anúncios expirados ou removidos.");
         // `existing` below MUST stay tracked — it may be Remove()d.
         var existing = await _db.ListingFavorites
             .FirstOrDefaultAsync(f => f.ListingId == listingId && f.UserId == userId, ct);
@@ -410,8 +418,12 @@ public class ListingService : IListingService
 
     public async Task ReportAsync(Guid reporterId, int listingId, ReportListingRequest dto, CancellationToken ct = default)
     {
-        var exists = await _db.Listings.AnyAsync(l => l.Id == listingId, ct);
-        if (!exists) throw new ListingNotFoundException();
+        var listing = await _db.Listings.AsNoTracking()
+            .Select(l => new { l.Id, l.Status })
+            .FirstOrDefaultAsync(l => l.Id == listingId, ct)
+            ?? throw new ListingNotFoundException();
+        if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
+            throw new ListingForbiddenException("Não é possível denunciar anúncios expirados ou removidos.");
         // D-21: same Reports table, TargetType = "listing"
         _db.Reports.Add(new Report
         {
@@ -457,7 +469,7 @@ public class ListingService : IListingService
         SoldAt = l.SoldAt,
         ExpiresAt = l.ExpiresAt,
         DaysUntilExpiry = l.ExpiresAt.HasValue
-            ? (int?)Math.Max(0, (int)(l.ExpiresAt.Value - DateTime.UtcNow).TotalDays)
+            ? (int?)Math.Max(0, (int)Math.Ceiling((l.ExpiresAt.Value - DateTime.UtcNow).TotalDays))
             : null,
         Photos = l.Photos.OrderBy(p => p.OrderIndex).Select(p => new ListingPhotoDto
         {

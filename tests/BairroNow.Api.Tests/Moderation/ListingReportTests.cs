@@ -2,6 +2,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using BairroNow.Api.Data;
@@ -31,10 +32,13 @@ public class ListingReportTests
         fileMock.Setup(f => f.SaveImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("/x.jpg");
 
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c.GetSection("Features")["FullTextSearchEnabled"]).Returns("false");
         var svc = new ListingService(db, fileMock.Object,
             new CreateListingRequestValidator(), new UpdateListingRequestValidator(),
             Mock.Of<INotificationService>(),
-            new MemoryCache(new MemoryCacheOptions()), NullLogger<ListingService>.Instance);
+            new MemoryCache(new MemoryCacheOptions()), NullLogger<ListingService>.Instance,
+            config.Object);
 
         var files = new FormFileCollection();
         var bytes = new byte[] { 0xFF };

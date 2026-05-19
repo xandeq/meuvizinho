@@ -3,6 +3,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using BairroNow.Api.Data;
@@ -48,13 +49,16 @@ public class ListingServiceTests
         notif.Setup(n => n.NotifyMentionAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
+        var config = new Mock<IConfiguration>();
+        config.Setup(c => c.GetSection("Features")["FullTextSearchEnabled"]).Returns("false");
         var svc = new ListingService(
             db, fileMock.Object,
             new CreateListingRequestValidator(),
             new UpdateListingRequestValidator(),
             notif.Object,
             new MemoryCache(new MemoryCacheOptions()),
-            NullLogger<ListingService>.Instance);
+            NullLogger<ListingService>.Instance,
+            config.Object);
         return (svc, db, sellerId);
     }
 
@@ -131,5 +135,93 @@ public class ListingServiceTests
         await svc.DeleteAsync(sellerId, created.Id);
         var photos = await db.ListingPhotos.Where(p => p.ListingId == created.Id).ToListAsync();
         photos.Should().HaveCount(2);
+    }
+
+    // ─── Wave M regression: listing expiry ───────────────────────────────────
+
+    [Fact]
+    public async Task CreateListing_SetsExpiresAtToThirtyDays()
+    {
+        var (svc, _, sellerId) = BuildSut();
+        var before = DateTime.UtcNow;
+        var result = await svc.CreateAsync(sellerId,
+            new CreateListingRequest { Title = "Teste", Description = "desc valida aqui", Price = 50, CategoryCode = "outros", SubcategoryCode = "diversos" },
+            FakePhotos(1));
+
+        result.ExpiresAt.Should().NotBeNull();
+        result.ExpiresAt!.Value.Should().BeCloseTo(before.AddDays(30), TimeSpan.FromSeconds(5));
+        result.DaysUntilExpiry.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task RenewAsync_ExpiredListing_ReactivatesAndExtends()
+    {
+        var (svc, db, sellerId) = BuildSut();
+        var created = await svc.CreateAsync(sellerId,
+            new CreateListingRequest { Title = "Renew test", Description = "desc valida aqui", Price = 20, CategoryCode = "outros", SubcategoryCode = "diversos" },
+            FakePhotos(1));
+
+        // Simulate expiry: set ExpiresAt to past and Status to expired
+        var entity = await db.Listings.FindAsync(created.Id);
+        entity!.Status = ListingStatus.Expired;
+        entity.ExpiresAt = DateTime.UtcNow.AddDays(-1);
+        await db.SaveChangesAsync();
+
+        var renewed = await svc.RenewAsync(sellerId, created.Id);
+
+        renewed.Status.Should().Be("active");
+        renewed.ExpiresAt.Should().BeCloseTo(DateTime.UtcNow.AddDays(30), TimeSpan.FromSeconds(5));
+    }
+
+    [Fact]
+    public async Task RenewAsync_FreshListing_ThrowsValidationException()
+    {
+        var (svc, _, sellerId) = BuildSut();
+        var created = await svc.CreateAsync(sellerId,
+            new CreateListingRequest { Title = "Fresh listing", Description = "desc valida aqui", Price = 30, CategoryCode = "outros", SubcategoryCode = "diversos" },
+            FakePhotos(1));
+
+        // Listing has 30 days remaining — renew should be blocked
+        var act = () => svc.RenewAsync(sellerId, created.Id);
+        await act.Should().ThrowAsync<ListingValidationException>()
+            .WithMessage("*7 dias*");
+    }
+
+    [Fact]
+    public async Task ToggleFavorite_ExpiredListing_ThrowsValidationException()
+    {
+        var (svc, db, sellerId) = BuildSut();
+        var buyerId = Guid.NewGuid();
+        db.Users.Add(new User { Id = buyerId, Email = "buyer@x.com", PasswordHash = "h", DisplayName = "Buyer", BairroId = 1, IsVerified = true, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+        await db.SaveChangesAsync();
+
+        var created = await svc.CreateAsync(sellerId,
+            new CreateListingRequest { Title = "Expired fav test", Description = "desc valida aqui", Price = 10, CategoryCode = "outros", SubcategoryCode = "diversos" },
+            FakePhotos(1));
+
+        var entity = await db.Listings.FindAsync(created.Id);
+        entity!.Status = ListingStatus.Expired;
+        await db.SaveChangesAsync();
+
+        var act = () => svc.ToggleFavoriteAsync(buyerId, created.Id);
+        await act.Should().ThrowAsync<ListingValidationException>()
+            .WithMessage("*expirados*");
+    }
+
+    [Fact]
+    public async Task DaysUntilExpiry_UsesDateCeiling_NotTruncation()
+    {
+        var (svc, db, sellerId) = BuildSut();
+        var created = await svc.CreateAsync(sellerId,
+            new CreateListingRequest { Title = "Ceiling test", Description = "desc valida aqui", Price = 10, CategoryCode = "outros", SubcategoryCode = "diversos" },
+            FakePhotos(1));
+
+        // Set ExpiresAt to exactly 0.5 days from now — ceiling should yield 1, not 0
+        var entity = await db.Listings.FindAsync(created.Id);
+        entity!.ExpiresAt = DateTime.UtcNow.AddHours(12);
+        await db.SaveChangesAsync();
+
+        var dto = await svc.GetByIdAsync(sellerId, created.Id);
+        dto!.DaysUntilExpiry.Should().Be(1);
     }
 }

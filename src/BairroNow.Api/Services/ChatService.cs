@@ -39,6 +39,9 @@ public class ChatService : IChatService
         if (listing.SellerId == buyerId)
             throw new ChatForbiddenException("Não é possível iniciar conversa consigo mesmo.");
 
+        if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
+            throw new ChatForbiddenException("Não é possível iniciar conversa em anúncios expirados ou removidos.");
+
         var buyer = await _db.Users.AsNoTracking()
             .Select(u => new { u.Id, u.BairroId, u.IsBanned })
             .FirstOrDefaultAsync(u => u.Id == buyerId, ct)
