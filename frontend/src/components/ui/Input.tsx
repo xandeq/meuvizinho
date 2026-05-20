@@ -29,7 +29,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <div className="relative flex items-center">
         {icon && (
           <span
-            className="absolute left-3.5 text-muted-fg pointer-events-none select-none"
+            className="absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-fg pointer-events-none select-none"
             aria-hidden
           >
             {icon}
