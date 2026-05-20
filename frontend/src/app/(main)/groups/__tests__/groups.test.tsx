@@ -13,6 +13,7 @@ jest.mock('@/lib/api/groups', () => ({
   getGroupEvents: jest.fn().mockResolvedValue([]),
   rsvpEvent: jest.fn().mockResolvedValue(undefined),
   deleteGroupPost: jest.fn().mockResolvedValue(undefined),
+  getGroupMembers: jest.fn().mockResolvedValue({ members: [], total: 0 }),
 }));
 
 // Mock auth store
@@ -34,6 +35,7 @@ jest.mock('@/lib/signalr', () => ({
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  useParams: () => ({ groupId: '1' }),
 }));
 
 // Mock next/link
@@ -98,14 +100,14 @@ describe('GroupCard (via GroupsPage)', () => {
 
 describe('GroupClient', () => {
   it('renders group feed tab', async () => {
-    render(<GroupClient groupId={1} />);
+    render(<GroupClient />);
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Compartilhe algo com o grupo...')).toBeInTheDocument();
     });
   });
 
   it('submits composer form with body and category via createGroupPost', async () => {
-    render(<GroupClient groupId={1} />);
+    render(<GroupClient />);
     await waitFor(() => {
       expect(screen.getByPlaceholderText('Compartilhe algo com o grupo...')).toBeInTheDocument();
     });
@@ -141,7 +143,7 @@ describe('GroupEventsTab', () => {
       },
     ]);
 
-    render(<GroupClient groupId={1} />);
+    render(<GroupClient />);
 
     // Switch to events tab
     await waitFor(() => {

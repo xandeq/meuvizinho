@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { getHubConnection } from '@/lib/signalr';
@@ -18,11 +19,9 @@ interface PendingMember {
   joinedAt: string;
 }
 
-interface Props {
-  groupId: number;
-}
-
-export default function GroupClient({ groupId }: Props) {
+export default function GroupClient() {
+  const params = useParams();
+  const groupId = parseInt(params.groupId as string, 10);
   const {
     posts,
     appendPosts,

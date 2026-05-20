@@ -27,12 +27,7 @@ test.beforeAll(async ({ playwright }) => {
   }
   const { accessToken, user } = await loginRes.json();
   apiToken = accessToken;
-  bairroId = user?.bairroId ?? 0;
-
-  if (!bairroId) {
-    await ctx.dispose();
-    return; // tests will be skipped via test.skip below
-  }
+  bairroId = user?.bairroId ?? 1; // fallback to bairroId=1 for unverified E2E user
 
   const groupRes = await ctx.post("/api/v1/groups", {
     headers: { Authorization: `Bearer ${apiToken}` },
@@ -72,7 +67,7 @@ test.afterAll(async ({ playwright }) => {
 // ---------------------------------------------------------------------------
 async function browserLogin(page: ReturnType<typeof test.info>["project"]["use"] extends infer U ? never : import("@playwright/test").Page) {
   await page.goto("/login/");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
   await page.getByLabel(/e-?mail/i).fill(TEST_EMAIL);
   await page.getByLabel(/^senha$/i).fill(TEST_PASSWORD);
   await page.getByRole("button", { name: /entrar/i }).click();
@@ -86,11 +81,9 @@ async function browserLogin(page: ReturnType<typeof test.info>["project"]["use"]
 // Test 1 — polls tab renders (empty state or list)
 // ---------------------------------------------------------------------------
 test("polls tab is reachable for group owner", async ({ page }) => {
-  if (!bairroId) test.skip(true, "Test user has no bairro set up");
-
   await browserLogin(page);
   await page.goto(`/groups/${groupId}/`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
 
   // Click the Enquetes tab
   await page.getByRole("button", { name: /enquetes/i }).click();
@@ -105,11 +98,9 @@ test("polls tab is reachable for group owner", async ({ page }) => {
 // Test 2 — create a poll
 // ---------------------------------------------------------------------------
 test("create a poll — UI submit returns new poll card", async ({ page }) => {
-  if (!bairroId) test.skip(true, "Test user has no bairro set up");
-
   await browserLogin(page);
   await page.goto(`/groups/${groupId}/`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
   await page.getByRole("button", { name: /enquetes/i }).click();
 
   // Open creation form
@@ -149,11 +140,11 @@ test("create a poll — UI submit returns new poll card", async ({ page }) => {
 // Test 3 — vote on a poll option
 // ---------------------------------------------------------------------------
 test("voting on a poll option updates percentages", async ({ page }) => {
-  if (!bairroId || !pollId) test.skip(true, "Depends on poll created in test 2");
+  if (!pollId) test.skip(true, "Depends on poll created in test 2");
 
   await browserLogin(page);
   await page.goto(`/groups/${groupId}/`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
   await page.getByRole("button", { name: /enquetes/i }).click();
 
   // Wait for the poll card to appear
@@ -183,11 +174,11 @@ test("voting on a poll option updates percentages", async ({ page }) => {
 // Test 4 — close a poll via UI
 // ---------------------------------------------------------------------------
 test("owner can close a poll", async ({ page }) => {
-  if (!bairroId || !pollId) test.skip(true, "Depends on poll created in test 2");
+  if (!pollId) test.skip(true, "Depends on poll created in test 2");
 
   await browserLogin(page);
   await page.goto(`/groups/${groupId}/`);
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("domcontentloaded");
   await page.getByRole("button", { name: /enquetes/i }).click();
 
   const pollCard = page.locator(".bg-card").filter({ hasText: "Sim" }).first();
@@ -218,7 +209,7 @@ test("owner can close a poll", async ({ page }) => {
 // Test 5 — API smoke: list polls endpoint returns the created poll
 // ---------------------------------------------------------------------------
 test("GET /groups/:id/polls returns the poll", async ({ playwright }) => {
-  if (!bairroId || !pollId) test.skip(true, "Depends on poll created in test 2");
+  if (!pollId) test.skip(true, "Depends on poll created in test 2");
 
   const ctx = await playwright.request.newContext({ baseURL: API_BASE });
   const res = await ctx.get(`/api/v1/groups/${groupId}/polls`, {
