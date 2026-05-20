@@ -20,12 +20,22 @@ function relTime(date: string): string {
 function notificationBody(n: NotificationDto): string {
   const who = n.actor.displayName ?? "Alguém";
   switch (n.type) {
-    case "like":    return `${who} curtiu seu post`;
-    case "comment": return `${who} comentou no seu post`;
-    case "reply":   return `${who} respondeu seu comentário`;
-    case "mention": return `${who} mencionou você`;
-    default:        return `${who} interagiu com você`;
+    case "like":            return `${who} curtiu seu post`;
+    case "comment":         return `${who} comentou no seu post`;
+    case "reply":           return `${who} respondeu seu comentário`;
+    case "mention":         return `${who} mencionou você`;
+    case "listing_expired": return `Seu anúncio "${who}" expirou`;
+    case "price_drop":      return `Queda de preço em "${who}"`;
+    default:                return `${who} interagiu com você`;
   }
+}
+
+// ─── notification link target ─────────────────────────────────────────────────
+function notificationHref(n: NotificationDto): string {
+  if (n.type === "listing_expired" || n.type === "price_drop") {
+    return n.postId ? `/marketplace/${n.postId}/` : "/marketplace/";
+  }
+  return n.postId ? `/feed/post/?id=${n.postId}` : "/feed/";
 }
 
 // ─── type → icon ─────────────────────────────────────────────────────────────
@@ -61,6 +71,7 @@ function TypeIcon({ type }: { type: NotificationType | string }) {
           <path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94" />
         </svg>
       );
+    case "GroupJoinApproved":
     case "group_join_approved":
       return (
         // check-circle
@@ -69,6 +80,7 @@ function TypeIcon({ type }: { type: NotificationType | string }) {
           <polyline points="22 4 12 14.01 9 11.01" />
         </svg>
       );
+    case "NewRating":
     case "rating":
       return (
         // star
@@ -76,6 +88,7 @@ function TypeIcon({ type }: { type: NotificationType | string }) {
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       );
+    case "GroupEvent":
     case "group_event":
       return (
         // calendar
@@ -84,6 +97,22 @@ function TypeIcon({ type }: { type: NotificationType | string }) {
           <line x1="16" y1="2" x2="16" y2="6" />
           <line x1="8" y1="2" x2="8" y2="6" />
           <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      );
+    case "listing_expired":
+      return (
+        // clock
+        <svg className="w-4 h-4 text-amber-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
+      );
+    case "price_drop":
+      return (
+        // trending-down arrow
+        <svg className="w-4 h-4 text-green-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+          <polyline points="17 18 23 18 23 12" />
         </svg>
       );
     default:
@@ -221,9 +250,7 @@ export default function NotificationBell() {
                 {last10.map((n) => (
                   <li key={n.id}>
                     <Link
-                      href={
-                        n.postId ? `/feed/post/?id=${n.postId}` : "/feed/"
-                      }
+                      href={notificationHref(n)}
                       onClick={() => {
                         void markRead(n.id);
                         setOpen(false);

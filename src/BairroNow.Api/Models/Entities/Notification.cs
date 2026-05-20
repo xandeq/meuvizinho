@@ -9,6 +9,8 @@ public static class NotificationTypes
     public const string GroupJoinApproved = "GroupJoinApproved"; // 16 chars — matches DB max
     public const string NewRating = "NewRating";
     public const string GroupEvent = "GroupEvent";               // group event created
+    public const string ListingExpired = "listing_expired";      // 15 chars ✓ — seller alert
+    public const string PriceDrop = "price_drop";                // 10 chars ✓ — favoriter alert
 }
 
 public class Notification

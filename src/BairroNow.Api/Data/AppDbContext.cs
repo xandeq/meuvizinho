@@ -275,6 +275,7 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.BairroId, e.Status, e.CreatedAt });
             entity.HasIndex(e => e.SellerId);
             entity.HasQueryFilter(l => l.DeletedAt == null);
+            entity.Property(e => e.RowVersion).IsRowVersion();
         });
 
         // ─── ListingPhoto ───

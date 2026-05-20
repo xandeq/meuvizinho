@@ -9,7 +9,16 @@ export type ReportReason =
   | "Misinformation"
   | "Other";
 export type ReportTargetType = "post" | "comment" | "listing";
-export type NotificationType = "comment" | "reply" | "like" | "mention";
+export type NotificationType =
+  | "comment"
+  | "reply"
+  | "like"
+  | "mention"
+  | "GroupJoinApproved"
+  | "NewRating"
+  | "GroupEvent"
+  | "listing_expired"
+  | "price_drop";
 
 export interface PostImageDto {
   url: string;

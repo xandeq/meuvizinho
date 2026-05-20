@@ -180,6 +180,93 @@ public class NotificationService : INotificationService
         }
     }
 
+    // Wave N: notify seller when their listing expires
+    public async Task NotifyListingExpiredAsync(Guid sellerId, string listingTitle, int listingId, CancellationToken ct = default)
+    {
+        var notification = new Notification
+        {
+            UserId = sellerId,
+            ActorUserId = sellerId,  // system event — self-referential
+            Type = NotificationTypes.ListingExpired,
+            PostId = listingId,
+            CommentId = null,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Notifications.Add(notification);
+        await _db.SaveChangesAsync(ct);
+
+        // Use truncated title as actor displayName for the bell body
+        var title = listingTitle.Length > 30 ? listingTitle[..27] + "…" : listingTitle;
+        var dto = new Models.DTOs.NotificationDto
+        {
+            Id = notification.Id,
+            Type = NotificationTypes.ListingExpired,
+            PostId = listingId,
+            CommentId = null,
+            Actor = new Models.DTOs.PostAuthorDto { Id = sellerId, DisplayName = title },
+            IsRead = false,
+            CreatedAt = notification.CreatedAt
+        };
+
+        try { await _hub.Clients.User(sellerId.ToString()).SendAsync("notification", dto, ct); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR notification to {UserId}", sellerId); }
+
+        _ = SendExpoPushBodyAsync(sellerId,
+            $"Seu anúncio '{title}' expirou. Renove para continuar recebendo mensagens.",
+            NotificationTypes.ListingExpired, listingId, ct);
+    }
+
+    // Wave N: notify favoriter when a listing's price drops
+    public async Task NotifyPriceDropAsync(Guid favoriterId, Guid sellerId, string listingTitle, int listingId, decimal oldPrice, decimal newPrice, CancellationToken ct = default)
+    {
+        var notification = new Notification
+        {
+            UserId = favoriterId,
+            ActorUserId = sellerId,
+            Type = NotificationTypes.PriceDrop,
+            PostId = listingId,
+            CommentId = null,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Notifications.Add(notification);
+        await _db.SaveChangesAsync(ct);
+
+        var title = listingTitle.Length > 30 ? listingTitle[..27] + "…" : listingTitle;
+        var seller = await _db.Users.AsNoTracking()
+            .Where(u => u.Id == sellerId)
+            .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified, u.IsBusinessAccount, u.BusinessName, u.BusinessCategory })
+            .FirstOrDefaultAsync(ct);
+
+        var dto = new Models.DTOs.NotificationDto
+        {
+            Id = notification.Id,
+            Type = NotificationTypes.PriceDrop,
+            PostId = listingId,
+            CommentId = null,
+            Actor = new Models.DTOs.PostAuthorDto
+            {
+                Id = sellerId,
+                DisplayName = title,
+                PhotoUrl = seller?.PhotoUrl,
+                IsVerified = seller?.IsVerified ?? false,
+                IsBusinessAccount = seller?.IsBusinessAccount ?? false,
+                BusinessName = seller?.BusinessName,
+                BusinessCategory = seller?.BusinessCategory,
+            },
+            IsRead = false,
+            CreatedAt = notification.CreatedAt
+        };
+
+        try { await _hub.Clients.User(favoriterId.ToString()).SendAsync("notification", dto, ct); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR notification to {UserId}", favoriterId); }
+
+        _ = SendExpoPushBodyAsync(favoriterId,
+            $"Queda de preço: '{title}' agora está por R$ {newPrice:N2} (era R$ {oldPrice:N2})",
+            NotificationTypes.PriceDrop, listingId, ct);
+    }
+
     private async Task CreateAndPushAsync(string type, Guid recipientId, Guid actorId, int? postId, int? commentId, CancellationToken ct)
     {
         if (recipientId == actorId) return;

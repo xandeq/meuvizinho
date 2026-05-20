@@ -153,8 +153,8 @@ public class ListingService : IListingService
         await _db.SaveChangesAsync(ct);
         InvalidateGridCache(listing.BairroId);
 
-        // MKT-009: notify favoriters on price change — only while listing is active (not expired/sold/removed)
-        if (dto.Price.HasValue && dto.Price.Value != oldPrice && listing.Status == ListingStatus.Active)
+        // MKT-009: notify favoriters only on price DECREASE while listing is active
+        if (dto.Price.HasValue && dto.Price.Value < oldPrice && listing.Status == ListingStatus.Active)
         {
             var favoriterIds = await _db.ListingFavorites
                 .Where(f => f.ListingId == listingId && f.UserId != sellerId)
@@ -164,11 +164,11 @@ public class ListingService : IListingService
             {
                 try
                 {
-                    await _notifications.NotifyMentionAsync(userId, sellerId, listingId, null, ct);
+                    await _notifications.NotifyPriceDropAsync(userId, sellerId, listing.Title, listingId, oldPrice, listing.Price, ct);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to notify favoriter {UserId} of price change on listing {ListingId}", userId, listingId);
+                    _logger.LogWarning(ex, "Failed to notify favoriter {UserId} of price drop on listing {ListingId}", userId, listingId);
                 }
             }
         }

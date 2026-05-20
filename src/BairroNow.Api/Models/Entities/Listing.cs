@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace BairroNow.Api.Models.Entities;
 
 public static class ListingStatus
@@ -30,4 +32,7 @@ public class Listing
     public DateTime? DeletedAt { get; set; }
 
     public ICollection<ListingPhoto> Photos { get; set; } = new List<ListingPhoto>();
+
+    [Timestamp]
+    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 }
