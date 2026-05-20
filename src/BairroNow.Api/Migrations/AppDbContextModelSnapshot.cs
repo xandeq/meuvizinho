@@ -617,6 +617,110 @@ namespace BairroNow.Api.Migrations
                     b.ToTable("GroupPostLikes");
                 });
 
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPoll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GroupId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsClosed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("GroupId", "CreatedAt")
+                        .HasDatabaseName("IX_GroupPolls_GroupId_CreatedAt");
+
+                    b.ToTable("GroupPolls");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPollOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GroupPollId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupPollId")
+                        .HasDatabaseName("IX_GroupPollOptions_GroupPollId");
+
+                    b.ToTable("GroupPollOptions");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPollVote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("GroupPollId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GroupPollOptionId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GroupPollOptionId")
+                        .HasDatabaseName("IX_GroupPollVotes_GroupPollOptionId");
+
+                    b.HasIndex("GroupPollId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_GroupPollVotes_GroupPollId_UserId");
+
+                    b.ToTable("GroupPollVotes");
+                });
+
             modelBuilder.Entity("BairroNow.Api.Models.Entities.Listing", b =>
                 {
                     b.Property<int>("Id")
@@ -1725,6 +1829,63 @@ namespace BairroNow.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPoll", b =>
+                {
+                    b.HasOne("BairroNow.Api.Models.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BairroNow.Api.Models.Entities.Group", "Group")
+                        .WithMany()
+                        .HasForeignKey("GroupId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Group");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPollOption", b =>
+                {
+                    b.HasOne("BairroNow.Api.Models.Entities.GroupPoll", "Poll")
+                        .WithMany("Options")
+                        .HasForeignKey("GroupPollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poll");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPollVote", b =>
+                {
+                    b.HasOne("BairroNow.Api.Models.Entities.GroupPollOption", "Option")
+                        .WithMany()
+                        .HasForeignKey("GroupPollOptionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("BairroNow.Api.Models.Entities.GroupPoll", "Poll")
+                        .WithMany("Votes")
+                        .HasForeignKey("GroupPollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("BairroNow.Api.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Option");
+
+                    b.Navigation("Poll");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BairroNow.Api.Models.Entities.Listing", b =>
                 {
                     b.HasOne("BairroNow.Api.Models.Entities.Bairro", "Bairro")
@@ -2011,6 +2172,13 @@ namespace BairroNow.Api.Migrations
             modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupEvent", b =>
                 {
                     b.Navigation("Rsvps");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPoll", b =>
+                {
+                    b.Navigation("Options");
+
+                    b.Navigation("Votes");
                 });
 
             modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPost", b =>

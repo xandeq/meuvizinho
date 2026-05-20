@@ -19,13 +19,15 @@ public class GroupsController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IHubContext<NotificationHub> _hub;
     private readonly INotificationService _notifications;
+    private readonly ILogger<GroupsController> _logger;
     private const int DefaultPageSize = 20;
 
-    public GroupsController(AppDbContext db, IHubContext<NotificationHub> hub, INotificationService notifications)
+    public GroupsController(AppDbContext db, IHubContext<NotificationHub> hub, INotificationService notifications, ILogger<GroupsController> logger)
     {
         _db = db;
         _hub = hub;
         _notifications = notifications;
+        _logger = logger;
     }
 
     // GRP-004 — list groups with optional search/filter/pagination
@@ -732,6 +734,228 @@ public class GroupsController : ControllerBase
         return Ok(new { req.IsAttending });
     }
 
+    // ─── Wave O: Group Polls (enquetes) ──────────────────────────────────────
+
+    // GRP-POL-001 — list polls for a group
+    [HttpGet("{id:int}/polls")]
+    public async Task<IActionResult> ListPolls(int id, [FromQuery] int page = 1)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var isMember = await _db.GroupMembers.AsNoTracking()
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+        if (!isMember) return Forbid();
+
+        var now = DateTime.UtcNow;
+        var polls = await _db.GroupPolls.AsNoTracking()
+            .Where(p => p.GroupId == id && p.DeletedAt == null)
+            .OrderByDescending(p => p.CreatedAt)
+            .Skip((page - 1) * DefaultPageSize)
+            .Take(DefaultPageSize)
+            .Select(p => new
+            {
+                p.Id, p.Question, p.CreatedAt, p.ExpiresAt,
+                IsClosed = p.IsClosed || (p.ExpiresAt != null && p.ExpiresAt < now),
+                p.CreatedByUserId,
+                CreatedByName = p.CreatedByUser!.DisplayName,
+                TotalVotes = p.Votes.Count,
+                UserVoteOptionId = p.Votes
+                    .Where(v => v.UserId == userId.Value)
+                    .Select(v => (int?)v.GroupPollOptionId)
+                    .FirstOrDefault(),
+                Options = p.Options
+                    .OrderBy(o => o.DisplayOrder)
+                    .Select(o => new { o.Id, o.Text, VoteCount = o.Votes.Count })
+            })
+            .ToListAsync();
+
+        return Ok(polls);
+    }
+
+    // GRP-POL-002 — create a poll (members only)
+    [HttpPost("{id:int}/polls")]
+    public async Task<IActionResult> CreatePoll(int id, [FromBody] CreateGroupPollRequest req)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        if (req.Options == null || req.Options.Count < 2 || req.Options.Count > 6)
+            return BadRequest(new { error = "A enquete deve ter entre 2 e 6 opções." });
+        if (req.Options.Any(o => string.IsNullOrWhiteSpace(o) || o.Length > 100))
+            return BadRequest(new { error = "Opções devem ter entre 1 e 100 caracteres." });
+        if (string.IsNullOrWhiteSpace(req.Question) || req.Question.Length > 200)
+            return BadRequest(new { error = "A pergunta deve ter entre 1 e 200 caracteres." });
+
+        var isMember = await _db.GroupMembers.AsNoTracking()
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+        if (!isMember) return Forbid();
+
+        var poll = new GroupPoll
+        {
+            GroupId = id,
+            CreatedByUserId = userId.Value,
+            Question = req.Question.Trim(),
+            ExpiresAt = req.ExpiresAt,
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.GroupPolls.Add(poll);
+        await _db.SaveChangesAsync();
+
+        int order = 0;
+        foreach (var text in req.Options)
+            _db.GroupPollOptions.Add(new GroupPollOption { GroupPollId = poll.Id, Text = text.Trim(), DisplayOrder = order++ });
+        await _db.SaveChangesAsync();
+
+        var dto = await BuildPollDto(poll.Id, userId.Value, DateTime.UtcNow);
+
+        try { await _hub.Clients.Group($"group:{id}").SendAsync("NewGroupPoll", dto); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to push NewGroupPoll to group {GroupId}", id); }
+
+        return Created($"/api/v1/groups/{id}/polls/{poll.Id}", dto);
+    }
+
+    // GRP-POL-003 — vote (upsert — re-voting changes the vote)
+    [HttpPost("{id:int}/polls/{pollId:int}/vote")]
+    public async Task<IActionResult> Vote(int id, int pollId, [FromBody] GroupPollVoteRequest req)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var isMember = await _db.GroupMembers.AsNoTracking()
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+        if (!isMember) return Forbid();
+
+        var now = DateTime.UtcNow;
+        var poll = await _db.GroupPolls
+            .Where(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null)
+            .FirstOrDefaultAsync();
+        if (poll == null) return NotFound();
+        if (poll.IsClosed || (poll.ExpiresAt != null && poll.ExpiresAt < now))
+            return BadRequest(new { error = "Esta enquete está encerrada." });
+
+        var optionValid = await _db.GroupPollOptions
+            .AnyAsync(o => o.Id == req.OptionId && o.GroupPollId == pollId);
+        if (!optionValid) return BadRequest(new { error = "Opção inválida." });
+
+        var existing = await _db.GroupPollVotes
+            .FirstOrDefaultAsync(v => v.GroupPollId == pollId && v.UserId == userId.Value);
+        if (existing != null)
+        {
+            existing.GroupPollOptionId = req.OptionId;
+            existing.CreatedAt = now;
+        }
+        else
+        {
+            _db.GroupPollVotes.Add(new GroupPollVote
+            {
+                GroupPollId = pollId,
+                GroupPollOptionId = req.OptionId,
+                UserId = userId.Value,
+                CreatedAt = now
+            });
+        }
+        await _db.SaveChangesAsync();
+
+        var updated = await BuildPollDto(pollId, userId.Value, now);
+        try { await _hub.Clients.Group($"group:{id}").SendAsync("GroupPollUpdated", updated); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to push GroupPollUpdated to group {GroupId}", id); }
+
+        return Ok(updated);
+    }
+
+    // GRP-POL-004 — remove own vote
+    [HttpDelete("{id:int}/polls/{pollId:int}/vote")]
+    public async Task<IActionResult> RemoveVote(int id, int pollId)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var vote = await _db.GroupPollVotes
+            .FirstOrDefaultAsync(v => v.GroupPollId == pollId && v.UserId == userId.Value);
+        if (vote == null) return NoContent();
+
+        _db.GroupPollVotes.Remove(vote);
+        await _db.SaveChangesAsync();
+
+        var now = DateTime.UtcNow;
+        var updated = await BuildPollDto(pollId, userId.Value, now);
+        try { await _hub.Clients.Group($"group:{id}").SendAsync("GroupPollUpdated", updated); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to push GroupPollUpdated to group {GroupId}", id); }
+
+        return Ok(updated);
+    }
+
+    // GRP-POL-005 — close a poll (creator / admin / owner)
+    [HttpPost("{id:int}/polls/{pollId:int}/close")]
+    public async Task<IActionResult> ClosePoll(int id, int pollId)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var poll = await _db.GroupPolls
+            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null);
+        if (poll == null) return NotFound();
+
+        var member = await _db.GroupMembers.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+        if (member == null) return Forbid();
+
+        if (poll.CreatedByUserId != userId.Value && member.Role is not (GroupMemberRole.Admin or GroupMemberRole.Owner))
+            return Forbid();
+
+        poll.IsClosed = true;
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    // GRP-POL-006 — soft-delete a poll (creator / admin / owner)
+    [HttpDelete("{id:int}/polls/{pollId:int}")]
+    public async Task<IActionResult> DeletePoll(int id, int pollId)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var poll = await _db.GroupPolls
+            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null);
+        if (poll == null) return NotFound();
+
+        var member = await _db.GroupMembers.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+        if (member == null) return Forbid();
+
+        if (poll.CreatedByUserId != userId.Value && member.Role is not (GroupMemberRole.Admin or GroupMemberRole.Owner))
+            return Forbid();
+
+        poll.DeletedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    private async Task<object> BuildPollDto(int pollId, Guid userId, DateTime now)
+    {
+        return await _db.GroupPolls.AsNoTracking()
+            .Where(p => p.Id == pollId)
+            .Select(p => new
+            {
+                p.Id, p.Question, p.CreatedAt, p.ExpiresAt,
+                IsClosed = p.IsClosed || (p.ExpiresAt != null && p.ExpiresAt < now),
+                p.CreatedByUserId,
+                CreatedByName = p.CreatedByUser!.DisplayName,
+                TotalVotes = p.Votes.Count,
+                UserVoteOptionId = p.Votes
+                    .Where(v => v.UserId == userId)
+                    .Select(v => (int?)v.GroupPollOptionId)
+                    .FirstOrDefault(),
+                Options = p.Options
+                    .OrderBy(o => o.DisplayOrder)
+                    .Select(o => new { o.Id, o.Text, VoteCount = o.Votes.Count })
+            })
+            .FirstAsync();
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+
     private Guid? GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -758,5 +982,10 @@ public record AddGroupCommentRequest(string Body, int? ParentCommentId);
 public record CreateGroupEventRequest(
     string Title, string? Description, string? Location,
     DateTime StartsAt, DateTime? EndsAt, DateTime? ReminderAt);
+
+// Wave O — polls
+public record CreateGroupPollRequest(string Question, List<string>? Options, DateTime? ExpiresAt);
+
+public record GroupPollVoteRequest(int OptionId);
 
 public record RsvpRequest(bool IsAttending);

@@ -7,7 +7,7 @@ import { useGroupStore } from '@/stores/group-store';
 import { useAuthStore } from '@/lib/auth';
 import { getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent, getGroupMembers } from '@/lib/api/groups';
 import type { GroupMember } from '@/lib/api/groups';
-import type { GroupPost, GroupEvent } from '@/lib/types/groups';
+import type { GroupPost, GroupEvent, GroupPoll } from '@/lib/types/groups';
 import Avatar from '@/components/ui/Avatar';
 
 interface PendingMember {
@@ -38,7 +38,11 @@ export default function GroupClient({ groupId }: Props) {
   const currentUserId = useAuthStore((s) => s.user?.id);
   const [composerBody, setComposerBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'feed' | 'events' | 'members' | 'pending'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'polls' | 'events' | 'members' | 'pending'>('feed');
+
+  // Polls tab state
+  const [polls, setPolls] = useState<GroupPoll[]>([]);
+  const [pollsLoading, setPollsLoading] = useState(false);
 
   // Members tab state
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -83,9 +87,17 @@ export default function GroupClient({ groupId }: Props) {
       // off() before on() — idempotent on fast nav away/back
       hub.off('NewGroupPost');
       hub.off('GroupEventReminder');
+      hub.off('NewGroupPoll');
+      hub.off('GroupPollUpdated');
       hub.on('NewGroupPost', (post: GroupPost) => { if (!cancelled) prependPost(post); });
       hub.on('GroupEventReminder', (ev: { id: number; title: string; startsAt: string }) => {
         if (!cancelled) console.info('GroupEventReminder', ev);
+      });
+      hub.on('NewGroupPoll', (poll: GroupPoll) => {
+        if (!cancelled) setPolls((prev) => [poll, ...prev]);
+      });
+      hub.on('GroupPollUpdated', (poll: GroupPoll) => {
+        if (!cancelled) setPolls((prev) => prev.map((p) => p.id === poll.id ? poll : p));
       });
 
       // Guard with `cancelled` — onreconnected has no off() equivalent, so old
@@ -102,6 +114,8 @@ export default function GroupClient({ groupId }: Props) {
         hub.invoke('LeaveGroup', groupId).catch(console.error);
         hub.off('NewGroupPost');
         hub.off('GroupEventReminder');
+        hub.off('NewGroupPoll');
+        hub.off('GroupPollUpdated');
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,6 +131,20 @@ export default function GroupClient({ groupId }: Props) {
         setMembersTotal(d.total);
       })
       .finally(() => setMembersLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, groupId]);
+
+  // Load polls when polls tab is active
+  useEffect(() => {
+    if (activeTab !== 'polls') return;
+    setPollsLoading(true);
+    fetch(`${API}/api/v1/groups/${groupId}/polls`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+      .then((r) => r.json())
+      .then((d: GroupPoll[]) => setPolls(Array.isArray(d) ? d : []))
+      .catch(() => setPolls([]))
+      .finally(() => setPollsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, groupId]);
 
@@ -203,6 +231,15 @@ export default function GroupClient({ groupId }: Props) {
         {(
           [
             { key: 'feed', label: 'Feed', icon: null },
+            {
+              key: 'polls',
+              label: 'Enquetes',
+              icon: (
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+              ),
+            },
             { key: 'events', label: 'Eventos', icon: null },
             {
               key: 'members',
@@ -216,7 +253,7 @@ export default function GroupClient({ groupId }: Props) {
                 </svg>
               ),
             },
-          ] as { key: 'feed' | 'events' | 'members'; label: string; icon: React.ReactNode }[]
+          ] as { key: 'feed' | 'polls' | 'events' | 'members'; label: string; icon: React.ReactNode }[]
         ).map(({ key, label, icon }) => (
           <button
             key={key}
@@ -304,6 +341,22 @@ export default function GroupClient({ groupId }: Props) {
             </button>
           )}
         </>
+      )}
+
+      {activeTab === 'polls' && (
+        <GroupPollsTab
+          groupId={groupId}
+          polls={polls}
+          pollsLoading={pollsLoading}
+          currentUserId={currentUserId}
+          accessToken={accessToken}
+          API={API}
+          isMember={currentGroup?.myStatus === 'Active'}
+          isAdminOrOwner={isAdminOrOwner}
+          onPollCreated={(p) => setPolls((prev) => [p, ...prev])}
+          onPollUpdated={(p) => setPolls((prev) => prev.map((x) => x.id === p.id ? p : x))}
+          onPollDeleted={(id) => setPolls((prev) => prev.filter((x) => x.id !== id))}
+        />
       )}
 
       {activeTab === 'events' && <GroupEventsTab groupId={groupId} />}
@@ -443,6 +496,360 @@ export default function GroupClient({ groupId }: Props) {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// Inline polls tab (Wave O)
+function GroupPollsTab({
+  groupId,
+  polls,
+  pollsLoading,
+  currentUserId,
+  accessToken,
+  API,
+  isMember,
+  isAdminOrOwner,
+  onPollCreated,
+  onPollUpdated,
+  onPollDeleted,
+}: {
+  groupId: number;
+  polls: GroupPoll[];
+  pollsLoading: boolean;
+  currentUserId: string | undefined;
+  accessToken: string | null;
+  API: string;
+  isMember: boolean;
+  isAdminOrOwner: boolean;
+  onPollCreated: (p: GroupPoll) => void;
+  onPollUpdated: (p: GroupPoll) => void;
+  onPollDeleted: (id: number) => void;
+}) {
+  const [creating, setCreating] = useState(false);
+  const [question, setQuestion] = useState('');
+  const [options, setOptions] = useState(['', '']);
+  const [expiresAt, setExpiresAt] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [votingId, setVotingId] = useState<number | null>(null);
+
+  const addOption = () => {
+    if (options.length < 6) setOptions((o) => [...o, '']);
+  };
+
+  const removeOption = (i: number) => {
+    if (options.length > 2) setOptions((o) => o.filter((_, idx) => idx !== i));
+  };
+
+  const updateOption = (i: number, v: string) =>
+    setOptions((o) => o.map((x, idx) => (idx === i ? v : x)));
+
+  const resetForm = () => {
+    setCreating(false);
+    setQuestion('');
+    setOptions(['', '']);
+    setExpiresAt('');
+  };
+
+  const handleCreate = async () => {
+    const validOpts = options.map((o) => o.trim()).filter(Boolean);
+    if (!question.trim() || validOpts.length < 2) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`${API}/api/v1/groups/${groupId}/polls`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: question.trim(), options: validOpts, expiresAt: expiresAt || null }),
+      });
+      if (res.ok) {
+        onPollCreated(await res.json());
+        resetForm();
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleVote = async (poll: GroupPoll, optionId: number) => {
+    if (votingId !== null || poll.isClosed) return;
+    setVotingId(poll.id);
+    try {
+      const isToggle = poll.userVoteOptionId === optionId;
+      const method = isToggle ? 'DELETE' : 'POST';
+      const body = isToggle ? undefined : JSON.stringify({ optionId });
+      const res = await fetch(`${API}/api/v1/groups/${groupId}/polls/${poll.id}/vote`, {
+        method,
+        headers: { Authorization: `Bearer ${accessToken}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+        body,
+      });
+      if (res.ok) onPollUpdated(await res.json());
+    } finally {
+      setVotingId(null);
+    }
+  };
+
+  const handleClose = async (pollId: number) => {
+    const res = await fetch(`${API}/api/v1/groups/${groupId}/polls/${pollId}/close`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (res.ok) onPollUpdated(await res.json());
+  };
+
+  const handleDelete = async (pollId: number) => {
+    const res = await fetch(`${API}/api/v1/groups/${groupId}/polls/${pollId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (res.ok) onPollDeleted(pollId);
+  };
+
+  const isPollExpired = (p: GroupPoll) =>
+    p.expiresAt != null && new Date(p.expiresAt) < new Date();
+
+  const canManage = (p: GroupPoll) =>
+    isAdminOrOwner || p.createdByUserId === currentUserId;
+
+  return (
+    <div className="space-y-4">
+      {/* Create button */}
+      {isMember && !creating && (
+        <button
+          onClick={() => setCreating(true)}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-dashed border-border text-sm font-medium text-muted-fg hover:border-primary hover:text-primary transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+          Criar enquete
+        </button>
+      )}
+
+      {/* Creation form */}
+      {creating && (
+        <div className="bg-card rounded-xl border border-border shadow-sm p-4 space-y-3">
+          <p className="font-semibold text-fg text-sm">Nova enquete</p>
+
+          <div>
+            <label className="text-xs font-medium text-muted-fg mb-1 block">Pergunta</label>
+            <input
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
+              placeholder="Ex: Qual horário preferem para o evento?"
+              maxLength={200}
+              className="w-full text-sm rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+            />
+            <p className="text-right text-xs text-muted-fg mt-0.5">{question.length}/200</p>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-muted-fg mb-1 block">Opções ({options.length}/6)</label>
+            <div className="space-y-2">
+              {options.map((opt, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input
+                    value={opt}
+                    onChange={(e) => updateOption(i, e.target.value)}
+                    placeholder={`Opção ${i + 1}`}
+                    maxLength={100}
+                    className="flex-1 text-sm rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                  {options.length > 2 && (
+                    <button
+                      onClick={() => removeOption(i)}
+                      aria-label="Remover opção"
+                      className="text-danger hover:text-danger/70 p-1 rounded-lg transition-colors"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+            {options.length < 6 && (
+              <button
+                onClick={addOption}
+                className="mt-2 text-xs text-primary flex items-center gap-1 hover:text-primary/70 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Adicionar opção
+              </button>
+            )}
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-muted-fg mb-1 block">Encerrar automaticamente (opcional)</label>
+            <input
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              className="text-sm rounded-lg border border-border bg-bg px-3 py-2 outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+            />
+          </div>
+
+          <div className="flex gap-2 justify-end pt-1">
+            <button
+              onClick={resetForm}
+              className="text-sm px-4 py-2 rounded-xl text-muted-fg hover:bg-muted transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleCreate}
+              disabled={submitting || !question.trim() || options.filter((o) => o.trim()).length < 2}
+              className="text-sm px-4 py-2 rounded-xl bg-primary text-white font-medium disabled:opacity-40 hover:bg-primary/90 transition-colors"
+            >
+              {submitting ? 'Publicando...' : 'Publicar enquete'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Skeleton loader */}
+      {pollsLoading && (
+        <div className="space-y-4">
+          {[0, 1].map((i) => (
+            <div key={i} className="bg-card rounded-xl border border-border shadow-sm p-4 animate-pulse space-y-3">
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="space-y-2">
+                {[0, 1, 2].map((j) => (
+                  <div key={j} className="h-9 bg-muted rounded-lg" />
+                ))}
+              </div>
+              <div className="h-3 bg-muted rounded w-20" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {!pollsLoading && polls.length === 0 && (
+        <div className="text-center py-12">
+          <svg className="w-12 h-12 text-muted-fg mx-auto mb-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <p className="text-sm font-medium text-muted-fg">Nenhuma enquete ainda</p>
+          {isMember && (
+            <p className="text-xs text-muted-fg/70 mt-1">Seja o primeiro a criar uma enquete</p>
+          )}
+        </div>
+      )}
+
+      {/* Poll cards */}
+      {!pollsLoading && polls.map((poll) => {
+        const closed = poll.isClosed || isPollExpired(poll);
+        const isVoting = votingId === poll.id;
+        return (
+          <div key={poll.id} className="bg-card rounded-xl border border-border shadow-sm p-4">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2 mb-3">
+              <div className="flex-1">
+                <p className="font-medium text-fg text-sm leading-snug">{poll.question}</p>
+                {poll.createdByName && (
+                  <p className="text-xs text-muted-fg mt-0.5">Por {poll.createdByName}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {closed ? (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-muted-fg">
+                    {poll.isClosed ? 'Encerrada' : 'Expirada'}
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary/15 text-secondary">
+                    Aberta
+                  </span>
+                )}
+                {canManage(poll) && !closed && (
+                  <button
+                    onClick={() => handleClose(poll.id)}
+                    title="Encerrar enquete"
+                    className="text-muted-fg hover:text-fg p-1 rounded-lg transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <rect x="3" y="3" width="18" height="18" rx="2"/>
+                      <line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
+                    </svg>
+                  </button>
+                )}
+                {canManage(poll) && (
+                  <button
+                    onClick={() => handleDelete(poll.id)}
+                    title="Remover enquete"
+                    className="text-danger/40 hover:text-danger p-1 rounded-lg transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6l-1 14H6L5 6"/>
+                      <path d="M10 11v6"/><path d="M14 11v6"/>
+                      <path d="M9 6V4h6v2"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Options */}
+            <div className="space-y-2">
+              {poll.options.map((opt) => {
+                const pct = poll.totalVotes > 0 ? Math.round((opt.voteCount / poll.totalVotes) * 100) : 0;
+                const isMyVote = poll.userVoteOptionId === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => handleVote(poll, opt.id)}
+                    disabled={closed || isVoting}
+                    className={[
+                      'relative w-full text-left rounded-lg border overflow-hidden transition-all',
+                      closed || isVoting ? 'cursor-default' : 'hover:border-primary/50',
+                      isMyVote ? 'border-primary bg-primary/5' : 'border-border',
+                    ].join(' ')}
+                  >
+                    {/* Animated progress fill */}
+                    <div
+                      className={[
+                        'absolute inset-y-0 left-0 transition-[width] duration-500',
+                        isMyVote ? 'bg-primary/12' : 'bg-muted/60',
+                      ].join(' ')}
+                      style={{ width: `${pct}%` }}
+                    />
+                    <div className="relative flex items-center justify-between px-3 py-2.5">
+                      <div className="flex items-center gap-2">
+                        {isMyVote && (
+                          <svg className="w-3.5 h-3.5 text-primary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6L9 17l-5-5"/>
+                          </svg>
+                        )}
+                        <span className={`text-sm ${isMyVote ? 'font-semibold text-primary' : 'text-fg'}`}>
+                          {opt.text}
+                        </span>
+                      </div>
+                      <span className={`text-xs font-medium ${isMyVote ? 'text-primary' : 'text-muted-fg'}`}>
+                        {pct}%
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-xs text-muted-fg">
+                {poll.totalVotes} voto{poll.totalVotes !== 1 ? 's' : ''}
+              </p>
+              {poll.expiresAt && !closed && (
+                <p className="text-xs text-muted-fg">
+                  Encerra {formatDistanceToNow(new Date(poll.expiresAt), { locale: ptBR, addSuffix: true })}
+                </p>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

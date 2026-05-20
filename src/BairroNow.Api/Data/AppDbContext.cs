@@ -53,6 +53,11 @@ public class AppDbContext : DbContext
     // Wave K — Profile Views (Analytics)
     public DbSet<ProfileView> ProfileViews => Set<ProfileView>();
 
+    // Wave O — Group Polls (enquetes)
+    public DbSet<GroupPoll> GroupPolls => Set<GroupPoll>();
+    public DbSet<GroupPollOption> GroupPollOptions => Set<GroupPollOption>();
+    public DbSet<GroupPollVote> GroupPollVotes => Set<GroupPollVote>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -579,6 +584,38 @@ public class AppDbContext : DbContext
             e.HasIndex(r => new { r.RaterId, r.BusinessUserId }).IsUnique();
             e.HasOne(r => r.Rater).WithMany().HasForeignKey(r => r.RaterId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne(r => r.BusinessUser).WithMany().HasForeignKey(r => r.BusinessUserId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Wave O — GroupPoll
+        modelBuilder.Entity<GroupPoll>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Question).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            entity.HasOne(e => e.Group).WithMany().HasForeignKey(e => e.GroupId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.CreatedByUser).WithMany().HasForeignKey(e => e.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => new { e.GroupId, e.CreatedAt });
+        });
+
+        // Wave O — GroupPollOption
+        modelBuilder.Entity<GroupPollOption>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Text).IsRequired().HasMaxLength(100);
+            entity.HasOne(e => e.Poll).WithMany(p => p.Options).HasForeignKey(e => e.GroupPollId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Wave O — GroupPollVote (one vote per user per poll)
+        modelBuilder.Entity<GroupPollVote>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.HasIndex(e => new { e.GroupPollId, e.UserId }).IsUnique();
+            entity.HasOne(e => e.Poll).WithMany(p => p.Votes).HasForeignKey(e => e.GroupPollId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Option).WithMany(o => o.Votes).HasForeignKey(e => e.GroupPollOptionId).OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // Phase 6 — User new fields config

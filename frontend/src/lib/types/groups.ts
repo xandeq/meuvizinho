@@ -45,3 +45,22 @@ export interface GroupEvent {
   rsvpCount: number;
   myRsvp: boolean | null;
 }
+
+export interface GroupPollOption {
+  id: number;
+  text: string;
+  voteCount: number;
+}
+
+export interface GroupPoll {
+  id: number;
+  question: string;
+  options: GroupPollOption[];
+  totalVotes: number;
+  userVoteOptionId: number | null;
+  isClosed: boolean;
+  createdAt: string;
+  expiresAt: string | null;
+  createdByUserId: string;
+  createdByName: string | null;
+}
