@@ -234,8 +234,8 @@ export default function GroupClient() {
         </div>
       )}
 
-      {/* Tab nav */}
-      <div className="flex gap-4 border-b border-border mb-4">
+      {/* Tab nav — overflow-x-auto prevents wrapping on narrow screens (iPhone SE) */}
+      <div className="flex gap-4 border-b border-border mb-4 overflow-x-auto">
         {(
           [
             { key: 'feed', label: 'Feed', icon: null },
@@ -266,7 +266,7 @@ export default function GroupClient() {
           <button
             key={key}
             onClick={() => setActiveTab(key as typeof activeTab)}
-            className={`pb-2 text-sm font-medium flex items-center gap-1.5 ${
+            className={`shrink-0 pb-2 text-sm font-medium flex items-center gap-1.5 ${
               activeTab === key ? 'border-b-2 border-primary text-primary' : 'text-muted-fg'
             }`}
           >
@@ -277,7 +277,7 @@ export default function GroupClient() {
         {isAdminOrOwner && (
           <button
             onClick={() => setActiveTab('pending')}
-            className={`pb-2 text-sm font-medium flex items-center gap-1.5 ${
+            className={`shrink-0 pb-2 text-sm font-medium flex items-center gap-1.5 ${
               activeTab === 'pending' ? 'border-b-2 border-primary text-primary' : 'text-muted-fg'
             }`}
           >
@@ -540,6 +540,7 @@ function GroupPollsTab({
   const [expiresAt, setExpiresAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [votingId, setVotingId] = useState<number | null>(null);
+  const [pollError, setPollError] = useState<string | null>(null);
 
   const addOption = () => {
     if (options.length < 6) setOptions((o) => [...o, '']);
@@ -602,12 +603,15 @@ function GroupPollsTab({
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (res.ok) {
+      setPollError(null);
       if (res.status === 204) {
         const poll = polls.find((p) => p.id === pollId);
         if (poll) onPollUpdated({ ...poll, isClosed: true });
       } else {
         onPollUpdated(await res.json());
       }
+    } else {
+      setPollError('Não foi possível encerrar a enquete.');
     }
   };
 
@@ -616,7 +620,12 @@ function GroupPollsTab({
       method: 'DELETE',
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (res.ok) onPollDeleted(pollId);
+    if (res.ok) {
+      setPollError(null);
+      onPollDeleted(pollId);
+    } else {
+      setPollError('Não foi possível remover a enquete.');
+    }
   };
 
   const isPollExpired = (p: GroupPoll) =>
@@ -627,6 +636,22 @@ function GroupPollsTab({
 
   return (
     <div className="space-y-4">
+      {/* Inline error banner for close/delete failures */}
+      {pollError && (
+        <div className="flex items-center justify-between gap-2 rounded-xl bg-danger/10 border border-danger/20 px-3 py-2.5 text-sm text-danger">
+          <span>{pollError}</span>
+          <button
+            onClick={() => setPollError(null)}
+            aria-label="Fechar"
+            className="shrink-0 text-danger/70 hover:text-danger transition-colors p-0.5"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Create button */}
       {isMember && !creating && (
         <button
@@ -763,7 +788,7 @@ function GroupPollsTab({
             {/* Header */}
             <div className="flex items-start justify-between gap-2 mb-3">
               <div className="flex-1">
-                <p className="font-medium text-fg text-sm leading-snug">{poll.question}</p>
+                <p className="font-medium text-fg text-sm leading-snug break-words">{poll.question}</p>
                 {poll.createdByName && (
                   <p className="text-xs text-muted-fg mt-0.5">Por {poll.createdByName}</p>
                 )}
