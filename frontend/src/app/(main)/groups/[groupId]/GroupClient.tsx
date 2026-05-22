@@ -901,9 +901,18 @@ function GroupPollsTab({
 // Inline events tab (GRP-007)
 function GroupEventsTab({ groupId }: { groupId: number }) {
   const [events, setEvents] = useState<GroupEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
 
   useEffect(() => {
-    getGroupEvents(groupId).then(setEvents);
+    if (!groupId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setEventsLoading(true);
+    setEventsError(null);
+    getGroupEvents(groupId)
+      .then(setEvents)
+      .catch(() => setEventsError('Não foi possível carregar os eventos.'))
+      .finally(() => setEventsLoading(false));
   }, [groupId]);
 
   const handleRsvp = (ev: GroupEvent) => {
@@ -919,6 +928,45 @@ function GroupEventsTab({ groupId }: { groupId: number }) {
       )
       .catch(console.error);
   };
+
+  if (eventsLoading) {
+    return (
+      <div className="space-y-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="bg-card rounded-xl border border-border shadow-sm p-4 animate-pulse space-y-2">
+            <div className="h-4 bg-muted rounded w-2/3" />
+            <div className="h-3 bg-muted rounded w-1/3" />
+            <div className="h-3 bg-muted rounded w-1/4" />
+            <div className="h-9 bg-muted rounded-xl w-36 mt-1" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (eventsError) {
+    return (
+      <div className="text-center py-10 space-y-2">
+        <svg className="w-10 h-10 text-danger/60 mx-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/>
+        </svg>
+        <p className="text-sm text-danger font-medium">{eventsError}</p>
+        <button
+          onClick={() => {
+            setEventsLoading(true);
+            setEventsError(null);
+            getGroupEvents(groupId)
+              .then(setEvents)
+              .catch(() => setEventsError('Não foi possível carregar os eventos.'))
+              .finally(() => setEventsLoading(false));
+          }}
+          className="text-xs text-primary hover:underline"
+        >
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3">
@@ -939,7 +987,14 @@ function GroupEventsTab({ groupId }: { groupId: number }) {
         </div>
       ))}
       {events.length === 0 && (
-        <p className="text-sm text-muted-fg text-center py-8">Nenhum evento criado ainda.</p>
+        <div className="text-center py-10">
+          <svg className="w-10 h-10 text-muted-fg mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <p className="text-sm text-muted-fg">Nenhum evento criado ainda.</p>
+        </div>
       )}
     </div>
   );

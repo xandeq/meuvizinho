@@ -36,7 +36,8 @@ public class GroupsController : ControllerBase
         [FromQuery] int bairroId,
         [FromQuery] string? search,
         [FromQuery] string? category,
-        [FromQuery] int page = 1)
+        [FromQuery] int page = 1,
+        CancellationToken ct = default)
     {
         IQueryable<Group> groups = _db.Groups
             .AsNoTracking()
@@ -57,7 +58,7 @@ public class GroupsController : ControllerBase
                              || EF.Functions.Like(g.Description, $"%{search}%")));
         }
 
-        var total = await groups.CountAsync();
+        var total = await groups.CountAsync(ct);
         var items = await groups
             .OrderByDescending(g => g.CreatedAt)
             .Skip((page - 1) * DefaultPageSize)
@@ -74,7 +75,7 @@ public class GroupsController : ControllerBase
                 g.CreatedAt,
                 MemberCount = g.Members.Count(m => m.Status == GroupMemberStatus.Active)
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         Response.Headers["X-Pagination"] = $"page={page},total={total}";
         return Ok(items);
@@ -82,7 +83,7 @@ public class GroupsController : ControllerBase
 
     // GRP-001 — create group, auto-add creator as Owner
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateGroupRequest req)
+    public async Task<IActionResult> Create([FromBody] CreateGroupRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -100,7 +101,7 @@ public class GroupsController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
         _db.Groups.Add(group);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var ownerMember = new GroupMember
         {
@@ -111,14 +112,14 @@ public class GroupsController : ControllerBase
             JoinedAt = DateTime.UtcNow
         };
         _db.GroupMembers.Add(ownerMember);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         return Created($"/api/v1/groups/{group.Id}", new { group.Id, group.Name });
     }
 
     // GET /api/v1/groups/{id} — group detail
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<IActionResult> Get(int id, CancellationToken ct = default)
     {
         var userId = GetUserId();
 
@@ -148,7 +149,7 @@ public class GroupsController : ControllerBase
                         .Select(m => m.Role.ToString())
                         .FirstOrDefault()
             })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
 
         if (group == null) return NotFound();
         return Ok(group);
@@ -156,18 +157,18 @@ public class GroupsController : ControllerBase
 
     // PUT /api/v1/groups/{id} — update (owner/admin only)
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateGroupRequest req)
+    public async Task<IActionResult> Update(int id, [FromBody] UpdateGroupRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var member = await _db.GroupMembers
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         if (member == null || member.Role == GroupMemberRole.Member)
             return Forbid();
 
-        var group = await _db.Groups.FindAsync(id);
+        var group = await _db.Groups.FindAsync([id], ct);
         if (group == null || group.DeletedAt != null) return NotFound();
 
         if (req.Name != null) group.Name = req.Name;
@@ -175,35 +176,35 @@ public class GroupsController : ControllerBase
         if (req.Rules != null) group.Rules = req.Rules;
         if (req.CoverImageUrl != null) group.CoverImageUrl = req.CoverImageUrl;
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // DELETE /api/v1/groups/{id} — soft delete (owner only)
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var member = await _db.GroupMembers
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value, ct);
 
         if (member == null || member.Role != GroupMemberRole.Owner)
             return Forbid();
 
-        var group = await _db.Groups.FindAsync(id);
+        var group = await _db.Groups.FindAsync([id], ct);
         if (group == null) return NotFound();
 
         group.DeletedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // GET /api/v1/groups/{id}/members
     // Optional ?status=pending — returns pending members (owner/admin only)
     [HttpGet("{id:int}/members")]
-    public async Task<IActionResult> GetMembers(int id, [FromQuery] string? status, [FromQuery] int page = 1)
+    public async Task<IActionResult> GetMembers(int id, [FromQuery] string? status, [FromQuery] int page = 1, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -211,7 +212,7 @@ public class GroupsController : ControllerBase
         if (string.Equals(status, "pending", StringComparison.OrdinalIgnoreCase))
         {
             var callerMember = await _db.GroupMembers.AsNoTracking()
-                .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+                .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
             if (callerMember == null || callerMember.Role == GroupMemberRole.Member) return Forbid();
 
             var pending = await _db.GroupMembers.AsNoTracking()
@@ -229,7 +230,7 @@ public class GroupsController : ControllerBase
                     DisplayName = m.User!.DisplayName,
                     PhotoUrl = m.User.PhotoUrl
                 })
-                .ToListAsync();
+                .ToListAsync(ct);
 
             return Ok(pending);
         }
@@ -250,7 +251,7 @@ public class GroupsController : ControllerBase
                 DisplayName = m.User!.DisplayName,
                 PhotoUrl = m.User.PhotoUrl
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return Ok(members);
     }
@@ -335,7 +336,7 @@ public class GroupsController : ControllerBase
     // POST /api/v1/groups/{id}/members — join group
     // GRP-002: Open=Active immediately, Closed=PendingApproval
     [HttpPost("{id:int}/members")]
-    public async Task<IActionResult> Join(int id)
+    public async Task<IActionResult> Join(int id, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -343,13 +344,13 @@ public class GroupsController : ControllerBase
         var group = await _db.Groups
             .AsNoTracking()
             .Where(g => g.Id == id && g.DeletedAt == null)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
 
         if (group == null) return NotFound();
 
         // Check existing membership
         var existing = await _db.GroupMembers
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value, ct);
 
         if (existing != null)
         {
@@ -361,14 +362,14 @@ public class GroupsController : ControllerBase
             existing.Status = group.JoinPolicy == GroupJoinPolicy.Open
                 ? GroupMemberStatus.Active
                 : GroupMemberStatus.PendingApproval;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return Ok(new { existing.Status });
         }
 
         // GRP-008: CrossBairro — check adjacency (MVP: allow if empty)
         if (group.Scope == GroupScope.CrossBairro)
         {
-            var user = await _db.Users.AsNoTracking().Select(u => new { u.Id, u.BairroId }).FirstOrDefaultAsync(u => u.Id == userId.Value);
+            var user = await _db.Users.AsNoTracking().Select(u => new { u.Id, u.BairroId }).FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
             if (user?.BairroId != group.BairroId)
             {
                 // Check adjacency table — if no adjacency records exist, allow (MVP fallback)
@@ -387,7 +388,7 @@ public class GroupsController : ControllerBase
             JoinedAt = DateTime.UtcNow
         };
         _db.GroupMembers.Add(member);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         return Created($"/api/v1/groups/{id}/members/{member.Id}", new { member.Status });
     }
@@ -395,17 +396,17 @@ public class GroupsController : ControllerBase
     // DELETE /api/v1/groups/{id}/members/{userId} — leave or remove member
     // GRP-005: Owner/Admin can remove; Admin cannot remove Owner
     [HttpDelete("{id:int}/members/{targetUserId:guid}")]
-    public async Task<IActionResult> RemoveMember(int id, Guid targetUserId)
+    public async Task<IActionResult> RemoveMember(int id, Guid targetUserId, CancellationToken ct = default)
     {
         var actorId = GetUserId();
         if (actorId == null) return Unauthorized();
 
         var actorMember = await _db.GroupMembers
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == actorId.Value && m.Status == GroupMemberStatus.Active);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == actorId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         var targetMember = await _db.GroupMembers
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == targetUserId);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == targetUserId, ct);
 
         if (targetMember == null) return NotFound();
 
@@ -413,7 +414,7 @@ public class GroupsController : ControllerBase
         if (actorId.Value == targetUserId)
         {
             _db.GroupMembers.Remove(targetMember);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return NoContent();
         }
 
@@ -426,26 +427,26 @@ public class GroupsController : ControllerBase
             return Forbid();
 
         _db.GroupMembers.Remove(targetMember);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // PUT /api/v1/groups/{id}/members/{userId}/role
     [HttpPut("{id:int}/members/{targetUserId:guid}/role")]
-    public async Task<IActionResult> UpdateMemberRole(int id, Guid targetUserId, [FromBody] UpdateMemberRoleRequest req)
+    public async Task<IActionResult> UpdateMemberRole(int id, Guid targetUserId, [FromBody] UpdateMemberRoleRequest req, CancellationToken ct = default)
     {
         var actorId = GetUserId();
         if (actorId == null) return Unauthorized();
 
         var actorMember = await _db.GroupMembers
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == actorId.Value && m.Status == GroupMemberStatus.Active);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == actorId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         if (actorMember == null || actorMember.Role == GroupMemberRole.Member)
             return Forbid();
 
         var targetMember = await _db.GroupMembers
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == targetUserId);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == targetUserId, ct);
 
         if (targetMember == null) return NotFound();
 
@@ -456,31 +457,31 @@ public class GroupsController : ControllerBase
             return Forbid();
 
         targetMember.Role = req.Role;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // PUT /api/v1/groups/{id}/members/{userId}/notifications
     [HttpPut("{id:int}/members/{targetUserId:guid}/notifications")]
-    public async Task<IActionResult> UpdateNotifications(int id, Guid targetUserId, [FromBody] UpdateNotificationPrefRequest req)
+    public async Task<IActionResult> UpdateNotifications(int id, Guid targetUserId, [FromBody] UpdateNotificationPrefRequest req, CancellationToken ct = default)
     {
         var actorId = GetUserId();
         if (actorId == null) return Unauthorized();
         if (actorId.Value != targetUserId) return Forbid();
 
         var member = await _db.GroupMembers
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == actorId.Value);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == actorId.Value, ct);
 
         if (member == null) return NotFound();
 
         member.NotificationPreference = req.Preference;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // GRP-003 — group feed
     [HttpGet("{id:int}/posts")]
-    public async Task<IActionResult> GetPosts(int id, [FromQuery] int page = 1)
+    public async Task<IActionResult> GetPosts(int id, [FromQuery] int page = 1, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -488,7 +489,7 @@ public class GroupsController : ControllerBase
         // Must be member to see posts
         var isMember = await _db.GroupMembers
             .AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         if (!isMember) return Forbid();
 
@@ -511,21 +512,21 @@ public class GroupsController : ControllerBase
                 LikeCount = p.Likes.Count,
                 CommentCount = p.Comments.Count(c => c.DeletedAt == null)
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return Ok(posts);
     }
 
     // GRP-003 — create group post; SignalR push to group:{id}
     [HttpPost("{id:int}/posts")]
-    public async Task<IActionResult> CreatePost(int id, [FromBody] CreateGroupPostRequest req)
+    public async Task<IActionResult> CreatePost(int id, [FromBody] CreateGroupPostRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var isMember = await _db.GroupMembers
             .AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         if (!isMember) return Forbid();
 
@@ -539,7 +540,7 @@ public class GroupsController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
         _db.GroupPosts.Add(post);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         // SignalR: push to group room (best-effort — post is already persisted)
         try
@@ -557,17 +558,17 @@ public class GroupsController : ControllerBase
 
     // GRP-005 — soft delete group post
     [HttpDelete("{id:int}/posts/{postId:int}")]
-    public async Task<IActionResult> DeletePost(int id, int postId)
+    public async Task<IActionResult> DeletePost(int id, int postId, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var post = await _db.GroupPosts.FindAsync(postId);
+        var post = await _db.GroupPosts.FindAsync([postId], ct);
         if (post == null || post.GroupId != id) return NotFound();
 
         var actorMember = await _db.GroupMembers
             .AsNoTracking()
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         bool isAuthor = post.AuthorId == userId.Value;
         bool isModerator = actorMember != null && actorMember.Role != GroupMemberRole.Member;
@@ -575,35 +576,35 @@ public class GroupsController : ControllerBase
         if (!isAuthor && !isModerator) return Forbid();
 
         post.DeletedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // Toggle like
     [HttpPost("{id:int}/posts/{postId:int}/likes")]
-    public async Task<IActionResult> ToggleLike(int id, int postId)
+    public async Task<IActionResult> ToggleLike(int id, int postId, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var existing = await _db.GroupPostLikes
-            .FirstOrDefaultAsync(l => l.GroupPostId == postId && l.UserId == userId.Value);
+            .FirstOrDefaultAsync(l => l.GroupPostId == postId && l.UserId == userId.Value, ct);
 
         if (existing != null)
         {
             _db.GroupPostLikes.Remove(existing);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return Ok(new { liked = false });
         }
 
         _db.GroupPostLikes.Add(new GroupPostLike { GroupPostId = postId, UserId = userId.Value });
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return Ok(new { liked = true });
     }
 
     // GET threaded comments
     [HttpGet("{id:int}/posts/{postId:int}/comments")]
-    public async Task<IActionResult> GetComments(int id, int postId)
+    public async Task<IActionResult> GetComments(int id, int postId, CancellationToken ct = default)
     {
         // Load top-level comments + replies together, then group client-side
         var allComments = await _db.GroupComments
@@ -619,7 +620,7 @@ public class GroupsController : ControllerBase
                 c.CreatedAt,
                 c.ParentCommentId
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var topLevel = allComments
             .Where(c => c.ParentCommentId == null)
@@ -639,7 +640,7 @@ public class GroupsController : ControllerBase
 
     // POST comment
     [HttpPost("{id:int}/posts/{postId:int}/comments")]
-    public async Task<IActionResult> AddComment(int id, int postId, [FromBody] AddGroupCommentRequest req)
+    public async Task<IActionResult> AddComment(int id, int postId, [FromBody] AddGroupCommentRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -653,14 +654,14 @@ public class GroupsController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
         _db.GroupComments.Add(comment);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         return Created($"/api/v1/groups/{id}/posts/{postId}/comments/{comment.Id}", new { comment.Id });
     }
 
     // GRP-007 — list events
     [HttpGet("{id:int}/events")]
-    public async Task<IActionResult> GetEvents(int id)
+    public async Task<IActionResult> GetEvents(int id, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -684,21 +685,21 @@ public class GroupsController : ControllerBase
                     .Select(r => (bool?)r.IsAttending)
                     .FirstOrDefault()
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return Ok(events);
     }
 
     // GRP-007 — create event
     [HttpPost("{id:int}/events")]
-    public async Task<IActionResult> CreateEvent(int id, [FromBody] CreateGroupEventRequest req)
+    public async Task<IActionResult> CreateEvent(int id, [FromBody] CreateGroupEventRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var isMember = await _db.GroupMembers
             .AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
 
         if (!isMember) return Forbid();
 
@@ -716,7 +717,7 @@ public class GroupsController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
         _db.GroupEvents.Add(ev);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         _ = _notifications.NotifyGroupEventCreatedAsync(id, userId.Value, ev.Title, ev.Id);
 
@@ -725,13 +726,13 @@ public class GroupsController : ControllerBase
 
     // GRP-007 — upsert RSVP
     [HttpPost("{id:int}/events/{eventId:int}/rsvp")]
-    public async Task<IActionResult> Rsvp(int id, int eventId, [FromBody] RsvpRequest req)
+    public async Task<IActionResult> Rsvp(int id, int eventId, [FromBody] RsvpRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var existing = await _db.GroupEventRsvps
-            .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId.Value);
+            .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId.Value, ct);
 
         if (existing != null)
         {
@@ -749,7 +750,7 @@ public class GroupsController : ControllerBase
             });
         }
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return Ok(new { req.IsAttending });
     }
 
@@ -757,13 +758,13 @@ public class GroupsController : ControllerBase
 
     // GRP-POL-001 — list polls for a group
     [HttpGet("{id:int}/polls")]
-    public async Task<IActionResult> ListPolls(int id, [FromQuery] int page = 1)
+    public async Task<IActionResult> ListPolls(int id, [FromQuery] int page = 1, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var isMember = await _db.GroupMembers.AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
         if (!isMember) return Forbid();
 
         var now = DateTime.UtcNow;
@@ -787,14 +788,14 @@ public class GroupsController : ControllerBase
                     .OrderBy(o => o.DisplayOrder)
                     .Select(o => new { o.Id, o.Text, VoteCount = o.Votes.Count })
             })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return Ok(polls);
     }
 
     // GRP-POL-002 — create a poll (members only)
     [HttpPost("{id:int}/polls")]
-    public async Task<IActionResult> CreatePoll(int id, [FromBody] CreateGroupPollRequest req)
+    public async Task<IActionResult> CreatePoll(int id, [FromBody] CreateGroupPollRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -807,7 +808,7 @@ public class GroupsController : ControllerBase
             return BadRequest(new { error = "A pergunta deve ter entre 1 e 200 caracteres." });
 
         var isMember = await _db.GroupMembers.AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
         if (!isMember) return Forbid();
 
         var poll = new GroupPoll
@@ -819,14 +820,14 @@ public class GroupsController : ControllerBase
             CreatedAt = DateTime.UtcNow
         };
         _db.GroupPolls.Add(poll);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         int order = 0;
         foreach (var text in req.Options)
             _db.GroupPollOptions.Add(new GroupPollOption { GroupPollId = poll.Id, Text = text.Trim(), DisplayOrder = order++ });
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        var dto = await BuildPollDto(poll.Id, userId.Value, DateTime.UtcNow);
+        var dto = await BuildPollDto(poll.Id, userId.Value, DateTime.UtcNow, ct);
 
         try { await _hub.Clients.Group($"group:{id}").SendAsync("NewGroupPoll", dto); }
         catch (Exception ex) { _logger.LogWarning(ex, "Failed to push NewGroupPoll to group {GroupId}", id); }
@@ -836,29 +837,29 @@ public class GroupsController : ControllerBase
 
     // GRP-POL-003 — vote (upsert — re-voting changes the vote)
     [HttpPost("{id:int}/polls/{pollId:int}/vote")]
-    public async Task<IActionResult> Vote(int id, int pollId, [FromBody] GroupPollVoteRequest req)
+    public async Task<IActionResult> Vote(int id, int pollId, [FromBody] GroupPollVoteRequest req, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var isMember = await _db.GroupMembers.AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
         if (!isMember) return Forbid();
 
         var now = DateTime.UtcNow;
         var poll = await _db.GroupPolls
             .Where(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null)
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
         if (poll == null) return NotFound();
         if (poll.IsClosed || (poll.ExpiresAt != null && poll.ExpiresAt < now))
             return BadRequest(new { error = "Esta enquete está encerrada." });
 
         var optionValid = await _db.GroupPollOptions
-            .AnyAsync(o => o.Id == req.OptionId && o.GroupPollId == pollId);
+            .AnyAsync(o => o.Id == req.OptionId && o.GroupPollId == pollId, ct);
         if (!optionValid) return BadRequest(new { error = "Opção inválida." });
 
         var existing = await _db.GroupPollVotes
-            .FirstOrDefaultAsync(v => v.GroupPollId == pollId && v.UserId == userId.Value);
+            .FirstOrDefaultAsync(v => v.GroupPollId == pollId && v.UserId == userId.Value, ct);
         if (existing != null)
         {
             existing.GroupPollOptionId = req.OptionId;
@@ -874,9 +875,9 @@ public class GroupsController : ControllerBase
                 CreatedAt = now
             });
         }
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
-        var updated = await BuildPollDto(pollId, userId.Value, now);
+        var updated = await BuildPollDto(pollId, userId.Value, now, ct);
         try { await _hub.Clients.Group($"group:{id}").SendAsync("GroupPollUpdated", updated); }
         catch (Exception ex) { _logger.LogWarning(ex, "Failed to push GroupPollUpdated to group {GroupId}", id); }
 
@@ -885,20 +886,20 @@ public class GroupsController : ControllerBase
 
     // GRP-POL-004 — remove own vote
     [HttpDelete("{id:int}/polls/{pollId:int}/vote")]
-    public async Task<IActionResult> RemoveVote(int id, int pollId)
+    public async Task<IActionResult> RemoveVote(int id, int pollId, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var vote = await _db.GroupPollVotes
-            .FirstOrDefaultAsync(v => v.GroupPollId == pollId && v.UserId == userId.Value);
+            .FirstOrDefaultAsync(v => v.GroupPollId == pollId && v.UserId == userId.Value, ct);
         if (vote == null) return NoContent();
 
         _db.GroupPollVotes.Remove(vote);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var now = DateTime.UtcNow;
-        var updated = await BuildPollDto(pollId, userId.Value, now);
+        var updated = await BuildPollDto(pollId, userId.Value, now, ct);
         try { await _hub.Clients.Group($"group:{id}").SendAsync("GroupPollUpdated", updated); }
         catch (Exception ex) { _logger.LogWarning(ex, "Failed to push GroupPollUpdated to group {GroupId}", id); }
 
@@ -907,51 +908,51 @@ public class GroupsController : ControllerBase
 
     // GRP-POL-005 — close a poll (creator / admin / owner)
     [HttpPost("{id:int}/polls/{pollId:int}/close")]
-    public async Task<IActionResult> ClosePoll(int id, int pollId)
+    public async Task<IActionResult> ClosePoll(int id, int pollId, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var poll = await _db.GroupPolls
-            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null);
+            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null, ct);
         if (poll == null) return NotFound();
 
         var member = await _db.GroupMembers.AsNoTracking()
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
         if (member == null) return Forbid();
 
         if (poll.CreatedByUserId != userId.Value && member.Role is not (GroupMemberRole.Admin or GroupMemberRole.Owner))
             return Forbid();
 
         poll.IsClosed = true;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
     // GRP-POL-006 — soft-delete a poll (creator / admin / owner)
     [HttpDelete("{id:int}/polls/{pollId:int}")]
-    public async Task<IActionResult> DeletePoll(int id, int pollId)
+    public async Task<IActionResult> DeletePoll(int id, int pollId, CancellationToken ct = default)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         var poll = await _db.GroupPolls
-            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null);
+            .FirstOrDefaultAsync(p => p.Id == pollId && p.GroupId == id && p.DeletedAt == null, ct);
         if (poll == null) return NotFound();
 
         var member = await _db.GroupMembers.AsNoTracking()
-            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active);
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
         if (member == null) return Forbid();
 
         if (poll.CreatedByUserId != userId.Value && member.Role is not (GroupMemberRole.Admin or GroupMemberRole.Owner))
             return Forbid();
 
         poll.DeletedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
-    private async Task<object?> BuildPollDto(int pollId, Guid userId, DateTime now)
+    private async Task<object?> BuildPollDto(int pollId, Guid userId, DateTime now, CancellationToken ct = default)
     {
         return await _db.GroupPolls.AsNoTracking()
             .Where(p => p.Id == pollId)
@@ -970,7 +971,7 @@ public class GroupsController : ControllerBase
                     .OrderBy(o => o.DisplayOrder)
                     .Select(o => new { o.Id, o.Text, VoteCount = o.Votes.Count })
             })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(ct);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

@@ -9,6 +9,10 @@ on:
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 
+concurrency:
+  group: deploy-backend-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
@@ -27,6 +31,18 @@ jobs:
 
       - name: Test
         run: dotnet test tests/BairroNow.Api.Tests/BairroNow.Api.Tests.csproj -c Release --no-restore --verbosity normal
+
+      - name: Install EF tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Apply DB migrations
+        env:
+          ConnectionStrings__Default: ${{ secrets.BAIRRONOW_CONN_STRING }}
+        run: >
+          dotnet ef database update
+          --project src/BairroNow.Api/BairroNow.Api.csproj
+          --configuration Release
+          --no-build
 
       - name: Publish
         run: dotnet publish src/BairroNow.Api/BairroNow.Api.csproj -c Release -o publish --no-restore
