@@ -69,17 +69,17 @@ public class AuthService : IAuthService
         return (response, null);
     }
 
-    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> LoginAsync(LoginRequest request, string ipAddress, CancellationToken ct = default)
+    public async Task<(AuthResponse? Response, string? RefreshToken, bool RequiresTotp, Guid? TotpUserId, string? Error)> LoginAsync(LoginRequest request, string ipAddress, CancellationToken ct = default)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant(), ct);
         if (user == null)
-            return (null, null, "E-mail ou senha incorretos.");
+            return (null, null, false, null, "E-mail ou senha incorretos.");
 
         if (user.IsBanned)
-            return (null, null, "Conta banida.");
+            return (null, null, false, null, "Conta banida.");
 
         if (user.LockoutEnd.HasValue && user.LockoutEnd > DateTime.UtcNow)
-            return (null, null, "Conta bloqueada temporariamente. Tente novamente em 15 minutos.");
+            return (null, null, false, null, "Conta bloqueada temporariamente. Tente novamente em 15 minutos.");
 
         if (string.IsNullOrEmpty(user.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
         {
@@ -90,12 +90,22 @@ public class AuthService : IAuthService
                 _logger.LogWarning("Account locked for {Email} after {Attempts} failed attempts", user.Email, user.FailedLoginAttempts);
             }
             await _db.SaveChangesAsync(ct);
-            return (null, null, "E-mail ou senha incorretos.");
+            return (null, null, false, null, "E-mail ou senha incorretos.");
         }
 
         // Success: reset failed attempts
         user.FailedLoginAttempts = 0;
         user.LockoutEnd = null;
+
+        // TOTP gate: admin users with TOTP enabled must complete a second step.
+        // Return early without issuing tokens — the controller will generate a short-lived
+        // temp token using TotpUserId. This check happens here (where the user entity is
+        // already loaded) so the controller needs no extra DB round-trip.
+        if (user.IsAdmin && user.TotpEnabled)
+        {
+            await _db.SaveChangesAsync(ct); // persist the reset of FailedLoginAttempts
+            return (null, null, true, user.Id, null);
+        }
 
         var accessToken = _tokenService.GenerateAccessToken(user);
         var rawRefreshToken = _tokenService.GenerateRefreshToken();
@@ -113,7 +123,7 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync(ct);
 
         var response = new AuthResponse(accessToken, new UserInfo(user.Id, user.Email, user.DisplayName, user.EmailConfirmed, user.BairroId, user.IsVerified, user.IsAdmin));
-        return (response, rawRefreshToken, null);
+        return (response, rawRefreshToken, false, null, null);
     }
 
     public async Task<(AuthResponse? Response, string? NewRefreshToken, string? Error)> RefreshAsync(string refreshToken, string ipAddress, CancellationToken ct = default)

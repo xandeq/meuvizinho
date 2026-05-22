@@ -82,9 +82,47 @@ public class AccountController : ControllerBase
         return Ok(new { message = "Exclusao cancelada. Sua conta esta ativa novamente." });
     }
 
+    /// <summary>
+    /// Immediately and permanently deletes the authenticated user's account (LGPD/GDPR right to erasure).
+    /// Requires password confirmation for non-OAuth accounts. Returns 204 on success.
+    /// </summary>
+    [HttpDelete("me")]
+    [EnableRateLimiting("authenticated")]
+    public async Task<IActionResult> DeleteAccount([FromBody] DeleteAccountRequest? req, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        try
+        {
+            await _accountService.DeleteAccountAsync(userId.Value, req?.Password, ct);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "ALREADY_DELETED")
+        {
+            return Conflict(new { error = "Conta ja foi excluida." });
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound(new { error = "Conta nao encontrada." });
+        }
+        catch (UnauthorizedAccessException ex) when (ex.Message == "PASSWORD_REQUIRED")
+        {
+            return BadRequest(new { error = "Confirmacao de senha obrigatoria." });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return BadRequest(new { error = "Senha incorreta." });
+        }
+    }
+
     private Guid? GetUserId()
     {
         var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
         return Guid.TryParse(sub, out var id) ? id : (Guid?)null;
     }
 }
+
+/// <summary>Request body for DELETE /api/v1/account/me.</summary>
+/// <param name="Password">Current password — required for accounts with a password hash; may be omitted for OAuth-only accounts.</param>
+public record DeleteAccountRequest(string? Password);

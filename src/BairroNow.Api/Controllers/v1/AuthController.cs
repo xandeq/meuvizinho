@@ -39,7 +39,7 @@ public class AuthController : ControllerBase
     [EnableRateLimiting("public")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var (response, refreshToken, error) = await _authService.LoginAsync(request, GetIpAddress(), ct);
+        var (response, refreshToken, requiresTotp, totpUserId, error) = await _authService.LoginAsync(request, GetIpAddress(), ct);
         if (error != null)
         {
             if (error.Contains("banida"))
@@ -49,16 +49,11 @@ public class AuthController : ControllerBase
             return Unauthorized(new { error = "E-mail ou senha incorretos." });
         }
 
-        // TOTP gate: if admin user with TOTP enabled, return temp token instead of full JWT
-        if (response != null && response.User.IsAdmin)
+        // TOTP gate: service already determined this in the same DB fetch — no extra round-trip.
+        if (requiresTotp && totpUserId.HasValue)
         {
-            // Check if user has TOTP enabled by looking up user
-            var user = await GetUserByIdAsync(response.User.Id, ct);
-            if (user != null && user.TotpEnabled)
-            {
-                var tempToken = GenerateTotpTempToken(user);
-                return Ok(new { requiresTotp = true, tempToken });
-            }
+            var tempToken = GenerateTotpTempToken(totpUserId.Value);
+            return Ok(new { requiresTotp = true, tempToken });
         }
 
         SetRefreshTokenCookie(refreshToken!);
@@ -239,7 +234,7 @@ public class AuthController : ControllerBase
 
     // ── Private helpers ──
 
-    private string GenerateTotpTempToken(Models.Entities.User user)
+    private string GenerateTotpTempToken(Guid userId)
     {
         var key = new SymmetricSecurityKey(
             Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]
@@ -247,7 +242,7 @@ public class AuthController : ControllerBase
 
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim("totp_pending", "true"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
@@ -264,14 +259,6 @@ public class AuthController : ControllerBase
         var handler = new JwtSecurityTokenHandler();
         var token = handler.CreateToken(tokenDescriptor);
         return handler.WriteToken(token);
-    }
-
-    private async Task<Models.Entities.User?> GetUserByIdAsync(Guid userId, CancellationToken ct)
-    {
-        // Use a scoped DbContext to look up user TotpEnabled status
-        // This is needed because LoginAsync returns AuthResponse without TOTP info
-        var db = HttpContext.RequestServices.GetRequiredService<Data.AppDbContext>();
-        return await db.Users.FindAsync([userId], ct);
     }
 
     private Guid? GetUserId()

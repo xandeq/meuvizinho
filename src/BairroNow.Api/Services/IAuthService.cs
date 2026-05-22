@@ -5,7 +5,7 @@ namespace BairroNow.Api.Services;
 public interface IAuthService
 {
     Task<(AuthResponse? Response, string? Error)> RegisterAsync(RegisterRequest request, string ipAddress, CancellationToken ct = default);
-    Task<(AuthResponse? Response, string? RefreshToken, string? Error)> LoginAsync(LoginRequest request, string ipAddress, CancellationToken ct = default);
+    Task<(AuthResponse? Response, string? RefreshToken, bool RequiresTotp, Guid? TotpUserId, string? Error)> LoginAsync(LoginRequest request, string ipAddress, CancellationToken ct = default);
     Task<(AuthResponse? Response, string? NewRefreshToken, string? Error)> RefreshAsync(string refreshToken, string ipAddress, CancellationToken ct = default);
     Task LogoutAsync(string refreshToken, string ipAddress, CancellationToken ct = default);
     Task LogoutAllAsync(Guid userId, CancellationToken ct = default);
