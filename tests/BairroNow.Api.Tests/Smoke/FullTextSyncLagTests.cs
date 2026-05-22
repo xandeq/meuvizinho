@@ -10,7 +10,7 @@ namespace BairroNow.Api.Tests.Smoke;
 [Trait("Category", "Smoke")]
 public class FullTextSyncLagTests
 {
-    [Fact]
+    [Fact(Skip = "Requires FTS_SMOKE=1 and a real SQL Server connection — wire up against SmarterASP sandbox before enabling")]
     public async Task Insert_AppearsInContains_Within5Seconds()
     {
         if (Environment.GetEnvironmentVariable("FTS_SMOKE") != "1")

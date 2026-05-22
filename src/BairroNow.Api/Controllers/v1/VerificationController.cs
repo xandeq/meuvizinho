@@ -84,11 +84,20 @@ public class VerificationController : ControllerBase
         if (targetUser == null)
             return NotFound(new { error = "Usuario nao encontrado." });
 
-        // Cannot vouch twice
+        // Wrap vouch insert + optional auto-approve in a serializable transaction
+        // to prevent concurrent vouches from both passing the duplicate check and
+        // causing double auto-approval.
+        await using var tx = await _db.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable, ct);
+
+        // Re-check duplicate inside the transaction
         var alreadyVouched = await _db.VerificationVouches
             .AnyAsync(v => v.VoucheeId == userId && v.VoucherId == callerId.Value, ct);
         if (alreadyVouched)
+        {
+            await tx.RollbackAsync(ct);
             return Conflict(new { error = "Voce ja deu vouch para este usuario." });
+        }
 
         // Create vouch
         var vouch = new VerificationVouch
@@ -104,6 +113,7 @@ public class VerificationController : ControllerBase
         var vouchCount = await _db.VerificationVouches
             .CountAsync(v => v.VoucheeId == userId, ct);
 
+        bool autoApproved = false;
         if (vouchCount >= 2 && !targetUser.IsVerified)
         {
             // Auto-approve: update verification status
@@ -121,11 +131,14 @@ public class VerificationController : ControllerBase
             targetUser.IsVerified = true;
             targetUser.VerifiedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
-
-            return Ok(new { message = "Vouch registrado. Usuario aprovado automaticamente!", autoApproved = true });
+            autoApproved = true;
         }
 
-        return Ok(new { message = "Vouch registrado com sucesso.", autoApproved = false });
+        await tx.CommitAsync(ct);
+
+        return Ok(autoApproved
+            ? new { message = "Vouch registrado. Usuario aprovado automaticamente!", autoApproved = true }
+            : new { message = "Vouch registrado com sucesso.", autoApproved = false });
     }
 
     private Guid? GetUserId()

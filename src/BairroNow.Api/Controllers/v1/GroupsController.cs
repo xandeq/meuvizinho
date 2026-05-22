@@ -541,9 +541,16 @@ public class GroupsController : ControllerBase
         _db.GroupPosts.Add(post);
         await _db.SaveChangesAsync();
 
-        // SignalR: push to group room
-        await _hub.Clients.Group($"group:{id}")
-            .SendAsync("NewGroupPost", new { post.Id, post.Body, post.AuthorId, post.CreatedAt });
+        // SignalR: push to group room (best-effort — post is already persisted)
+        try
+        {
+            await _hub.Clients.Group($"group:{id}")
+                .SendAsync("NewGroupPost", new { post.Id, post.Body, post.AuthorId, post.CreatedAt });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "SignalR push failed for group {GroupId} post {PostId}", id, post.Id);
+        }
 
         return Created($"/api/v1/groups/{id}/posts/{post.Id}", new { post.Id });
     }
@@ -944,7 +951,7 @@ public class GroupsController : ControllerBase
         return NoContent();
     }
 
-    private async Task<object> BuildPollDto(int pollId, Guid userId, DateTime now)
+    private async Task<object?> BuildPollDto(int pollId, Guid userId, DateTime now)
     {
         return await _db.GroupPolls.AsNoTracking()
             .Where(p => p.Id == pollId)
@@ -963,7 +970,7 @@ public class GroupsController : ControllerBase
                     .OrderBy(o => o.DisplayOrder)
                     .Select(o => new { o.Id, o.Text, VoteCount = o.Votes.Count })
             })
-            .FirstAsync();
+            .FirstOrDefaultAsync();
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

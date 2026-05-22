@@ -145,8 +145,8 @@ public class ModerationController : ControllerBase
             Details = $"User {user.Email} banned via report #{reportId} by admin."
         });
 
-        report.Status = "resolved";
-        _db.Reports.Update(new Models.Entities.Report { Id = reportId });
+        await _db.Reports.Where(r => r.Id == reportId)
+            .ExecuteUpdateAsync(s => s.SetProperty(r => r.Status, "resolved"), ct);
         await _db.SaveChangesAsync(ct);
 
         return Ok(new { message = "Usuário banido com sucesso.", bannedUserId = authorId.Value });

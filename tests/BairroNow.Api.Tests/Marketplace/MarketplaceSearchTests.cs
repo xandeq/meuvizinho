@@ -67,8 +67,10 @@ public class MarketplaceSearchTests
     {
         var (svc, db, sellerId) = BuildSut();
         var older = await svc.CreateAsync(sellerId, new CreateListingRequest { Title = "Old", Description = "old listing 12345", Price = 10, CategoryCode = "outros", SubcategoryCode = "diversos" }, One());
-        await Task.Delay(20);
         var newer = await svc.CreateAsync(sellerId, new CreateListingRequest { Title = "New", Description = "new listing 12345", Price = 20, CategoryCode = "outros", SubcategoryCode = "diversos" }, One());
+        // Force deterministic recency ordering without relying on sleep timing
+        await db.Listings.Where(l => l.Id == older.Id).ExecuteUpdateAsync(s => s.SetProperty(l => l.CreatedAt, DateTime.UtcNow.AddMinutes(-1)));
+        await db.Listings.Where(l => l.Id == newer.Id).ExecuteUpdateAsync(s => s.SetProperty(l => l.CreatedAt, DateTime.UtcNow));
         var page = await svc.GetBairroGridAsync(sellerId, 1, null, null, null, false, null, null, 20);
         page.Items.First().Id.Should().Be(newer.Id);
     }

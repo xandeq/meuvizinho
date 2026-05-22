@@ -26,6 +26,23 @@ public class NotificationHub : Hub
     public async Task JoinBairro(string bairroId)
     {
         ThrottleOrThrow("JoinBairro");
+
+        var userId = GetUserId();
+        if (userId == null) throw new HubException("Unauthorized");
+
+        if (!int.TryParse(bairroId, out var bairroIdInt))
+            throw new HubException("Invalid bairroId");
+
+        var isMember = await _db.Users
+            .AsNoTracking()
+            .AnyAsync(u => u.Id == userId.Value && u.BairroId == bairroIdInt && u.IsActive);
+
+        if (!isMember)
+        {
+            _logger.LogWarning("Unauthorized JoinBairro attempt: userId={UserId} bairroId={BairroId}", userId, bairroId);
+            throw new HubException("Not a member of this bairro");
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, $"bairro-{bairroId}");
     }
 

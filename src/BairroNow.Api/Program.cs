@@ -325,6 +325,13 @@ try
     builder.Services.AddHostedService<ListingExpiryService>();
     builder.Services.AddScoped<AccountService>();
     builder.Services.AddScoped<OcrService>();
+
+    // Named HttpClient for Expo push — uses IHttpClientFactory for proper DNS rotation
+    builder.Services.AddHttpClient("expo-push", client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(5);
+    });
+
     builder.Services.AddHttpClient();
 
     var app = builder.Build();

@@ -11,18 +11,24 @@ namespace BairroNow.Api.Services;
 
 public class NotificationService : INotificationService
 {
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(5) };
     private const string ExpoUrl = "https://exp.host/--/api/v2/push/send";
+    private const string ExpoClientName = "expo-push";
 
     private readonly AppDbContext _db;
     private readonly IHubContext<NotificationHub> _hub;
     private readonly ILogger<NotificationService> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public NotificationService(AppDbContext db, IHubContext<NotificationHub> hub, ILogger<NotificationService> logger)
+    public NotificationService(
+        AppDbContext db,
+        IHubContext<NotificationHub> hub,
+        ILogger<NotificationService> logger,
+        IHttpClientFactory httpClientFactory)
     {
         _db = db;
         _hub = hub;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
     }
 
     public Task NotifyCommentAsync(Guid recipientId, Guid actorId, int postId, int commentId, CancellationToken ct = default)
@@ -365,7 +371,8 @@ public class NotificationService : INotificationService
                 Encoding.UTF8,
                 "application/json"
             );
-            using var response = await _http.PostAsync(ExpoUrl, content, CancellationToken.None);
+            using var http = _httpClientFactory.CreateClient(ExpoClientName);
+            using var response = await http.PostAsync(ExpoUrl, content, CancellationToken.None);
             if (!response.IsSuccessStatusCode)
                 _logger.LogWarning("Expo push returned {Status} for user {UserId}", response.StatusCode, recipientId);
         }
@@ -403,7 +410,8 @@ public class NotificationService : INotificationService
                 Encoding.UTF8,
                 "application/json"
             );
-            using var response = await _http.PostAsync(ExpoUrl, content, CancellationToken.None);
+            using var http = _httpClientFactory.CreateClient(ExpoClientName);
+            using var response = await http.PostAsync(ExpoUrl, content, CancellationToken.None);
             if (!response.IsSuccessStatusCode)
                 _logger.LogWarning("Expo push returned {Status} for user {UserId}", response.StatusCode, recipientId);
         }

@@ -12,7 +12,13 @@ namespace BairroNow.Api.Controllers.v1;
 public class BusinessesController : ControllerBase
 {
     private readonly AppDbContext _db;
-    public BusinessesController(AppDbContext db) => _db = db;
+    private readonly ILogger<BusinessesController> _logger;
+
+    public BusinessesController(AppDbContext db, ILogger<BusinessesController> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     // GET /api/v1/businesses
     [HttpGet("/api/v1/businesses")]
@@ -98,7 +104,8 @@ public class BusinessesController : ControllerBase
         }
         catch (Exception ex)
         {
-            return StatusCode(500, new { error = ex.GetType().Name, detail = ex.Message });
+            _logger.LogError(ex, "Error listing businesses for bairro");
+            return StatusCode(500, new { error = "Erro ao carregar negócios. Tente novamente." });
         }
     }
 }
