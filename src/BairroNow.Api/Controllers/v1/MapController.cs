@@ -78,7 +78,7 @@ public class MapController : ControllerBase
 
     // MAP-006 — heatmap: aggregate post count by ~0.002° grid cell
     [HttpGet("heatmap")]
-    public async Task<IActionResult> GetHeatmap([FromQuery] int bairroId)
+    public async Task<IActionResult> GetHeatmap([FromQuery] int bairroId, CancellationToken ct)
     {
         var data = await _db.Verifications
             .AsNoTracking()
@@ -93,26 +93,26 @@ public class MapController : ControllerBase
                 LngCell = Math.Round(v.ApprovedLng!.Value / 0.002) * 0.002
             })
             .Select(g => new { g.Key.LatCell, g.Key.LngCell, Count = g.Count() })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         return Ok(data);
     }
 
     // MAP-007 — POIs (admin-only create, anyone can read)
     [HttpGet("pois")]
-    public async Task<IActionResult> GetPois([FromQuery] int bairroId)
+    public async Task<IActionResult> GetPois([FromQuery] int bairroId, CancellationToken ct)
     {
         var pois = await _db.PointsOfInterest
             .AsNoTracking()
             .Where(p => p.BairroId == bairroId && p.DeletedAt == null)
             .Select(p => new { p.Id, p.Name, p.Description, p.Category, p.Lat, p.Lng })
-            .ToListAsync();
+            .ToListAsync(ct);
         return Ok(pois);
     }
 
     [HttpPost("pois")]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> CreatePoi([FromBody] CreatePoiRequest req)
+    public async Task<IActionResult> CreatePoi([FromBody] CreatePoiRequest req, CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -128,21 +128,21 @@ public class MapController : ControllerBase
             CreatedByUserId = userId.Value
         };
         _db.PointsOfInterest.Add(poi);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return Created($"/api/v1/map/pois/{poi.Id}", poi);
     }
 
     // MAP-004 — opt out toggle
     [HttpPut("preference")]
-    public async Task<IActionResult> UpdateMapPreference([FromBody] MapPreferenceRequest req)
+    public async Task<IActionResult> UpdateMapPreference([FromBody] MapPreferenceRequest req, CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
-        var user = await _db.Users.FindAsync(userId.Value);
+        var user = await _db.Users.FindAsync(new object[] { userId.Value }, ct);
         if (user == null) return NotFound();
         user.ShowOnMap = req.ShowOnMap;
         user.UpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return NoContent();
     }
 
