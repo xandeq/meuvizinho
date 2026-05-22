@@ -26,9 +26,9 @@ public class AuthController : ControllerBase
 
     [HttpPost("register")]
     [EnableRateLimiting("public")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
-        var (response, error) = await _authService.RegisterAsync(request, GetIpAddress());
+        var (response, error) = await _authService.RegisterAsync(request, GetIpAddress(), ct);
         if (error != null)
             return Conflict(new { error });
 
@@ -37,9 +37,9 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [EnableRateLimiting("public")]
-    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken ct)
     {
-        var (response, refreshToken, error) = await _authService.LoginAsync(request, GetIpAddress());
+        var (response, refreshToken, error) = await _authService.LoginAsync(request, GetIpAddress(), ct);
         if (error != null)
         {
             if (error.Contains("banida"))
@@ -53,7 +53,7 @@ public class AuthController : ControllerBase
         if (response != null && response.User.IsAdmin)
         {
             // Check if user has TOTP enabled by looking up user
-            var user = await GetUserByIdAsync(response.User.Id);
+            var user = await GetUserByIdAsync(response.User.Id, ct);
             if (user != null && user.TotpEnabled)
             {
                 var tempToken = GenerateTotpTempToken(user);
@@ -67,9 +67,9 @@ public class AuthController : ControllerBase
 
     [HttpPost("login/totp-verify")]
     [EnableRateLimiting("public")]
-    public async Task<IActionResult> TotpVerify([FromBody] TotpVerifyRequest request)
+    public async Task<IActionResult> TotpVerify([FromBody] TotpVerifyRequest request, CancellationToken ct)
     {
-        var (response, refreshToken, error) = await _authService.VerifyTotpAsync(request.TempToken, request.Code);
+        var (response, refreshToken, error) = await _authService.VerifyTotpAsync(request.TempToken, request.Code, ct);
         if (error != null)
             return Unauthorized(new { error });
 
@@ -80,7 +80,7 @@ public class AuthController : ControllerBase
     [HttpPost("totp/setup")]
     [Authorize]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> TotpSetup()
+    public async Task<IActionResult> TotpSetup(CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
@@ -90,7 +90,7 @@ public class AuthController : ControllerBase
         if (isAdmin != "true")
             return Forbid();
 
-        var result = await _authService.SetupTotpAsync(userId.Value);
+        var result = await _authService.SetupTotpAsync(userId.Value, ct);
         if (result == null)
             return NotFound(new { error = "Usuario nao encontrado." });
 
@@ -116,7 +116,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("google/callback")]
-    public async Task<IActionResult> GoogleCallback()
+    public async Task<IActionResult> GoogleCallback(CancellationToken ct)
     {
         var authenticateResult = await HttpContext.AuthenticateAsync("Google");
         if (!authenticateResult.Succeeded)
@@ -128,7 +128,7 @@ public class AuthController : ControllerBase
         if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(googleId))
             return Unauthorized(new { error = "Dados Google incompletos." });
 
-        var (response, refreshToken, error) = await _authService.GoogleSignInAsync(email, googleId);
+        var (response, refreshToken, error) = await _authService.GoogleSignInAsync(email, googleId, ct);
         if (error != null)
             return Unauthorized(new { error });
 
@@ -139,9 +139,9 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("google/mobile")]
-    public async Task<IActionResult> GoogleMobile([FromBody] GoogleMobileRequest request)
+    public async Task<IActionResult> GoogleMobile([FromBody] GoogleMobileRequest request, CancellationToken ct)
     {
-        var (response, refreshToken, error) = await _authService.GoogleSignInMobileAsync(request.IdToken);
+        var (response, refreshToken, error) = await _authService.GoogleSignInMobileAsync(request.IdToken, ct);
         if (error != null)
             return Unauthorized(new { error });
 
@@ -150,19 +150,19 @@ public class AuthController : ControllerBase
 
     [HttpPost("magic-link/request")]
     [EnableRateLimiting("public")]
-    public async Task<IActionResult> MagicLinkRequest([FromBody] MagicLinkRequestDto request)
+    public async Task<IActionResult> MagicLinkRequest([FromBody] MagicLinkRequestDto request, CancellationToken ct)
     {
-        await _authService.RequestMagicLinkAsync(request.Email);
+        await _authService.RequestMagicLinkAsync(request.Email, ct);
         // Always return 200 to prevent email enumeration
         return Ok(new { message = "Se o e-mail existir, enviaremos um link de acesso." });
     }
 
     [HttpGet("magic-link/verify")]
-    public async Task<IActionResult> MagicLinkVerify([FromQuery] string token)
+    public async Task<IActionResult> MagicLinkVerify([FromQuery] string token, CancellationToken ct)
     {
         var frontendUrl = _configuration["FrontendUrl"] ?? "https://bairronow.com.br";
 
-        var (response, refreshToken, error) = await _authService.VerifyMagicLinkAsync(token);
+        var (response, refreshToken, error) = await _authService.VerifyMagicLinkAsync(token, ct);
         if (error != null)
             return Redirect($"{frontendUrl}/auth/magic-link?error=invalid");
 
@@ -172,13 +172,13 @@ public class AuthController : ControllerBase
 
     [HttpPost("refresh")]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> Refresh()
+    public async Task<IActionResult> Refresh(CancellationToken ct)
     {
         var refreshToken = Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
             return Unauthorized(new { error = "Token nao encontrado." });
 
-        var (response, newRefreshToken, error) = await _authService.RefreshAsync(refreshToken, GetIpAddress());
+        var (response, newRefreshToken, error) = await _authService.RefreshAsync(refreshToken, GetIpAddress(), ct);
         if (error != null)
         {
             ClearRefreshTokenCookie();
@@ -192,11 +192,11 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     [Authorize]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> Logout()
+    public async Task<IActionResult> Logout(CancellationToken ct)
     {
         var refreshToken = Request.Cookies["refreshToken"];
         if (!string.IsNullOrEmpty(refreshToken))
-            await _authService.LogoutAsync(refreshToken, GetIpAddress());
+            await _authService.LogoutAsync(refreshToken, GetIpAddress(), ct);
 
         ClearRefreshTokenCookie();
         return Ok(new { message = "Sessao encerrada." });
@@ -205,7 +205,7 @@ public class AuthController : ControllerBase
     [HttpPost("logout-all")]
     [Authorize]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> LogoutAll()
+    public async Task<IActionResult> LogoutAll(CancellationToken ct)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? User.FindFirst("sub")?.Value;
@@ -213,24 +213,24 @@ public class AuthController : ControllerBase
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
             return Unauthorized(new { error = "Usuario nao identificado." });
 
-        await _authService.LogoutAllAsync(userId);
+        await _authService.LogoutAllAsync(userId, ct);
         ClearRefreshTokenCookie();
         return Ok(new { message = "Todas as sessoes encerradas." });
     }
 
     [HttpPost("forgot-password")]
     [EnableRateLimiting("public")]
-    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
     {
-        await _authService.ForgotPasswordAsync(request.Email);
+        await _authService.ForgotPasswordAsync(request.Email, ct);
         return Ok(new { message = "Se o e-mail existir, enviaremos um link de recuperacao." });
     }
 
     [HttpPost("reset-password")]
     [EnableRateLimiting("public")]
-    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
     {
-        var result = await _authService.ResetPasswordAsync(request.Token, request.Email, request.NewPassword);
+        var result = await _authService.ResetPasswordAsync(request.Token, request.Email, request.NewPassword, ct);
         if (!result)
             return BadRequest(new { error = "Token invalido ou expirado." });
 
@@ -266,12 +266,12 @@ public class AuthController : ControllerBase
         return handler.WriteToken(token);
     }
 
-    private async Task<Models.Entities.User?> GetUserByIdAsync(Guid userId)
+    private async Task<Models.Entities.User?> GetUserByIdAsync(Guid userId, CancellationToken ct)
     {
         // Use a scoped DbContext to look up user TotpEnabled status
         // This is needed because LoginAsync returns AuthResponse without TOTP info
         var db = HttpContext.RequestServices.GetRequiredService<Data.AppDbContext>();
-        return await db.Users.FindAsync(userId);
+        return await db.Users.FindAsync([userId], ct);
     }
 
     private Guid? GetUserId()

@@ -50,7 +50,7 @@ public class ListingExpiryService : BackgroundService
         // Narrow race: if a seller renews between this query and the UPDATE, the UPDATE's
         // WHERE clause will skip that listing (Status=Active AND ExpiresAt<now re-evaluated at DB level),
         // but we may fire a spurious "listing expired" notification — acceptable edge case.
-        var toExpire = await db.Listings
+        var toExpire = await db.Listings.AsNoTracking()
             .Where(l => l.Status == ListingStatus.Active
                      && l.ExpiresAt != null
                      && l.ExpiresAt < now)

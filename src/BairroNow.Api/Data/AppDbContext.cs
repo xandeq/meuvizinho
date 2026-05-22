@@ -138,6 +138,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.ProofSha256).IsRequired().HasMaxLength(64);
             entity.HasIndex(e => e.ProofSha256);
             entity.HasIndex(e => new { e.UserId, e.Status });
+            // DocumentRetentionService filters Approved + ReviewedAt < cutoff every hour
+            entity.HasIndex(e => new { e.Status, e.ReviewedAt });
             entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
             entity.Property(e => e.RejectionReason).HasMaxLength(500);
             entity.Property(e => e.SubmittedAt).HasDefaultValueSql("GETUTCDATE()");
@@ -499,6 +501,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Location).HasMaxLength(300);
             entity.HasOne(e => e.Group).WithMany(g => g.Events).HasForeignKey(e => e.GroupId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.CreatedByUser).WithMany().HasForeignKey(e => e.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+            // GroupEventReminderService polls this filter every 5 minutes
+            entity.HasIndex(e => new { e.ReminderSent, e.ReminderAt });
         });
 
         // Phase 5 — GroupEventRsvp

@@ -17,48 +17,48 @@ public class AccountService
         _logger = logger;
     }
 
-    public async Task<object> BuildExportAsync(Guid userId)
+    public async Task<object> BuildExportAsync(Guid userId, CancellationToken ct = default)
     {
-        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user == null)
             throw new InvalidOperationException("User not found");
 
         var posts = await _db.Posts.AsNoTracking()
             .Where(p => p.AuthorId == userId)
             .Select(p => new { p.Id, p.Body, p.Category, p.CreatedAt })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var comments = await _db.Comments.AsNoTracking()
             .Where(c => c.AuthorId == userId)
             .Select(c => new { c.Id, c.Body, c.PostId, c.CreatedAt })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var listings = await _db.Listings.AsNoTracking()
             .Where(l => l.SellerId == userId)
             .Select(l => new { l.Id, l.Title, l.Description, l.Price, l.Status, l.CreatedAt })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var messages = await _db.Messages.AsNoTracking()
             .Where(m => m.SenderId == userId)
             .Select(m => new { m.Id, m.Text, m.SentAt, m.ConversationId })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var verifications = await _db.Verifications.IgnoreQueryFilters().AsNoTracking()
             .Where(v => v.UserId == userId)
             .Select(v => new { v.Id, v.Cep, v.Status, v.SubmittedAt, v.ReviewedAt })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var notifications = await _db.Notifications.AsNoTracking()
             .Where(n => n.UserId == userId)
             .Select(n => new { n.Id, n.Type, n.IsRead, n.CreatedAt })
-            .ToListAsync();
+            .ToListAsync(ct);
 
         // Update last export timestamp
-        var userEntity = await _db.Users.FindAsync(userId);
+        var userEntity = await _db.Users.FindAsync(new object[] { userId }, ct);
         if (userEntity != null)
         {
             userEntity.LastExportAt = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
         }
 
         return new
@@ -86,9 +86,9 @@ public class AccountService
         };
     }
 
-    public async Task RequestDeletionAsync(Guid userId)
+    public async Task RequestDeletionAsync(Guid userId, CancellationToken ct = default)
     {
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _db.Users.FindAsync(new object[] { userId }, ct);
         if (user == null)
             throw new InvalidOperationException("User not found");
 
@@ -98,14 +98,14 @@ public class AccountService
         // Revoke all refresh tokens
         var tokens = await _db.RefreshTokens
             .Where(t => t.UserId == userId && !t.IsRevoked)
-            .ToListAsync();
+            .ToListAsync(ct);
         foreach (var token in tokens)
             token.IsRevoked = true;
 
         // Delete verification documents immediately
         var verifications = await _db.Verifications.IgnoreQueryFilters()
             .Where(v => v.UserId == userId && v.ProofFilePath != "" && v.DocumentDeletedAt == null)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         foreach (var v in verifications)
         {
@@ -122,14 +122,14 @@ public class AccountService
             v.DocumentDeletedAt = DateTime.UtcNow;
         }
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         await _emailService.SendAccountDeletionConfirmationAsync(user.Email);
         _logger.LogInformation("Deletion requested for user {UserId}", userId);
     }
 
-    public async Task<bool> CancelDeletionAsync(Guid userId)
+    public async Task<bool> CancelDeletionAsync(Guid userId, CancellationToken ct = default)
     {
-        var user = await _db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+        var user = await _db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId, ct);
         if (user == null)
             return false;
 
@@ -141,18 +141,18 @@ public class AccountService
 
         user.DeleteRequestedAt = null;
         user.IsActive = true;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         _logger.LogInformation("Deletion cancelled for user {UserId}", userId);
         return true;
     }
 
-    public async Task RunAnonymizationAsync()
+    public async Task RunAnonymizationAsync(CancellationToken ct = default)
     {
         var cutoff = DateTime.UtcNow.AddDays(-30);
         var usersToAnonymize = await _db.Users.IgnoreQueryFilters()
             .Where(u => u.DeleteRequestedAt != null && u.DeleteRequestedAt <= cutoff && u.DeletedAt == null)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         foreach (var user in usersToAnonymize)
         {
@@ -169,7 +169,7 @@ public class AccountService
 
         if (usersToAnonymize.Any())
         {
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             _logger.LogInformation("Anonymized {Count} users past 30-day grace period", usersToAnonymize.Count);
         }
     }

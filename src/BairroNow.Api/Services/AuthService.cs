@@ -42,9 +42,9 @@ public class AuthService : IAuthService
         _logger = logger;
     }
 
-    public async Task<(AuthResponse? Response, string? Error)> RegisterAsync(RegisterRequest request, string ipAddress)
+    public async Task<(AuthResponse? Response, string? Error)> RegisterAsync(RegisterRequest request, string ipAddress, CancellationToken ct = default)
     {
-        if (await _db.Users.AnyAsync(u => u.Email == request.Email.ToLowerInvariant()))
+        if (await _db.Users.AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), ct))
             return (null, "E-mail ja cadastrado.");
 
         var user = new User
@@ -60,7 +60,7 @@ public class AuthService : IAuthService
         };
 
         _db.Users.Add(user);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         await _emailService.SendConfirmationEmailAsync(user.Email, user.EmailConfirmationToken);
 
@@ -69,9 +69,9 @@ public class AuthService : IAuthService
         return (response, null);
     }
 
-    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> LoginAsync(LoginRequest request, string ipAddress)
+    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> LoginAsync(LoginRequest request, string ipAddress, CancellationToken ct = default)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant());
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant(), ct);
         if (user == null)
             return (null, null, "E-mail ou senha incorretos.");
 
@@ -89,7 +89,7 @@ public class AuthService : IAuthService
                 user.LockoutEnd = DateTime.UtcNow.AddMinutes(LockoutMinutes);
                 _logger.LogWarning("Account locked for {Email} after {Attempts} failed attempts", user.Email, user.FailedLoginAttempts);
             }
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             return (null, null, "E-mail ou senha incorretos.");
         }
 
@@ -110,18 +110,18 @@ public class AuthService : IAuthService
         };
 
         _db.RefreshTokens.Add(refreshToken);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var response = new AuthResponse(accessToken, new UserInfo(user.Id, user.Email, user.DisplayName, user.EmailConfirmed, user.BairroId, user.IsVerified, user.IsAdmin));
         return (response, rawRefreshToken, null);
     }
 
-    public async Task<(AuthResponse? Response, string? NewRefreshToken, string? Error)> RefreshAsync(string refreshToken, string ipAddress)
+    public async Task<(AuthResponse? Response, string? NewRefreshToken, string? Error)> RefreshAsync(string refreshToken, string ipAddress, CancellationToken ct = default)
     {
         var tokenHash = HashToken(refreshToken);
         var storedToken = await _db.RefreshTokens
             .Include(t => t.User)
-            .FirstOrDefaultAsync(t => t.Token == tokenHash);
+            .FirstOrDefaultAsync(t => t.Token == tokenHash, ct);
 
         if (storedToken == null)
             return (null, null, "Token invalido.");
@@ -131,13 +131,13 @@ public class AuthService : IAuthService
             // Token reuse detected: revoke all tokens for this user
             var allTokens = await _db.RefreshTokens
                 .Where(t => t.UserId == storedToken.UserId && !t.IsRevoked)
-                .ToListAsync();
+                .ToListAsync(ct);
             foreach (var t in allTokens)
             {
                 t.IsRevoked = true;
                 t.RevokedByIp = ipAddress;
             }
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
             _logger.LogWarning("Refresh token reuse detected for user {UserId}", storedToken.UserId);
             return (null, null, "Token invalido.");
         }
@@ -162,7 +162,7 @@ public class AuthService : IAuthService
         storedToken.ReplacedByTokenId = newToken.Id;
 
         _db.RefreshTokens.Add(newToken);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var user = storedToken.User;
         var accessToken = _tokenService.GenerateAccessToken(user);
@@ -170,47 +170,47 @@ public class AuthService : IAuthService
         return (response, rawNewToken, null);
     }
 
-    public async Task LogoutAsync(string refreshToken, string ipAddress)
+    public async Task LogoutAsync(string refreshToken, string ipAddress, CancellationToken ct = default)
     {
         var tokenHash = HashToken(refreshToken);
-        var storedToken = await _db.RefreshTokens.FirstOrDefaultAsync(t => t.Token == tokenHash);
+        var storedToken = await _db.RefreshTokens.FirstOrDefaultAsync(t => t.Token == tokenHash, ct);
         if (storedToken != null)
         {
             storedToken.IsRevoked = true;
             storedToken.RevokedByIp = ipAddress;
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
         }
     }
 
-    public async Task LogoutAllAsync(Guid userId)
+    public async Task LogoutAllAsync(Guid userId, CancellationToken ct = default)
     {
         var tokens = await _db.RefreshTokens
             .Where(t => t.UserId == userId && !t.IsRevoked)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         foreach (var token in tokens)
             token.IsRevoked = true;
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
     }
 
-    public async Task<string?> ForgotPasswordAsync(string email)
+    public async Task<string?> ForgotPasswordAsync(string email, CancellationToken ct = default)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant());
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant(), ct);
         if (user == null)
             return null; // Don't reveal if email exists
 
         user.PasswordResetToken = Guid.NewGuid().ToString();
         user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(PasswordResetHours);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         await _emailService.SendPasswordResetEmailAsync(user.Email, user.PasswordResetToken);
         return user.PasswordResetToken;
     }
 
-    public async Task<bool> ResetPasswordAsync(string token, string email, string newPassword)
+    public async Task<bool> ResetPasswordAsync(string token, string email, string newPassword, CancellationToken ct = default)
     {
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant());
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email.ToLowerInvariant(), ct);
         if (user == null)
             return false;
 
@@ -220,24 +220,24 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.PasswordResetToken = null;
         user.PasswordResetTokenExpiry = null;
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         return true;
     }
 
     // ── Phase 6: Google OAuth ──
 
-    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInAsync(string email, string googleId)
+    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInAsync(string email, string googleId, CancellationToken ct = default)
     {
         var normalizedEmail = email.ToLowerInvariant();
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
 
         if (user != null)
         {
             if (user.GoogleId == null)
             {
                 user.GoogleId = googleId;
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(ct);
             }
         }
         else
@@ -254,22 +254,22 @@ public class AuthService : IAuthService
                 AcceptedPrivacyPolicyVersion = 1
             };
             _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+            await _db.SaveChangesAsync(ct);
         }
 
-        return await IssueTokensAsync(user, "google-oauth");
+        return await IssueTokensAsync(user, "google-oauth", ct);
     }
 
-    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInMobileAsync(string idToken)
+    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInMobileAsync(string idToken, CancellationToken ct = default)
     {
         try
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}");
+            var response = await client.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", ct);
             if (!response.IsSuccessStatusCode)
                 return (null, null, "Token Google invalido.");
 
-            var json = await response.Content.ReadAsStringAsync();
+            var json = await response.Content.ReadAsStringAsync(ct);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
 
@@ -283,7 +283,7 @@ public class AuthService : IAuthService
             if (string.IsNullOrEmpty(googleEmail) || string.IsNullOrEmpty(sub))
                 return (null, null, "Token Google invalido.");
 
-            return await GoogleSignInAsync(googleEmail, sub);
+            return await GoogleSignInAsync(googleEmail, sub, ct);
         }
         catch (Exception ex)
         {
@@ -294,10 +294,10 @@ public class AuthService : IAuthService
 
     // ── Phase 6: Magic Link ──
 
-    public async Task RequestMagicLinkAsync(string email)
+    public async Task RequestMagicLinkAsync(string email, CancellationToken ct = default)
     {
         var normalizedEmail = email.ToLowerInvariant();
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
         if (user == null)
             return; // Silent — prevent email enumeration
 
@@ -312,14 +312,14 @@ public class AuthService : IAuthService
         };
 
         _db.MagicLinkTokens.Add(magicLinkToken);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var frontendUrl = _configuration["FrontendUrl"] ?? "https://bairronow.com.br";
         var magicUrl = $"{frontendUrl}/auth/magic-link?token={Convert.ToBase64String(rawToken)}";
         await _emailService.SendMagicLinkAsync(user.Email, magicUrl);
     }
 
-    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> VerifyMagicLinkAsync(string rawTokenBase64)
+    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> VerifyMagicLinkAsync(string rawTokenBase64, CancellationToken ct = default)
     {
         try
         {
@@ -328,19 +328,19 @@ public class AuthService : IAuthService
 
             var now = DateTime.UtcNow;
             var claimed = await _db.Database.ExecuteSqlInterpolatedAsync(
-                $"UPDATE MagicLinkTokens SET Used = 1 WHERE TokenHash = {tokenHash} AND Used = 0 AND ExpiresAt > {now}");
+                $"UPDATE MagicLinkTokens SET Used = 1 WHERE TokenHash = {tokenHash} AND Used = 0 AND ExpiresAt > {now}", ct);
 
             if (claimed == 0)
                 return (null, null, "Link invalido ou expirado.");
 
             var stored = await _db.MagicLinkTokens
                 .Include(t => t.User)
-                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
+                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
 
             if (stored?.User == null)
                 return (null, null, "Link invalido ou expirado.");
 
-            return await IssueTokensAsync(stored.User, "magic-link");
+            return await IssueTokensAsync(stored.User, "magic-link", ct);
         }
         catch (FormatException)
         {
@@ -350,9 +350,9 @@ public class AuthService : IAuthService
 
     // ── Phase 6: TOTP ──
 
-    public async Task<(string Secret, string[] BackupCodes)?> SetupTotpAsync(Guid userId)
+    public async Task<(string Secret, string[] BackupCodes)?> SetupTotpAsync(Guid userId, CancellationToken ct = default)
     {
-        var user = await _db.Users.FindAsync(userId);
+        var user = await _db.Users.FindAsync([userId], ct);
         if (user == null)
             return null;
 
@@ -373,11 +373,11 @@ public class AuthService : IAuthService
         }
         user.TotpBackupCodes = JsonSerializer.Serialize(hashedCodes);
 
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
         return (base32Secret, backupCodes);
     }
 
-    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> VerifyTotpAsync(string tempToken, string code)
+    public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> VerifyTotpAsync(string tempToken, string code, CancellationToken ct = default)
     {
         // Validate tempToken is a JWT with totp_pending claim
         try
@@ -409,7 +409,7 @@ public class AuthService : IAuthService
             if (userIdStr == null || !Guid.TryParse(userIdStr, out var userId))
                 return (null, null, "Token invalido.");
 
-            var user = await _db.Users.FindAsync(userId);
+            var user = await _db.Users.FindAsync([userId], ct);
             if (user == null || user.TotpSecret == null)
                 return (null, null, "TOTP nao configurado.");
 
@@ -417,7 +417,7 @@ public class AuthService : IAuthService
             var totp = new Totp(Base32Encoding.ToBytes(user.TotpSecret));
             if (totp.VerifyTotp(code, out _, new VerificationWindow(previous: 1, future: 1)))
             {
-                return await IssueTokensAsync(user, "totp-verified");
+                return await IssueTokensAsync(user, "totp-verified", ct);
             }
 
             // Try backup codes
@@ -433,8 +433,8 @@ public class AuthService : IAuthService
                         // Remove used backup code
                         var newHashes = storedHashes.Where((_, i) => i != idx).ToArray();
                         user.TotpBackupCodes = JsonSerializer.Serialize(newHashes);
-                        await _db.SaveChangesAsync();
-                        return await IssueTokensAsync(user, "totp-backup");
+                        await _db.SaveChangesAsync(ct);
+                        return await IssueTokensAsync(user, "totp-backup", ct);
                     }
                 }
             }
@@ -449,7 +449,7 @@ public class AuthService : IAuthService
 
     // ── Private helpers ──
 
-    private async Task<(AuthResponse Response, string RefreshToken, string? Error)> IssueTokensAsync(User user, string method)
+    private async Task<(AuthResponse Response, string RefreshToken, string? Error)> IssueTokensAsync(User user, string method, CancellationToken ct = default)
     {
         var accessToken = _tokenService.GenerateAccessToken(user);
         var rawRefreshToken = _tokenService.GenerateRefreshToken();
@@ -464,7 +464,7 @@ public class AuthService : IAuthService
         };
 
         _db.RefreshTokens.Add(refreshToken);
-        await _db.SaveChangesAsync();
+        await _db.SaveChangesAsync(ct);
 
         var response = new AuthResponse(accessToken, new UserInfo(user.Id, user.Email, user.DisplayName, user.EmailConfirmed, user.BairroId, user.IsVerified, user.IsAdmin));
         return (response, rawRefreshToken, null);

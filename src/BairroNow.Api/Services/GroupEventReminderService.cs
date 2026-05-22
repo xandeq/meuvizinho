@@ -34,7 +34,6 @@ public class GroupEventReminderService : BackgroundService
 
         var due = await db.GroupEvents
             .Where(e => e.ReminderAt <= DateTime.UtcNow && !e.ReminderSent && e.DeletedAt == null)
-            .Include(e => e.Group)
             .ToListAsync(ct);
 
         // Save per-event: if SendAsync for event N throws, events 0..N-1 stay

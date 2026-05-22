@@ -56,42 +56,68 @@ public class DigestSchedulerService : BackgroundService
             .Select(u => new { u.Id, u.Email, u.BairroId })
             .ToListAsync(ct);
 
-        var sevenDaysAgo = DateTime.UtcNow.AddDays(-7);
-        var sevenDaysFromNow = DateTime.UtcNow.AddDays(7);
+        if (users.Count == 0)
+            return;
 
+        var now = DateTime.UtcNow;
+        var sevenDaysAgo = now.AddDays(-7);
+        var sevenDaysFromNow = now.AddDays(7);
+
+        // Collect the distinct bairro IDs we actually need before the loop.
+        var bairroIds = users.Select(u => u.BairroId!.Value).Distinct().ToList();
+
+        // --- Batch query 1: all relevant bairros in one round-trip ---
+        var bairrosById = await db.Bairros.AsNoTracking()
+            .Where(b => bairroIds.Contains(b.Id))
+            .ToDictionaryAsync(b => b.Id, ct);
+
+        // --- Batch query 2: top-3 posts per bairro (single query, grouped in memory) ---
+        // Fetching up to 10 candidates per bairro and slicing to 3 in memory is safe
+        // because the number of bairros is bounded (~hundreds) and posts are already
+        // filtered to a 7-day window. An alternative GROUP BY TOP-N in SQL requires
+        // window functions not natively supported by EF Core without raw SQL.
+        var recentPostsByBairro = (await db.Posts.AsNoTracking()
+            .Where(p => bairroIds.Contains(p.BairroId) && p.CreatedAt >= sevenDaysAgo)
+            .Select(p => new { p.Id, p.Body, p.BairroId, LikeCount = p.Likes.Count })
+            .ToListAsync(ct))
+            .GroupBy(p => p.BairroId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderByDescending(p => p.LikeCount).Take(3).ToList());
+
+        // --- Batch query 3: upcoming events per bairro (single query, grouped in memory) ---
+        var upcomingEventsByBairro = (await db.GroupEvents.AsNoTracking()
+            .Where(e => bairroIds.Contains(e.Group!.BairroId)
+                && e.StartsAt >= now
+                && e.StartsAt <= sevenDaysFromNow
+                && e.DeletedAt == null)
+            .Select(e => new { e.Id, e.Title, e.StartsAt, BairroId = e.Group!.BairroId })
+            .ToListAsync(ct))
+            .GroupBy(e => e.BairroId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(e => e.StartsAt).Take(3).ToList());
+
+        // --- Loop is now purely in-memory: no DB calls inside ---
         foreach (var user in users)
         {
             try
             {
-                var bairro = await db.Bairros.AsNoTracking()
-                    .FirstOrDefaultAsync(b => b.Id == user.BairroId, ct);
+                var bairroId = user.BairroId!.Value;
 
-                if (bairro == null) continue;
+                if (!bairrosById.TryGetValue(bairroId, out var bairro))
+                    continue;
 
-                var topPosts = await db.Posts.AsNoTracking()
-                    .Where(p => p.BairroId == user.BairroId && p.CreatedAt >= sevenDaysAgo)
-                    .OrderByDescending(p => p.Likes.Count)
-                    .Take(3)
-                    .Select(p => new { p.Id, p.Body, LikeCount = p.Likes.Count })
-                    .ToListAsync(ct);
+                var topPosts = recentPostsByBairro.GetValueOrDefault(bairroId) ?? [];
+                var upcomingEvents = upcomingEventsByBairro.GetValueOrDefault(bairroId) ?? [];
 
-                var upcomingEvents = await db.GroupEvents.AsNoTracking()
-                    .Where(e => e.Group!.BairroId == user.BairroId
-                        && e.StartsAt >= DateTime.UtcNow
-                        && e.StartsAt <= sevenDaysFromNow
-                        && e.DeletedAt == null)
-                    .OrderBy(e => e.StartsAt)
-                    .Take(3)
-                    .Select(e => new { e.Id, e.Title, e.StartsAt })
-                    .ToListAsync(ct);
-
-                if (!topPosts.Any() && !upcomingEvents.Any())
+                if (topPosts.Count == 0 && upcomingEvents.Count == 0)
                     continue;
 
                 var html = $@"
 <h2>O que aconteceu no {bairro.Nome} essa semana</h2>";
 
-                if (topPosts.Any())
+                if (topPosts.Count > 0)
                 {
                     html += "<h3>Posts mais curtidos</h3><ul>";
                     foreach (var post in topPosts)
@@ -102,7 +128,7 @@ public class DigestSchedulerService : BackgroundService
                     html += "</ul>";
                 }
 
-                if (upcomingEvents.Any())
+                if (upcomingEvents.Count > 0)
                 {
                     html += "<h3>Proximos eventos</h3><ul>";
                     foreach (var ev in upcomingEvents)

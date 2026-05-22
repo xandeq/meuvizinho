@@ -25,20 +25,20 @@ public class AccountController : ControllerBase
     /// </summary>
     [HttpGet("export")]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> Export()
+    public async Task<IActionResult> Export(CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
         // Check rate limit: 24h between exports
         var db = HttpContext.RequestServices.GetRequiredService<Data.AppDbContext>();
-        var user = await db.Users.FindAsync(userId.Value);
+        var user = await db.Users.FindAsync(new object[] { userId.Value }, ct);
         if (user?.LastExportAt != null && user.LastExportAt > DateTime.UtcNow.AddHours(-24))
         {
             return StatusCode(429, new { error = "Exportacao permitida apenas uma vez a cada 24 horas." });
         }
 
-        var data = await _accountService.BuildExportAsync(userId.Value);
+        var data = await _accountService.BuildExportAsync(userId.Value, ct);
         var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
         var bytes = Encoding.UTF8.GetBytes(json);
 
@@ -50,12 +50,12 @@ public class AccountController : ControllerBase
     /// </summary>
     [HttpPost("delete")]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> RequestDeletion()
+    public async Task<IActionResult> RequestDeletion(CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        await _accountService.RequestDeletionAsync(userId.Value);
+        await _accountService.RequestDeletionAsync(userId.Value, ct);
         var deletionDate = DateTime.UtcNow.AddDays(30);
 
         return Ok(new
@@ -70,12 +70,12 @@ public class AccountController : ControllerBase
     /// </summary>
     [HttpPost("delete/cancel")]
     [EnableRateLimiting("authenticated")]
-    public async Task<IActionResult> CancelDeletion()
+    public async Task<IActionResult> CancelDeletion(CancellationToken ct)
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var cancelled = await _accountService.CancelDeletionAsync(userId.Value);
+        var cancelled = await _accountService.CancelDeletionAsync(userId.Value, ct);
         if (!cancelled)
             return BadRequest(new { error = "Nao foi possivel cancelar. O periodo de carencia pode ter expirado." });
 

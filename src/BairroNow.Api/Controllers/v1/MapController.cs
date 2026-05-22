@@ -26,7 +26,7 @@ public class MapController : ControllerBase
     // MAP-001, MAP-002, MAP-003, MAP-004, MAP-005
     // GET /api/v1/map/pins?bairroId={id}&filter={verified|new|businesses}
     [HttpGet("pins")]
-    public async Task<IActionResult> GetPins([FromQuery] int bairroId, [FromQuery] string? filter)
+    public async Task<IActionResult> GetPins([FromQuery] int bairroId, [FromQuery] string? filter, CancellationToken ct)
     {
         var query = _db.Users
             .AsNoTracking()
@@ -55,7 +55,7 @@ public class MapController : ControllerBase
                       RawLng = v.ApprovedLng
                   })
             .Where(x => x.RawLat != null && x.RawLng != null)
-            .ToListAsync();
+            .ToListAsync(ct);
 
         var result = pins.Select(p =>
         {
