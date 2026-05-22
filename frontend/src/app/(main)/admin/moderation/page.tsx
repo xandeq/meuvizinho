@@ -143,7 +143,17 @@ export default function ModerationPage() {
       {error && <p className="text-sm text-danger font-semibold">{error}</p>}
 
       {loading ? (
-        <p className="text-fg/60 font-medium">Carregando...</p>
+        <div className="space-y-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 bg-bg border-2 border-border rounded-lg p-3 animate-pulse">
+              <div className="h-5 bg-muted rounded-full w-16" />
+              <div className="h-4 bg-muted rounded w-12" />
+              <div className="h-4 bg-muted rounded w-36" />
+              <div className="h-4 bg-muted rounded w-24" />
+              <div className="h-4 bg-muted rounded w-20 ml-auto" />
+            </div>
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <div className="bg-bg rounded-lg border-2 border-border p-6">
           <p className="text-fg/60 font-medium">Nenhuma denúncia pendente.</p>

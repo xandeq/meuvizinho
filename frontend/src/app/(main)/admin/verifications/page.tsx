@@ -89,7 +89,16 @@ export default function AdminVerificationsPage() {
       {error && <p className="text-sm text-danger font-semibold">{error}</p>}
 
       {loading ? (
-        <p className="text-fg/70 font-medium">Carregando...</p>
+        <div className="space-y-2 overflow-x-auto">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-4 bg-bg border border-border rounded-lg p-3 animate-pulse">
+              <div className="h-4 bg-muted rounded w-40" />
+              <div className="h-4 bg-muted rounded w-20" />
+              <div className="h-4 bg-muted rounded w-28" />
+              <div className="h-4 bg-muted rounded w-16 ml-auto" />
+            </div>
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <Card padding="md">
           <p className="text-fg/70 font-medium">

@@ -15,19 +15,33 @@ interface FlaggedPost {
 export default function AdminGroupsPage() {
   const user = useAuthStore((s) => s.user);
   const [flaggedPosts, setFlaggedPosts] = useState<FlaggedPost[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.bairroId) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLoading(true);
     api
       .get(`/api/v1/groups/flagged-posts?bairroId=${user.bairroId}`)
       .then((r) => setFlaggedPosts(r.data))
-      .catch(() => setFlaggedPosts([]));
+      .catch(() => setFlaggedPosts([]))
+      .finally(() => setLoading(false));
   }, [user?.bairroId]);
 
   return (
     <main className="container mx-auto px-4 py-6">
       <h1 className="text-2xl font-semibold text-fg mb-6">Moderação de Grupos</h1>
-      {flaggedPosts.length === 0 ? (
+      {loading ? (
+        <div className="space-y-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-4 border-b border-border py-3 animate-pulse">
+              <div className="h-4 bg-muted rounded w-28" />
+              <div className="h-4 bg-muted rounded w-20" />
+              <div className="h-4 bg-muted rounded w-48" />
+            </div>
+          ))}
+        </div>
+      ) : !flaggedPosts.length ? (
         <p className="text-muted-fg text-sm">Nenhuma publicação sinalizada.</p>
       ) : (
         <table className="w-full text-sm border-collapse">

@@ -115,7 +115,15 @@ export default function MarketplacePage() {
       <FilterChips filters={filters} onChange={setFilters} />
 
       {loading && items.length === 0 ? (
-        <p className="text-fg/60 font-medium">Carregando...</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+            <div key={i} className="bg-card rounded-2xl border border-border/70 p-3 space-y-2 animate-pulse">
+              <div className="aspect-square bg-muted rounded-xl" />
+              <div className="h-3.5 bg-muted rounded w-3/4" />
+              <div className="h-4 bg-muted rounded w-1/2" />
+            </div>
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <div className="bg-bg border-2 border-border rounded-xl p-8 text-center">
           <p className="text-fg/70 font-semibold mb-3">

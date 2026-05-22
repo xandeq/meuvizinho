@@ -92,6 +92,7 @@ export default function MapClient() {
       </div>
 
       {/* MAP-001 Interactive map */}
+      <div className="relative">
       <MapContainer
         center={DEFAULT_CENTER}
         zoom={DEFAULT_ZOOM}
@@ -170,7 +171,13 @@ export default function MapClient() {
         ))}
       </MapContainer>
 
-      {loading && <p className="text-sm text-muted-fg text-center">Carregando pins...</p>}
+      {loading && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 bg-bg/90 backdrop-blur-sm border border-border rounded-full px-4 py-2 shadow-md">
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <span className="text-xs font-semibold text-fg">Carregando pins...</span>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

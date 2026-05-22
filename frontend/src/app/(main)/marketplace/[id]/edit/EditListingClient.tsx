@@ -32,7 +32,21 @@ export default function EditListingClient() {
     if (listingId) load();
   }, [listingId, load]);
 
-  if (loading) return <p className="text-fg/60 font-medium">Carregando...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-5 max-w-2xl mx-auto">
+        <div className="h-8 bg-muted rounded w-1/2 animate-pulse" />
+        <div className="space-y-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="space-y-1.5 animate-pulse">
+              <div className="h-3 bg-muted rounded w-1/4" />
+              <div className="h-10 bg-muted rounded-xl w-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (error || !listing)
     return <p className="text-red-600 font-semibold">{error ?? "Não encontrado"}</p>;
   if (user?.id !== listing.sellerId)

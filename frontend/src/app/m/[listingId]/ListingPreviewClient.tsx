@@ -59,8 +59,31 @@ export default function ListingPreviewClient({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-fg/60 font-medium">Carregando...</p>
+      <div className="min-h-screen bg-bg">
+        <header className="border-b-2 border-border px-6 py-4">
+          <div className="max-w-2xl mx-auto flex items-center justify-between animate-pulse">
+            <div className="h-7 bg-muted rounded w-32" />
+            <div className="h-9 bg-muted rounded-lg w-24" />
+          </div>
+        </header>
+        <main className="max-w-2xl mx-auto px-6 py-8">
+          <div className="bg-bg border-2 border-border rounded-lg overflow-hidden animate-pulse">
+            <div className="aspect-video w-full bg-muted" />
+            <div className="p-6 space-y-4">
+              <div className="space-y-2">
+                <div className="h-7 bg-muted rounded w-3/4" />
+                <div className="h-8 bg-muted rounded w-1/3" />
+              </div>
+              <div className="h-4 bg-muted rounded w-1/2" />
+              <div className="border-t border-border pt-4 space-y-2">
+                <div className="h-4 bg-muted rounded w-1/5 mb-3" />
+                <div className="h-3 bg-muted rounded w-full" />
+                <div className="h-3 bg-muted rounded w-5/6" />
+                <div className="h-3 bg-muted rounded w-4/6" />
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

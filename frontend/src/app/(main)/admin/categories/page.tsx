@@ -69,7 +69,17 @@ export default function AdminCategoriesPage() {
       )}
 
       {loading ? (
-        <p className="text-fg/60 font-medium">Carregando...</p>
+        <div className="space-y-2">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center justify-between bg-bg border-2 border-border rounded-lg p-3 animate-pulse">
+              <div className="space-y-1.5">
+                <div className="h-4 bg-muted rounded w-32" />
+                <div className="h-3 bg-muted rounded w-24" />
+              </div>
+              <div className="h-5 w-16 bg-muted rounded" />
+            </div>
+          ))}
+        </div>
       ) : (
         <ul className="space-y-2">
           {categories.map((c) => (

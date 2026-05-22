@@ -23,7 +23,17 @@ export default function ChatListPage() {
       </header>
 
       {loading ? (
-        <p className="text-fg/60 font-medium">Carregando...</p>
+        <div className="space-y-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-3 bg-bg border-2 border-border rounded-lg animate-pulse">
+              <div className="w-14 h-14 rounded-full bg-muted shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-muted rounded w-1/2" />
+                <div className="h-3 bg-muted rounded w-3/4" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <ConversationList conversations={conversations} />
       )}

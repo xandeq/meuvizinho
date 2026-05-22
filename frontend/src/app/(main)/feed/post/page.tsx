@@ -50,7 +50,24 @@ function PostDetailContent() {
   return (
     <div className="space-y-4">
       <FeedHeader />
-      {loading && <p className="text-fg/60">Carregando...</p>}
+      {loading && (
+        <div className="space-y-4 animate-pulse">
+          <div className="bg-card rounded-2xl border border-border/70 p-4 space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-muted" />
+              <div className="space-y-2">
+                <div className="h-3 bg-muted rounded w-32" />
+                <div className="h-2.5 bg-muted rounded w-20" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded w-full" />
+              <div className="h-4 bg-muted rounded w-5/6" />
+              <div className="h-4 bg-muted rounded w-4/6" />
+            </div>
+          </div>
+        </div>
+      )}
       {notFound && (
         <p className="text-fg/70 font-semibold">Post não encontrado.</p>
       )}
@@ -67,7 +84,23 @@ function PostDetailContent() {
 
 export default function PostDetailPage() {
   return (
-    <Suspense fallback={<p className="text-fg/60">Carregando...</p>}>
+    <Suspense fallback={
+      <div className="space-y-4 animate-pulse p-4">
+        <div className="bg-card rounded-2xl border border-border/70 p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-muted" />
+            <div className="space-y-2">
+              <div className="h-3 bg-muted rounded w-32" />
+              <div className="h-2.5 bg-muted rounded w-20" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 bg-muted rounded w-full" />
+            <div className="h-4 bg-muted rounded w-5/6" />
+          </div>
+        </div>
+      </div>
+    }>
       <PostDetailContent />
     </Suspense>
   );

@@ -450,9 +450,11 @@ export default function GroupClient() {
       {activeTab === 'members' && (
         <div className="space-y-3">
           {/* Header with total count */}
-          <p className="text-sm font-medium text-muted-fg">
-            {membersLoading ? 'Carregando...' : `${membersTotal} membros`}
-          </p>
+          {membersLoading ? (
+            <div className="h-4 bg-muted rounded w-20 animate-pulse" />
+          ) : (
+            <p className="text-sm font-medium text-muted-fg">{membersTotal} membros</p>
+          )}
 
           {/* Skeleton loader */}
           {membersLoading && (

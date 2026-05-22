@@ -69,7 +69,28 @@ export default function ListingDetailClient() {
     if (listingId) load();
   }, [listingId, load]);
 
-  if (loading) return <p className="text-fg/60 font-medium">Carregando...</p>;
+  if (loading) {
+    return (
+      <div className="space-y-5 max-w-3xl mx-auto">
+        <div className="aspect-video w-full bg-muted animate-pulse rounded-2xl" />
+        <div className="space-y-3">
+          <div className="h-7 bg-muted rounded w-3/4 animate-pulse" />
+          <div className="h-8 bg-muted rounded w-1/3 animate-pulse" />
+          <div className="h-4 bg-muted rounded w-1/4 animate-pulse" />
+        </div>
+        <div className="bg-card rounded-xl border border-border/70 p-4 space-y-2 animate-pulse">
+          <div className="h-4 bg-muted rounded w-1/4" />
+          <div className="h-4 bg-muted rounded w-1/2" />
+        </div>
+        <div className="bg-card rounded-xl border border-border/70 p-4 space-y-2 animate-pulse">
+          <div className="h-4 bg-muted rounded w-1/4 mb-3" />
+          <div className="h-3 bg-muted rounded w-full" />
+          <div className="h-3 bg-muted rounded w-5/6" />
+          <div className="h-3 bg-muted rounded w-4/6" />
+        </div>
+      </div>
+    );
+  }
   if (error || !listing)
     return (
       <p className="text-danger font-semibold">

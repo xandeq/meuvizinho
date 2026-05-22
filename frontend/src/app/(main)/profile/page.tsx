@@ -303,7 +303,28 @@ export default function ProfilePage() {
   };
 
   if (loading) {
-    return <p className="text-fg/70 font-medium">Carregando perfil...</p>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-start justify-between animate-pulse">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-muted" />
+            <div className="space-y-2">
+              <div className="h-5 bg-muted rounded w-40" />
+              <div className="h-3 bg-muted rounded w-24" />
+            </div>
+          </div>
+          <div className="h-9 bg-muted rounded-xl w-24" />
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="bg-card rounded-2xl border border-border/70 p-4 space-y-2 animate-pulse">
+              <div className="h-4 bg-muted rounded w-1/3" />
+              <div className="h-3 bg-muted rounded w-2/3" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (!profile) {

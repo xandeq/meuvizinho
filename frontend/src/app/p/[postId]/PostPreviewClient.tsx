@@ -49,8 +49,32 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-fg/60 font-medium">Carregando...</p>
+      <div className="min-h-screen bg-bg">
+        <header className="border-b-2 border-border px-6 py-4">
+          <div className="max-w-2xl mx-auto flex items-center justify-between animate-pulse">
+            <div className="h-7 bg-muted rounded w-32" />
+            <div className="h-9 bg-muted rounded-lg w-24" />
+          </div>
+        </header>
+        <main className="max-w-2xl mx-auto px-6 py-8">
+          <div className="bg-bg border-2 border-border rounded-lg p-6 space-y-4 animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-muted" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded w-32" />
+                <div className="h-3 bg-muted rounded w-24" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 bg-muted rounded w-full" />
+              <div className="h-4 bg-muted rounded w-5/6" />
+              <div className="h-4 bg-muted rounded w-4/6" />
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-border">
+              <div className="h-4 bg-muted rounded w-32" />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
