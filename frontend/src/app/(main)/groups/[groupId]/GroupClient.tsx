@@ -352,6 +352,9 @@ export default function GroupClient() {
                 {/* Post actions */}
                 <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/40">
                   <button
+                    type="button"
+                    aria-label={p.isLikedByMe ? 'Remover curtida' : 'Curtir publicação'}
+                    aria-pressed={p.isLikedByMe}
                     onClick={() => handleToggleLike(p.id, p.isLikedByMe, p.likeCount)}
                     className={[
                       'flex items-center gap-1.5 text-xs font-medium transition-colors',
@@ -376,6 +379,7 @@ export default function GroupClient() {
 
           {hasMore && (
             <button
+              type="button"
               onClick={() => incrementPage()}
               className="mt-4 w-full text-sm text-primary py-2 border border-primary/20 rounded-xl hover:bg-primary/5"
             >

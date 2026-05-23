@@ -155,7 +155,8 @@ export default function PostCard({
               key={img.url}
               src={img.url}
               alt={`Imagem ${i + 1}`}
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-cover bg-muted"
+              onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
             />
           ))}
         </div>

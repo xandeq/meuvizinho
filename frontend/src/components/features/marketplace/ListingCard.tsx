@@ -57,6 +57,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
             alt={listing.title}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
