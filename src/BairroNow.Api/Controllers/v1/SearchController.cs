@@ -29,7 +29,7 @@ public class SearchController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
         var results = await _feed.SearchAsync(userId.Value, request, ct);
-        return Ok(results);
+        return Ok(new { items = results, total = results.Count });
     }
 
     // GET /api/v1/search/users?q=termo&skip=0&take=20
