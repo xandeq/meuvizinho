@@ -48,14 +48,15 @@ public class GroupsController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(search))
         {
+            var safeSearch = EscapeLike(search.Trim());
             // EF Core 8 FTS workaround: use IgnoreQueryFilters + manual soft-delete filter
             groups = _db.Groups
                 .AsNoTracking()
                 .IgnoreQueryFilters()
                 .Where(g => g.DeletedAt == null
                          && g.BairroId == bairroId
-                         && (EF.Functions.Like(g.Name, $"%{search}%")
-                             || EF.Functions.Like(g.Description, $"%{search}%")));
+                         && (EF.Functions.Like(g.Name, $"%{safeSearch}%")
+                             || EF.Functions.Like(g.Description, $"%{safeSearch}%")));
         }
 
         var total = await groups.CountAsync(ct);
@@ -975,6 +976,10 @@ public class GroupsController : ControllerBase
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    // Escape SQL Server LIKE wildcards so user input is treated as literals.
+    private static string EscapeLike(string s) =>
+        s.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
     private Guid? GetUserId()
     {

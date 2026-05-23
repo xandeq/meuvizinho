@@ -50,9 +50,12 @@ public class SearchController : ControllerBase
             .Where(u => u.BairroId == caller.BairroId.Value && u.IsActive);
 
         if (!string.IsNullOrEmpty(qTrim))
+        {
+            var safe = EscapeLike(qTrim);
             query = query.Where(u =>
-                EF.Functions.Like(u.DisplayName ?? "", "%" + qTrim + "%") ||
-                EF.Functions.Like(u.BusinessName ?? "", "%" + qTrim + "%"));
+                EF.Functions.Like(u.DisplayName ?? "", "%" + safe + "%") ||
+                EF.Functions.Like(u.BusinessName ?? "", "%" + safe + "%"));
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query
@@ -91,9 +94,12 @@ public class SearchController : ControllerBase
             .Where(l => l.BairroId == caller.BairroId.Value && l.DeletedAt == null);
 
         if (!string.IsNullOrEmpty(qTrim))
+        {
+            var safe = EscapeLike(qTrim);
             query = query.Where(l =>
-                EF.Functions.Like(l.Title, "%" + qTrim + "%") ||
-                EF.Functions.Like(l.Description, "%" + qTrim + "%"));
+                EF.Functions.Like(l.Title, "%" + safe + "%") ||
+                EF.Functions.Like(l.Description, "%" + safe + "%"));
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query
@@ -113,6 +119,9 @@ public class SearchController : ControllerBase
 
         return Ok(new { items, total });
     }
+
+    private static string EscapeLike(string s) =>
+        s.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
     private Guid? GetUserId()
     {
