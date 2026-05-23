@@ -953,6 +953,30 @@ public class GroupsController : ControllerBase
         return NoContent();
     }
 
+    // Admin: GET /api/v1/groups/flagged-posts?bairroId={n}
+    [HttpGet("flagged-posts")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> FlaggedPosts([FromQuery] int bairroId, CancellationToken ct = default)
+    {
+        var posts = await _db.GroupPosts.AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(p => p.IsFlagged && p.DeletedAt == null && p.Group!.BairroId == bairroId)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(100)
+            .Select(p => new
+            {
+                p.Id,
+                GroupId   = p.GroupId,
+                GroupName = p.Group!.Name,
+                AuthorName = p.Author!.DisplayName ?? p.Author.Email,
+                p.Body,
+                p.CreatedAt,
+            })
+            .ToListAsync(ct);
+
+        return Ok(posts);
+    }
+
     private async Task<object?> BuildPollDto(int pollId, Guid userId, DateTime now, CancellationToken ct = default)
     {
         return await _db.GroupPolls.AsNoTracking()
