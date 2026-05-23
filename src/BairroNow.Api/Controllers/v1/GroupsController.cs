@@ -8,12 +8,14 @@ using BairroNow.Api.Hubs;
 using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Models.Enums;
 using BairroNow.Api.Services;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BairroNow.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/groups")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class GroupsController : ControllerBase
 {
     private readonly AppDbContext _db;
