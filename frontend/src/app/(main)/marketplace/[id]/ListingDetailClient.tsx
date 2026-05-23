@@ -8,6 +8,7 @@ import ListingDetailGallery from "@/components/features/marketplace/ListingDetai
 import ReportListingDialog from "@/components/features/marketplace/ReportListingDialog";
 import RatingForm from "@/components/features/marketplace/RatingForm";
 import { useAuthStore } from "@/lib/auth";
+import EmptyState from "@/components/ui/EmptyState";
 import {
   getListing,
   toggleFavorite,
@@ -93,9 +94,11 @@ export default function ListingDetailClient() {
   }
   if (error || !listing)
     return (
-      <p className="text-danger font-semibold">
-        {error ?? "Anúncio não encontrado"}
-      </p>
+      <EmptyState
+        title={error ?? "Anúncio não encontrado"}
+        description="O anúncio pode ter sido removido ou o link é inválido."
+        action={{ label: "Voltar ao marketplace", onClick: () => router.push("/marketplace/") }}
+      />
     );
 
   const isOwner = user?.id === listing.sellerId;

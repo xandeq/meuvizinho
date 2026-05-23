@@ -8,6 +8,7 @@ import FormField from "@/components/ui/FormField";
 import Card from "@/components/ui/Card";
 import Avatar from "@/components/ui/Avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import EmptyState from "@/components/ui/EmptyState";
 import BusinessRating from "@/components/features/BusinessRating";
 import { profileApi } from "@/lib/api";
 import { updateProfileSchema } from "@bairronow/shared-validators";
@@ -329,9 +330,10 @@ export default function ProfilePage() {
 
   if (!profile) {
     return (
-      <p className="text-danger font-semibold">
-        {error ?? "Nao foi possivel carregar o perfil."}
-      </p>
+      <EmptyState
+        title="Erro ao carregar perfil"
+        description={error ?? "Não foi possível carregar o perfil."}
+      />
     );
   }
 

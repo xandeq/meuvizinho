@@ -91,6 +91,11 @@ public class GroupsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        if (string.IsNullOrWhiteSpace(req.Name) || req.Name.Length > 80)
+            return BadRequest(new { error = "O nome do grupo deve ter entre 1 e 80 caracteres." });
+        if (string.IsNullOrWhiteSpace(req.Description) || req.Description.Length > 500)
+            return BadRequest(new { error = "A descrição deve ter entre 1 e 500 caracteres." });
+
         var group = new Group
         {
             BairroId = req.BairroId,
@@ -536,6 +541,9 @@ public class GroupsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        if (string.IsNullOrWhiteSpace(req.Body) || req.Body.Length > 2000)
+            return BadRequest(new { error = "O corpo da publicação deve ter entre 1 e 2000 caracteres." });
+
         var isMember = await _db.GroupMembers
             .AsNoTracking()
             .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
@@ -680,6 +688,9 @@ public class GroupsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(req.Body) || req.Body.Length > 1000)
+            return BadRequest(new { error = "O comentário deve ter entre 1 e 1000 caracteres." });
 
         var comment = new GroupComment
         {
