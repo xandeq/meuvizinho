@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 
@@ -9,6 +10,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/push-token")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class PushTokenController : ControllerBase
 {
     private readonly AppDbContext _db;

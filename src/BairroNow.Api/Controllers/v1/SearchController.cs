@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.DTOs;
@@ -11,6 +12,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/search")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class SearchController : ControllerBase
 {
     private readonly IFeedQueryService _feed;

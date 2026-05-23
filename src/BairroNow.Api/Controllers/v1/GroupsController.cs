@@ -236,25 +236,27 @@ public class GroupsController : ControllerBase
             return Ok(pending);
         }
 
-        var members = await _db.GroupMembers
+        var baseQuery = _db.GroupMembers
             .AsNoTracking()
-            .Where(m => m.GroupId == id && m.Status == GroupMemberStatus.Active)
+            .Where(m => m.GroupId == id && m.Status == GroupMemberStatus.Active);
+
+        var total = await baseQuery.CountAsync(ct);
+        var members = await baseQuery
             .OrderBy(m => m.JoinedAt)
             .Skip((page - 1) * DefaultPageSize)
             .Take(DefaultPageSize)
             .Select(m => new
             {
                 m.Id,
-                m.UserId,
-                m.Role,
-                m.Status,
+                UserId = m.UserId,
+                Role = m.Role.ToString().ToLower(),
                 m.JoinedAt,
                 DisplayName = m.User!.DisplayName,
                 PhotoUrl = m.User.PhotoUrl
             })
             .ToListAsync(ct);
 
-        return Ok(members);
+        return Ok(new { items = members, total });
     }
 
     // GET /api/v1/groups/{id}/pending — list pending join requests (owner/admin only)

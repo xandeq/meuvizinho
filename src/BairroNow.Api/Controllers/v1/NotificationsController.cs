@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.DTOs;
@@ -10,6 +11,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/notifications")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class NotificationsController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -69,9 +71,9 @@ public class NotificationsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
-        var unread = await _db.Notifications.Where(n => n.UserId == userId.Value && !n.IsRead).ToListAsync(ct);
-        foreach (var n in unread) n.IsRead = true;
-        await _db.SaveChangesAsync(ct);
+        await _db.Notifications
+            .Where(n => n.UserId == userId.Value && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), ct);
         return NoContent();
     }
 

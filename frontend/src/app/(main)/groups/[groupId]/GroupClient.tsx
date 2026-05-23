@@ -295,37 +295,37 @@ export default function GroupClient() {
 
       {activeTab === 'feed' && (
         <>
-          {/* Composer */}
-          <form
-            onSubmit={handleSubmit}
-            className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 mb-4"
-          >
-            <textarea
-              value={composerBody}
-              onChange={(e) => setComposerBody(e.target.value)}
-              placeholder="Compartilhe algo com o grupo..."
-              rows={3}
-              className="w-full resize-none text-sm text-muted-fg outline-none"
-            />
-            <div className="flex justify-end mt-2">
-              <button
-                type="submit"
-                disabled={submitting || !composerBody.trim()}
-                className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-white text-sm px-4 py-1.5 rounded-xl"
-              >
-                {submitting ? 'Publicando...' : 'Publicar'}
-              </button>
-            </div>
-          </form>
+          {/* Composer — only active members can post */}
+          {currentGroup?.myStatus === 'Active' && (
+            <form
+              onSubmit={handleSubmit}
+              className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 mb-4"
+            >
+              <textarea
+                value={composerBody}
+                onChange={(e) => setComposerBody(e.target.value)}
+                placeholder="Compartilhe algo com o grupo..."
+                rows={3}
+                className="w-full resize-none text-sm text-muted-fg outline-none"
+              />
+              <div className="flex justify-end mt-2">
+                <button
+                  type="submit"
+                  disabled={submitting || !composerBody.trim()}
+                  className="bg-primary hover:bg-primary/90 disabled:opacity-40 text-white text-sm px-4 py-1.5 rounded-xl"
+                >
+                  {submitting ? 'Publicando...' : 'Publicar'}
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* Posts */}
           <div className="space-y-3">
             {posts.map((p) => (
               <div key={p.id} className="bg-card rounded-2xl border border-border/50 shadow-sm p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-fg text-xs">
-                    {p.author.displayName?.[0] ?? '?'}
-                  </div>
+                  <Avatar src={p.author.photoUrl ?? null} name={p.author.displayName} size="sm" verified={p.author.isVerified} />
                   <div>
                     <p className="text-sm font-medium text-fg">{p.author.displayName}</p>
                     <p className="text-xs text-muted-fg">
@@ -365,7 +365,13 @@ export default function GroupClient() {
         />
       )}
 
-      {activeTab === 'events' && <GroupEventsTab groupId={groupId} />}
+      {activeTab === 'events' && (
+        <GroupEventsTab
+          groupId={groupId}
+          isMember={currentGroup?.myStatus === 'Active'}
+          joinPolicy={currentGroup?.joinPolicy}
+        />
+      )}
 
       {activeTab === 'pending' && isAdminOrOwner && (
         <div className="space-y-3">
@@ -901,7 +907,7 @@ function GroupPollsTab({
 }
 
 // Inline events tab (GRP-007)
-function GroupEventsTab({ groupId }: { groupId: number }) {
+function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; isMember?: boolean; joinPolicy?: string }) {
   const [events, setEvents] = useState<GroupEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
@@ -978,14 +984,16 @@ function GroupEventsTab({ groupId }: { groupId: number }) {
           {ev.location && <p className="text-sm text-muted-fg">{ev.location}</p>}
           <p className="text-sm text-muted-fg">{new Date(ev.startsAt).toLocaleString('pt-BR')}</p>
           <p className="text-xs text-muted-fg">{ev.rsvpCount} confirmados</p>
-          <button
-            onClick={() => handleRsvp(ev)}
-            className={`mt-2 text-sm px-3 py-2.5 rounded-xl min-h-[44px] ${
-              ev.myRsvp ? 'bg-secondary text-secondary-fg' : 'bg-muted text-muted-fg'
-            }`}
-          >
-            {ev.myRsvp ? 'Confirmado' : 'Confirmar presença'}
-          </button>
+          {(joinPolicy !== 'Closed' || isMember) && (
+            <button
+              onClick={() => handleRsvp(ev)}
+              className={`mt-2 text-sm px-3 py-2.5 rounded-xl min-h-[44px] ${
+                ev.myRsvp ? 'bg-secondary text-secondary-fg' : 'bg-muted text-muted-fg'
+              }`}
+            >
+              {ev.myRsvp ? 'Confirmado' : 'Confirmar presença'}
+            </button>
+          )}
         </div>
       ))}
       {events.length === 0 && (
