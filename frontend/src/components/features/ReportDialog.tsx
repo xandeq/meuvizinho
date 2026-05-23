@@ -87,7 +87,7 @@ export default function ReportDialog({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-md border-2 border-border font-semibold"
+              className="px-4 py-2 rounded-xl border border-border/50 font-semibold hover:border-border-strong transition-colors"
             >
               Cancelar
             </button>

@@ -78,7 +78,7 @@ export default function RatingForm({
         onChange={(e) => setComment(e.target.value)}
         placeholder="Comentário (opcional)"
         maxLength={500}
-        className="w-full border-2 border-border rounded px-3 py-2 text-sm"
+        className="w-full border border-border/50 rounded-xl px-3 py-2 text-sm bg-muted text-fg focus:border-primary focus:bg-card focus:outline-none transition-colors"
       />
 
       {error && <p className="text-sm text-danger font-semibold">{error}</p>}

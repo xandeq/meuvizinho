@@ -80,7 +80,7 @@ export default function PhotoDropzone({
           {value.map((file, idx) => (
             <div
               key={`${file.name}-${idx}`}
-              className="relative aspect-square rounded-md overflow-hidden border-2 border-border bg-muted"
+              className="relative aspect-square rounded-xl overflow-hidden border border-border/50 bg-muted"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

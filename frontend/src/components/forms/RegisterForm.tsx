@@ -90,7 +90,7 @@ export default function RegisterForm() {
     <div className="space-y-5">
       <a
         href={`${API_BASE_URL}/api/v1/auth/google`}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-border rounded-xl hover:bg-muted transition-colors font-semibold"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 border border-border/50 rounded-xl hover:bg-muted hover:border-border-strong transition-all duration-200 font-semibold"
       >
         <svg viewBox="0 0 24 24" className="w-5 h-5">
           <path

@@ -85,7 +85,7 @@ export default function Card({
         "rounded-2xl",
         variantMap[resolvedVariant],
         padMap[padding],
-        border ? "border-2 border-border" : "",
+        border ? "border border-border/50" : "",
         interactive || liftOnHover
           ? "transition-all duration-200 ease-out cursor-pointer"
           : "",

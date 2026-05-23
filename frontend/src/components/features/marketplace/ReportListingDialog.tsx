@@ -52,7 +52,7 @@ export default function ReportListingDialog({
       aria-label="Denunciar anúncio"
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
-      <div className="bg-bg border-2 border-border rounded-lg max-w-md w-full p-5 space-y-4">
+      <div className="bg-card border border-border/50 shadow-xl rounded-2xl max-w-md w-full p-5 space-y-4">
         <h2 className="text-xl font-extrabold text-fg">Denunciar anúncio</h2>
 
         {submitted ? (
@@ -94,7 +94,7 @@ export default function ReportListingDialog({
               value={note}
               onChange={(e) => setNote(e.target.value)}
               placeholder="Detalhes (opcional)"
-              className="w-full border-2 border-border rounded px-3 py-2 text-sm"
+              className="w-full border border-border/50 rounded-xl px-3 py-2 text-sm bg-muted text-fg focus:border-primary focus:bg-card focus:outline-none transition-colors"
             />
 
             {error && (
@@ -105,7 +105,7 @@ export default function ReportListingDialog({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 border-2 border-border text-fg font-semibold py-2 rounded-lg"
+                className="flex-1 border border-border/50 text-fg font-semibold py-2 rounded-xl hover:border-border-strong transition-colors"
               >
                 Cancelar
               </button>
