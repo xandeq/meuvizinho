@@ -317,7 +317,7 @@ export default function ProfilePage() {
         </div>
         <div className="space-y-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="bg-card rounded-2xl border border-border/70 p-4 space-y-2 animate-pulse">
+            <div key={i} className="bg-card rounded-2xl border border-border/50 p-4 space-y-2 animate-pulse">
               <div className="h-4 bg-muted rounded w-1/3" />
               <div className="h-3 bg-muted rounded w-2/3" />
             </div>

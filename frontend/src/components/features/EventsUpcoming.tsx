@@ -40,7 +40,7 @@ export default function EventsUpcoming({ bairroId }: Props) {
   if (!loading && events.length === 0) return null; // hide widget if no events
 
   return (
-    <div className="bg-card rounded-2xl border border-border/70 p-4 space-y-3 animate-slide-up">
+    <div className="bg-card rounded-2xl border border-border/50 p-4 space-y-3 animate-slide-up">
       <div className="flex items-center gap-2">
         {/* calendar icon */}
         <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -78,11 +78,11 @@ export default function ListingDetailClient() {
           <div className="h-8 bg-muted rounded w-1/3 animate-pulse" />
           <div className="h-4 bg-muted rounded w-1/4 animate-pulse" />
         </div>
-        <div className="bg-card rounded-xl border border-border/70 p-4 space-y-2 animate-pulse">
+        <div className="bg-card rounded-xl border border-border/50 p-4 space-y-2 animate-pulse">
           <div className="h-4 bg-muted rounded w-1/4" />
           <div className="h-4 bg-muted rounded w-1/2" />
         </div>
-        <div className="bg-card rounded-xl border border-border/70 p-4 space-y-2 animate-pulse">
+        <div className="bg-card rounded-xl border border-border/50 p-4 space-y-2 animate-pulse">
           <div className="h-4 bg-muted rounded w-1/4 mb-3" />
           <div className="h-3 bg-muted rounded w-full" />
           <div className="h-3 bg-muted rounded w-5/6" />

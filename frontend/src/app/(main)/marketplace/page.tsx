@@ -117,7 +117,7 @@ export default function MarketplacePage() {
       {loading && items.length === 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
-            <div key={i} className="bg-card rounded-2xl border border-border/70 p-3 space-y-2 animate-pulse">
+            <div key={i} className="bg-card rounded-2xl border border-border/50 p-3 space-y-2 animate-pulse">
               <div className="aspect-square bg-muted rounded-xl" />
               <div className="h-3.5 bg-muted rounded w-3/4" />
               <div className="h-4 bg-muted rounded w-1/2" />

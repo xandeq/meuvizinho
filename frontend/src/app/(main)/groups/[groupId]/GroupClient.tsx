@@ -494,7 +494,7 @@ export default function GroupClient() {
                   m.role === 'owner'
                     ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400'
                     : m.role === 'admin'
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400'
+                    ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary/80'
                     : 'bg-muted text-muted-fg',
                 ].join(' ')}
               >

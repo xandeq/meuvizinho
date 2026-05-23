@@ -30,7 +30,7 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const variantMap: Record<CardVariant, string> = {
   default:
-    "bg-card border border-border/70",
+    "bg-card border border-border/50",
   elevated:
     "bg-card border border-border/50 shadow-md",
   muted:
@@ -47,7 +47,7 @@ const variantMap: Record<CardVariant, string> = {
     "bg-slate-900 border border-slate-800 text-white",
   // Legacy aliases
   white:
-    "bg-card border border-border/70",
+    "bg-card border border-border/50",
   "blue-tint":
     "bg-primary-light border border-primary-mid/30",
   "green-tint":

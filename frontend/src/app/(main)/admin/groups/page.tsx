@@ -29,7 +29,7 @@ export default function AdminGroupsPage() {
   }, [user?.bairroId]);
 
   return (
-    <main className="container mx-auto px-4 py-6">
+    <main className="container mx-auto px-4 py-6 animate-slide-up">
       <h1 className="text-2xl font-semibold text-fg mb-6">Moderação de Grupos</h1>
       {loading ? (
         <div className="space-y-2">

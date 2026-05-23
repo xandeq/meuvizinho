@@ -174,7 +174,7 @@ function TrendingSection() {
                 <Link
                   key={post.id}
                   href={`/feed/post/?id=${post.id}`}
-                  className="min-w-[200px] max-w-[220px] shrink-0 flex flex-col gap-2 p-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent hover-lift transition-all duration-200"
+                  className="min-w-[200px] max-w-[220px] shrink-0 flex flex-col gap-2 p-3 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/5 to-transparent hover:-translate-y-0.5 hover:shadow-sm transition-all duration-300 ease-out"
                 >
                   {/* Author row */}
                   <div className="flex items-center gap-2">

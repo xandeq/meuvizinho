@@ -79,7 +79,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto animate-slide-up">
       <header className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-fg">Configuracoes</h1>
         <Link

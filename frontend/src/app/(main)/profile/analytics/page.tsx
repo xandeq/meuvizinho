@@ -88,7 +88,7 @@ function KpiCard({
   iconBg: string;
 }) {
   return (
-    <div className="bg-card rounded-2xl border border-border/70 p-5 flex items-start gap-4">
+    <div className="bg-card rounded-2xl border border-border/50 p-5 flex items-start gap-4">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
         {icon}
       </div>
@@ -244,7 +244,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Views over time */}
-      <div className="bg-card rounded-2xl border border-border/70 p-6">
+      <div className="bg-card rounded-2xl border border-border/50 p-6">
         <h2 className="text-sm font-bold text-fg/70 uppercase tracking-wide mb-5">
           Visualizações por dia — últimos 30 dias
         </h2>
@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Rating distribution */}
-      <div className="bg-card rounded-2xl border border-border/70 p-6">
+      <div className="bg-card rounded-2xl border border-border/50 p-6">
         <h2 className="text-sm font-bold text-fg/70 uppercase tracking-wide mb-5">
           Distribuição das avaliações
         </h2>

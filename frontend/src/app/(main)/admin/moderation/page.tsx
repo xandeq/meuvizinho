@@ -118,7 +118,7 @@ export default function ModerationPage() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-slide-up">
       <FeedHeader />
       <h1 className="text-2xl font-extrabold text-fg">Moderação</h1>
 

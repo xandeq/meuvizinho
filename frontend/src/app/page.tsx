@@ -239,7 +239,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════
           FEATURES — blue-50 tinted section
       ══════════════════════════════════════════════════════ */}
-      <section className="bg-blue-50 py-20 px-6">
+      <section className="bg-primary/5 py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
             O que você vai encontrar
@@ -251,7 +251,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Feed */}
             <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
-              <FeatureIcon bg="bg-blue-100 text-blue-600">
+              <FeatureIcon bg="bg-primary/10 text-primary">
                 <IconHome />
               </FeatureIcon>
               <h3 className="mt-5 text-xl font-extrabold text-fg">Feed do Bairro</h3>
@@ -334,7 +334,7 @@ export default function LandingPage() {
           <div className="relative flex items-center justify-center">
             {/* Decorative background */}
             <div aria-hidden className="absolute w-72 h-72 rounded-full bg-emerald-50 opacity-80" />
-            <div aria-hidden className="absolute w-40 h-40 rounded-full bg-blue-50 opacity-60 -top-4 -right-4" />
+            <div aria-hidden className="absolute w-40 h-40 rounded-full bg-primary/5 opacity-60 -top-4 -right-4" />
 
             {/* Badge showcase card */}
             <div className="relative bg-bg rounded-lg p-8 max-w-xs w-full border-2 border-border">
@@ -356,9 +356,9 @@ export default function LandingPage() {
                   <span className="text-emerald-600"><IconBadgeCheck /></span>
                   Vizinha verificada
                 </span>
-                <span className="inline-flex items-center gap-2 bg-blue-100 text-blue-700
+                <span className="inline-flex items-center gap-2 bg-primary/10 text-primary
                                   rounded-full px-4 py-2 text-sm font-semibold w-fit">
-                  <span className="text-blue-600"><IconMapPin /></span>
+                  <span className="text-primary"><IconMapPin /></span>
                   Praia da Costa · 3 anos no bairro
                 </span>
               </div>

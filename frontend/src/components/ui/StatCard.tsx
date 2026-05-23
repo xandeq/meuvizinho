@@ -32,7 +32,7 @@ export default function StatCard({ label, value, icon, colorClass = "text-primar
   }, [value, delay]);
 
   return (
-    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 hover-lift animate-slide-up">
+    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 hover:-translate-y-1 hover:shadow-md transition-all duration-300 ease-out animate-slide-up">
       <div className="flex items-center justify-between mb-3">
         <span className={`w-10 h-10 rounded-xl flex items-center justify-center bg-muted ${colorClass}`}>
           {icon}

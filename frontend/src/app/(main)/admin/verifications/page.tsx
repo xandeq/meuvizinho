@@ -81,7 +81,7 @@ export default function AdminVerificationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-slide-up">
       <header className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-fg">
           Verificacoes pendentes

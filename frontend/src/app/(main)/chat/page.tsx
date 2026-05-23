@@ -16,7 +16,7 @@ export default function ChatListPage() {
   }, [connect, loadConversations]);
 
   return (
-    <div className="space-y-5 max-w-2xl mx-auto">
+    <div className="space-y-5 max-w-2xl mx-auto animate-slide-up">
       <header>
         <h1 className="text-3xl font-extrabold text-fg">Mensagens</h1>
         <p className="text-fg/60 font-medium">Suas conversas com vizinhos</p>

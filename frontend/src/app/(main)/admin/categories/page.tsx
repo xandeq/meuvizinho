@@ -57,7 +57,7 @@ export default function AdminCategoriesPage() {
   }
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto">
+    <div className="space-y-4 max-w-2xl mx-auto animate-slide-up">
       <h1 className="text-2xl font-extrabold text-fg">Categorias</h1>
       <p className="text-fg/60 font-medium text-sm">
         Ative ou desative categorias do marketplace. Não é possível criar ou

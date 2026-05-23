@@ -229,7 +229,7 @@ export default function BusinessesPage() {
               <Link
                 key={biz.userId}
                 href={`/business/${biz.userId}/`}
-                className="hover-lift block bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-3 transition-all duration-200 hover:border-primary/30 hover:shadow-md"
+                className="block bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-md"
               >
                 {/* Avatar + name */}
                 <div className="flex items-center gap-3">

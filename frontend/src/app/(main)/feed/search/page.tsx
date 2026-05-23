@@ -182,7 +182,7 @@ export default function SearchPage() {
       <h1 className="text-2xl font-extrabold text-fg">Buscar no bairro</h1>
 
       {/* Search input */}
-      <div className="bg-card rounded-2xl border border-border/70 p-4">
+      <div className="bg-card rounded-2xl border border-border/50 p-4">
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-fg pointer-events-none" />
           <input
@@ -196,7 +196,7 @@ export default function SearchPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 bg-card rounded-2xl border border-border/70 p-2">
+      <div className="flex items-center gap-1 bg-card rounded-2xl border border-border/50 p-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -214,7 +214,7 @@ export default function SearchPage() {
       </div>
 
       {/* Results */}
-      <div className="bg-card rounded-2xl border border-border/70 p-4 min-h-[120px]">
+      <div className="bg-card rounded-2xl border border-border/50 p-4 min-h-[120px]">
         {/* Empty query state */}
         {!q.trim() && (
           <div className="flex flex-col items-center justify-center gap-2 py-8 text-muted-fg">

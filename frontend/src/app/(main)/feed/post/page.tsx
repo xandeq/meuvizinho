@@ -52,7 +52,7 @@ function PostDetailContent() {
       <FeedHeader />
       {loading && (
         <div className="space-y-4 animate-pulse">
-          <div className="bg-card rounded-2xl border border-border/70 p-4 space-y-3">
+          <div className="bg-card rounded-2xl border border-border/50 p-4 space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-muted" />
               <div className="space-y-2">
@@ -86,7 +86,7 @@ export default function PostDetailPage() {
   return (
     <Suspense fallback={
       <div className="space-y-4 animate-pulse p-4">
-        <div className="bg-card rounded-2xl border border-border/70 p-4 space-y-3">
+        <div className="bg-card rounded-2xl border border-border/50 p-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-muted" />
             <div className="space-y-2">

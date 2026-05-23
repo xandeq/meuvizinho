@@ -99,7 +99,7 @@ export default function AuthLayout({
               />
             </div>
           )}
-          <div className="bg-card border border-border/70 rounded-3xl p-8 shadow-lg">
+          <div className="bg-card border border-border/50 rounded-3xl p-8 shadow-lg">
             <div className="mb-7 text-center">
               <h1 className="text-2xl font-extrabold tracking-tight text-fg">
                 {title}
