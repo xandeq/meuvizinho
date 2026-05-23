@@ -13,11 +13,35 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const IK_TTL_MS = 5 * 60 * 1000; // 5 min — matches server-side dedup window
+
+function getIdempotencyKey(url: string): string {
+  if (typeof window === 'undefined') return crypto.randomUUID();
+  const storageKey = `ik:${url}`;
+  try {
+    const stored = sessionStorage.getItem(storageKey);
+    if (stored) {
+      const { key, ts } = JSON.parse(stored) as { key: string; ts: number };
+      if (Date.now() - ts < IK_TTL_MS) return key;
+    }
+  } catch {
+    // sessionStorage unavailable (private mode, storage full)
+  }
+  const key = crypto.randomUUID();
+  try { sessionStorage.setItem(storageKey, JSON.stringify({ key, ts: Date.now() })); } catch { /* ignore */ }
+  return key;
+}
+
+function clearIdempotencyKey(url: string) {
+  if (typeof window === 'undefined') return;
+  try { sessionStorage.removeItem(`ik:${url}`); } catch { /* ignore */ }
+}
+
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().accessToken;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   if (config.method === 'post' && !config.headers['Idempotency-Key']) {
-    config.headers['Idempotency-Key'] = crypto.randomUUID();
+    config.headers['Idempotency-Key'] = getIdempotencyKey(config.url ?? '');
   }
   return config;
 });
@@ -25,7 +49,12 @@ api.interceptors.request.use((config) => {
 const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/register'];
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config.method === 'post') {
+      clearIdempotencyKey(response.config.url ?? '');
+    }
+    return response;
+  },
   async (error) => {
     const url = error.config?.url ?? '';
     const isAuthEndpoint = AUTH_ENDPOINTS.some((ep) => url.includes(ep));
