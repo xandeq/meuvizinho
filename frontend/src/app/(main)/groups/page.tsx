@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth';
@@ -57,16 +57,24 @@ export default function GroupsPage() {
   const user = useAuthStore((s) => s.user);
   const [groups, setGroups] = useState<Group[]>([]);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => setDebouncedSearch(value), 300);
+  };
 
   useEffect(() => {
     if (!user?.bairroId) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    getGroups(user.bairroId, { search: search || undefined })
+    getGroups(user.bairroId, { search: debouncedSearch || undefined })
       .then(setGroups)
       .finally(() => setLoading(false));
-  }, [user?.bairroId, search]);
+  }, [user?.bairroId, debouncedSearch]);
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -92,7 +100,7 @@ export default function GroupsPage() {
         type="search"
         placeholder="Buscar grupos..."
         value={search}
-        onChange={(e) => setSearch(e.target.value)}
+        onChange={(e) => handleSearchChange(e.target.value)}
         className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none transition-colors duration-150 focus:bg-card focus:border-primary font-medium"
       />
 

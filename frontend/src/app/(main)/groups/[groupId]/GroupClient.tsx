@@ -5,7 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { getHubConnection } from '@/lib/signalr';
 import { useGroupStore } from '@/stores/group-store';
 import { useAuthStore } from '@/lib/auth';
-import { getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent, getGroupMembers } from '@/lib/api/groups';
+import { getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent, getGroupMembers, toggleGroupPostLike } from '@/lib/api/groups';
 import type { GroupMember } from '@/lib/api/groups';
 import type { GroupPost, GroupEvent, GroupPoll } from '@/lib/types/groups';
 import Avatar from '@/components/ui/Avatar';
@@ -31,6 +31,7 @@ export default function GroupClient() {
     posts,
     appendPosts,
     prependPost,
+    updatePost,
     resetFeed,
     incrementPage,
     page,
@@ -184,6 +185,20 @@ export default function GroupClient() {
     setPending((prev) => prev.filter((m) => m.userId !== userId));
   };
 
+  const handleToggleLike = async (postId: number, currentlyLiked: boolean, currentCount: number) => {
+    // Optimistic update
+    updatePost(postId, {
+      isLikedByMe: !currentlyLiked,
+      likeCount: currentlyLiked ? currentCount - 1 : currentCount + 1,
+    });
+    try {
+      await toggleGroupPostLike(groupId, postId);
+    } catch {
+      // Rollback on failure
+      updatePost(postId, { isLikedByMe: currentlyLiked, likeCount: currentCount });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!composerBody.trim()) return;
@@ -333,7 +348,28 @@ export default function GroupClient() {
                     </p>
                   </div>
                 </div>
-                <p className="text-sm text-muted-fg">{p.body}</p>
+                <p className="text-sm text-fg leading-relaxed">{p.body}</p>
+                {/* Post actions */}
+                <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/40">
+                  <button
+                    onClick={() => handleToggleLike(p.id, p.isLikedByMe, p.likeCount)}
+                    className={[
+                      'flex items-center gap-1.5 text-xs font-medium transition-colors',
+                      p.isLikedByMe ? 'text-danger' : 'text-muted-fg hover:text-danger',
+                    ].join(' ')}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill={p.isLikedByMe ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    {p.likeCount > 0 && <span>{p.likeCount}</span>}
+                  </button>
+                  <span className="flex items-center gap-1.5 text-xs text-muted-fg">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    {p.commentCount > 0 && <span>{p.commentCount}</span>}
+                  </span>
+                </div>
               </div>
             ))}
           </div>

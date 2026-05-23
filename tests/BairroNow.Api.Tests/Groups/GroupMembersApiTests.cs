@@ -32,9 +32,11 @@ public class GroupMembersApiTests
         return ctrl;
     }
 
+    private static readonly JsonSerializerOptions _camelCase = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
     private static JsonElement AsJson(object? value)
     {
-        var json = JsonSerializer.Serialize(value);
+        var json = JsonSerializer.Serialize(value, _camelCase);
         return JsonDocument.Parse(json).RootElement;
     }
 

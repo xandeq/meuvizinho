@@ -101,17 +101,15 @@ public class GroupsController : ControllerBase
             CoverImageUrl = req.CoverImageUrl,
             CreatedAt = DateTime.UtcNow
         };
-        _db.Groups.Add(group);
-        await _db.SaveChangesAsync(ct);
-
         var ownerMember = new GroupMember
         {
-            GroupId = group.Id,
+            Group = group,
             UserId = userId.Value,
             Role = GroupMemberRole.Owner,
             Status = GroupMemberStatus.Active,
             JoinedAt = DateTime.UtcNow
         };
+        _db.Groups.Add(group);
         _db.GroupMembers.Add(ownerMember);
         await _db.SaveChangesAsync(ct);
 
@@ -505,15 +503,24 @@ public class GroupsController : ControllerBase
             .Select(p => new
             {
                 p.Id,
+                GroupId = p.GroupId,
                 p.Body,
                 p.Category,
                 p.CreatedAt,
                 p.EditedAt,
-                AuthorId = p.AuthorId,
-                AuthorName = p.Author!.DisplayName,
-                AuthorPhoto = p.Author.PhotoUrl,
+                p.IsFlagged,
+                Author = new
+                {
+                    Id = p.AuthorId,
+                    DisplayName = p.Author!.DisplayName,
+                    PhotoUrl = p.Author.PhotoUrl,
+                    IsVerified = p.Author.IsVerified
+                },
                 LikeCount = p.Likes.Count,
-                CommentCount = p.Comments.Count(c => c.DeletedAt == null)
+                CommentCount = p.Comments.Count(c => c.DeletedAt == null),
+                IsLikedByMe = p.Likes.Any(l => l.UserId == userId),
+                Images = p.Images.OrderBy(i => i.Order)
+                    .Select(i => new { i.Url, i.Order }).ToList()
             })
             .ToListAsync(ct);
 
@@ -545,11 +552,35 @@ public class GroupsController : ControllerBase
         _db.GroupPosts.Add(post);
         await _db.SaveChangesAsync(ct);
 
-        // SignalR: push to group room (best-effort — post is already persisted)
+        // SignalR: push to group room with full author shape (best-effort — post is already persisted)
         try
         {
-            await _hub.Clients.Group($"group:{id}")
-                .SendAsync("NewGroupPost", new { post.Id, post.Body, post.AuthorId, post.CreatedAt });
+            var authorInfo = await _db.Users.AsNoTracking()
+                .Where(u => u.Id == userId.Value)
+                .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified })
+                .FirstOrDefaultAsync(ct);
+
+            await _hub.Clients.Group($"group:{id}").SendAsync("NewGroupPost", new
+            {
+                post.Id,
+                GroupId = id,
+                post.Body,
+                post.Category,
+                post.CreatedAt,
+                EditedAt = (DateTime?)null,
+                IsFlagged = false,
+                Author = new
+                {
+                    Id = userId.Value,
+                    DisplayName = authorInfo?.DisplayName,
+                    PhotoUrl = authorInfo?.PhotoUrl,
+                    IsVerified = authorInfo?.IsVerified ?? false
+                },
+                LikeCount = 0,
+                CommentCount = 0,
+                IsLikedByMe = false,
+                Images = Array.Empty<object>()
+            });
         }
         catch (Exception ex)
         {
