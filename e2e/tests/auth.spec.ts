@@ -51,13 +51,13 @@ test.describe("auth flow", () => {
         const body = await loginRes.json();
         accessToken = body.accessToken;
       }
-      // Attempt self-delete (requires DELETE /api/v1/account/me endpoint)
+      // Attempt self-delete using password confirmation
       if (accessToken) {
         await ctx.delete("/api/v1/account/me", {
           headers: { Authorization: `Bearer ${accessToken}` },
+          data: { password: STRONG_PASSWORD },
         });
-        // Best-effort — if the endpoint doesn't exist (404) the user will remain
-        // but that is preferable to failing the test itself.
+        // Best-effort — failure leaves the test user in DB but doesn't fail the test.
       }
       await ctx.dispose();
     } catch {

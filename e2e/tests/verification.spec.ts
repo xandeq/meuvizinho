@@ -113,6 +113,7 @@ test.describe("verification flow", () => {
         // Preferred: self-delete (no admin rights needed)
         const selfDelete = await apiContext.delete("/api/v1/account/me", {
           headers: { Authorization: `Bearer ${userAccessToken}` },
+          data: { password: STRONG_PASSWORD },
         });
         if (!selfDelete.ok()) {
           // Fallback: admin hard-delete by email
