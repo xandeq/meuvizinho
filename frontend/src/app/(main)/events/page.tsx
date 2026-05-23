@@ -133,7 +133,7 @@ function EventCard({ event, token, onRsvpChange }: EventCardProps) {
   };
 
   return (
-    <div className="bg-card rounded-2xl border border-border/70 p-5 flex gap-4 transition-all duration-200 hover:border-primary/30 hover:shadow-md">
+    <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-5 flex gap-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:border-primary/30">
       {/* Date badge */}
       <div className="shrink-0 w-12 text-center bg-primary/10 rounded-xl py-1.5 px-1 self-start">
         <div className="text-[10px] font-semibold text-primary uppercase tracking-wide">

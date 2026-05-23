@@ -129,7 +129,7 @@ export default function GroupsPage() {
                   className="h-24 w-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                 />
               ) : (
-                <div className="h-24 w-full bg-gradient-to-br from-primary/10 via-secondary/8 to-primary/5" />
+                <div className="h-24 w-full bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/5" />
               )}
 
               <div className="p-4 space-y-2">
