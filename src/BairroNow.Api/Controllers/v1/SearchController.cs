@@ -41,6 +41,8 @@ public class SearchController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        if (q.Length > 100) return BadRequest(new { error = "Termo de busca muito longo." });
+
         var caller = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
         if (caller == null || !caller.BairroId.HasValue) return Ok(new { items = Array.Empty<object>(), total = 0 });
 
@@ -83,6 +85,8 @@ public class SearchController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        if (q.Length > 100) return BadRequest(new { error = "Termo de busca muito longo." });
 
         var caller = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
         if (caller == null || !caller.BairroId.HasValue) return Ok(new { items = Array.Empty<object>(), total = 0 });
