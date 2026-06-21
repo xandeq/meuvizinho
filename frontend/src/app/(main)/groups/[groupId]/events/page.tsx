@@ -1,15 +1,10 @@
-"use client";
+import GroupEventsRedirectClient from './GroupEventsRedirectClient';
 
-import { useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+// Required for Next.js static export: must return at least one entry
+export function generateStaticParams() {
+  return [{ groupId: 'placeholder' }];
+}
 
-export default function GroupEventsRedirectPage() {
-  const router = useRouter();
-  const params = useParams<{ groupId: string }>();
-
-  useEffect(() => {
-    router.replace(`/groups/${params.groupId}/`);
-  }, [router, params.groupId]);
-
-  return null;
+export default function GroupEventsPage() {
+  return <GroupEventsRedirectClient />;
 }
