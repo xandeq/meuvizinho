@@ -117,7 +117,7 @@ jobs:
             --no-build
           echo "✅ Migration aplicada com sucesso"
 
-      # Diagnóstico: gera migration temporária para mostrar o drift exato antes de falhar.
+      # Diagnóstico: gera migration temporária e mostra o diff do snapshot para revelar o drift exato.
       # Não commitado — o workspace do CI é efêmero.
       - name: Diagnóstico de drift (mostra o que mudou antes de falhar)
         run: |
@@ -126,12 +126,17 @@ jobs:
             --configuration Release \
             --no-build \
             2>&1 || true
-          echo "=== UP() da migration diagnóstica ==="
-          DIAG_FILE=$(ls src/BairroNow.Api/Migrations/__DiagDrift__*.cs 2>/dev/null | head -1)
+          echo "=== DIFF do AppDbContextModelSnapshot.cs (o que EF corrigiu) ==="
+          git diff src/BairroNow.Api/Migrations/AppDbContextModelSnapshot.cs || true
+          echo "=== Migration diagnóstica gerada ==="
+          DIAG_FILE=$(ls -t src/BairroNow.Api/Migrations/*.cs 2>/dev/null | grep -i diag | head -1)
           if [ -n "$DIAG_FILE" ]; then
+            echo "Arquivo: $DIAG_FILE"
             cat "$DIAG_FILE"
           else
-            echo "(nenhuma migration gerada — sem drift ou erro)"
+            NEWEST=$(ls -t src/BairroNow.Api/Migrations/*.cs 2>/dev/null | grep -v Snapshot | grep -v Designer | head -1)
+            echo "Arquivo mais recente: $NEWEST"
+            cat "$NEWEST" 2>/dev/null || echo "(nenhum arquivo encontrado)"
           fi
           echo "==="
 
