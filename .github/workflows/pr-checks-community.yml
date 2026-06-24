@@ -80,6 +80,37 @@ jobs:
           dotnet tool install --global dotnet-ef
           echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
 
+      # SQL Server rejeita o login quando a database especificada no connection string
+      # não existe (erro 18456, estado 38). É necessário criá-la antes do EF se conectar.
+      - name: Criar database BairroNowCI no SQL Server
+        run: |
+          SQLCMD=""
+          if [ -f /opt/mssql-tools18/bin/sqlcmd ]; then
+            SQLCMD=/opt/mssql-tools18/bin/sqlcmd
+          elif [ -f /opt/mssql-tools/bin/sqlcmd ]; then
+            SQLCMD=/opt/mssql-tools/bin/sqlcmd
+          else
+            echo "sqlcmd não encontrado, instalando mssql-tools18..."
+            curl -fsSL https://packages.microsoft.com/keys/microsoft.asc \
+              | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
+            curl -fsSL https://packages.microsoft.com/config/ubuntu/22.04/prod.list \
+              | sudo tee /etc/apt/sources.list.d/mssql-release.list
+            sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 unixodbc-dev 2>/dev/null
+            SQLCMD=/opt/mssql-tools18/bin/sqlcmd
+          fi
+          for i in $(seq 1 15); do
+            if $SQLCMD -S localhost,1433 -U sa -P 'BairroNow_CI_P@2026!' -C \
+                -Q "IF DB_ID('BairroNowCI') IS NULL CREATE DATABASE BairroNowCI" \
+                2>/dev/null; then
+              echo "✅ Database BairroNowCI criada/confirmada"
+              exit 0
+            fi
+            echo "Aguardando SQL Server pronto... tentativa $i/15"
+            sleep 5
+          done
+          echo "❌ Falhou ao criar BairroNowCI após 75s"
+          exit 1
+
       # Aplica a migration escrita à mão contra SQL Server 2022 real.
       # Se a migration tiver erro de SQL, este step falha aqui — não em prod.
       - name: Aplicar migration contra SQL Server real
