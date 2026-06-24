@@ -121,17 +121,24 @@ A neighborhood operating system for Brazil — a "Nextdoor brasileiro" where ver
 - Backend: GitHub Actions → FTP → SmarterASP `/bairronow-api/` (IIS, `app_offline.htm` trick)
 - Mobile: EAS build (workflow_dispatch apenas) → não deployado ainda
 
-**Estado atual (2026-05-16):**
-- `origin/master` = `18b9007` — v1.1 + Wave A mobile completo
+**Estado atual (2026-06-24):**
+- `origin/master` = `9892665` — tudo até Wave O (polls, DMs, push notifications)
 - git tag `v1.1` em `a7585e9`
-- GitHub Milestone #1 "v1.2 Comunidade Completa" com Issues #7-#10 (Waves A-D)
 - Backend healthy: `api.bairronow.com.br/health/ready` → Healthy
+- **Wave P (feat/whatsapp-condo-directory, 5 commits, PR aberto, NÃO mergeado):**
+  Diferencial "Meu Vizinho": diretório de grupos WhatsApp por bairro + condomínios com
+  síndico reivindicável + UI de moderação admin. Entidades: `WhatsAppGroup`, `Condominium`,
+  `CondominiumClaim`. Controllers: `api/v1/whatsapp-groups`, `api/v1/condominiums`.
+  Migration `20260623000001` **escrita à mão** — EF design-time bloqueado por Windows
+  Application Control (WDAC/Smart App Control `0x800711C7`) nesta máquina Windows.
+  Em CI/Linux o EF funciona normalmente. O drift check definitivo é
+  `dotnet ef migrations has-pending-model-changes` no job `backend-integration`
+  (`.github/workflows/pr-checks-community.yml`).
 
-**Próximos passos (Wave B):**
-1. `eas init` → gerar projectId real → atualizar `mobile/app.json`
-2. Wave B: Map clustering, Groups RSVP/invite links, notification center
-3. Wave C: PWA manifest + service worker
-4. Cloudflare SSL: mudar Flexible→Full em dash.cloudflare.com (token CF inválido, ação manual)
+**Aguardando para deploy:**
+- Domínio `meuvizinho.com.br` — leilão abre 08/07/2026
+- SSL Full Strict no Cloudflare (atualmente Flexible)
+- Rotação de JWT_KEY e CONN_STRING antes do go-live
 
 **CI:**
 - `deploy-backend.yml`: push → dotnet build/test/publish → FTP SmarterASP → smoke `/health/ready`
