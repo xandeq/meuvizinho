@@ -300,4 +300,30 @@ moderação, denúncias, notificações+push, LGPD (anonimização/retenção).
 
 ---
 
-*Última atualização: 23/06/2026 — auditoria de lançamento concluída*
+## WAVE P — Diferencial WhatsApp + Condomínio (IMPLEMENTADO 23/06/2026)
+
+Branch `feat/whatsapp-condo-directory` (3 commits: e9abaa9, 2b28b2b, e304eba).
+NÃO deployado (sem push — aguardando domínio/decisão).
+
+**Entregue (build limpo + 176/176 testes verdes):**
+- Backend: entidades `WhatsAppGroup`/`Condominium`/`CondominiumClaim` + 2 controllers
+  (`api/v1/whatsapp-groups`, `api/v1/condominiums`) com CRUD, moderação e fluxo de
+  claim/transferência de síndico (WhatsApp segue com a plataforma via `IsManagedByPlatform`)
+- Migration `20260623000001` + snapshot (escritos à mão — EF design-time bloqueado por
+  Windows Application Control nesta máquina; idêntico em CI/Linux)
+- 22 testes novos (validação de link, moderação, claim)
+- Frontend: `/whatsapp` (diretório), `/whatsapp/new` (submissão), `/condominios` (lista),
+  `/condominios/[id]` (detalhe + reivindicação), `/admin/community` (moderação), nav
+- Revisão adversarial aplicada: re-fila de moderação pós-edição, contador atômico,
+  índices únicos filtrados (backstop TOCTOU), PII no claim, loading travado
+
+**Pendente para ativar em produção (pós-domínio):**
+- [ ] Push da branch + PR + merge
+- [ ] Deploy aplica a migration no startup (SmarterASP)
+- [ ] Seed inicial: criar grupos manualmente no WhatsApp Business App (@meuvizinho admin)
+      e cadastrá-los/verificá-los no diretório
+- [ ] (trilha mobile) portar o diferencial para o app Expo
+
+---
+
+*Última atualização: 23/06/2026 — diferencial Wave P implementado, revisado e testado*
