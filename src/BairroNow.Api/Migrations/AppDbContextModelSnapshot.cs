@@ -2114,7 +2114,7 @@ namespace BairroNow.Api.Migrations
             modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPollVote", b =>
                 {
                     b.HasOne("BairroNow.Api.Models.Entities.GroupPollOption", "Option")
-                        .WithMany()
+                        .WithMany("Votes")
                         .HasForeignKey("GroupPollOptionId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
@@ -2430,6 +2430,11 @@ namespace BairroNow.Api.Migrations
                 {
                     b.Navigation("Options");
 
+                    b.Navigation("Votes");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.GroupPollOption", b =>
+                {
                     b.Navigation("Votes");
                 });
 
