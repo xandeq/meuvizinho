@@ -117,6 +117,24 @@ jobs:
             --no-build
           echo "✅ Migration aplicada com sucesso"
 
+      # Diagnóstico: gera migration temporária para mostrar o drift exato antes de falhar.
+      # Não commitado — o workspace do CI é efêmero.
+      - name: Diagnóstico de drift (mostra o que mudou antes de falhar)
+        run: |
+          dotnet ef migrations add __DiagDrift__ \
+            --project src/BairroNow.Api/BairroNow.Api.csproj \
+            --configuration Release \
+            --no-build \
+            2>&1 || true
+          echo "=== UP() da migration diagnóstica ==="
+          DIAG_FILE=$(ls src/BairroNow.Api/Migrations/__DiagDrift__*.cs 2>/dev/null | head -1)
+          if [ -n "$DIAG_FILE" ]; then
+            cat "$DIAG_FILE"
+          else
+            echo "(nenhuma migration gerada — sem drift ou erro)"
+          fi
+          echo "==="
+
       # GATE DEFINITIVO: detecta drift entre a migration hand-written e o ModelSnapshot.
       # Se houver qualquer divergência (campo esquecido, tipo errado, índice faltando),
       # o EF identifica e falha o build ANTES do merge. Em prod, a migration teria
