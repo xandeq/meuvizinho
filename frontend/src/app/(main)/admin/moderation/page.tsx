@@ -30,9 +30,9 @@ const TYPE_LABELS: Record<ReportTargetType, string> = {
 };
 
 const TYPE_BADGE: Record<ReportTargetType, string> = {
-  post: "bg-info/10 text-info ring-info/30",
+  post: "bg-primary/10 text-primary ring-primary/30",
   comment: "bg-accent/10 text-accent ring-accent/30",
-  listing: "bg-secondary/20 text-secondary-fg ring-secondary/30",
+  listing: "bg-secondary/10 text-secondary ring-secondary/30",
 };
 
 export default function ModerationPage() {

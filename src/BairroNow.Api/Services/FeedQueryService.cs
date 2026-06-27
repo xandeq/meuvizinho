@@ -135,7 +135,10 @@ public class FeedQueryService : IFeedQueryService
             .Where(p => p.BairroId == caller.BairroId.Value && p.IsPublished);
 
         if (!string.IsNullOrEmpty(q))
-            query = query.Where(p => EF.Functions.Like(p.Body, "%" + q + "%"));
+        {
+            var safeQ = q.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
+            query = query.Where(p => EF.Functions.Like(p.Body, "%" + safeQ + "%"));
+        }
         if (request.Category.HasValue)
             query = query.Where(p => p.Category == request.Category.Value);
         if (request.From.HasValue)

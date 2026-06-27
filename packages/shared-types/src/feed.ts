@@ -101,6 +101,7 @@ export interface NotificationDto {
   type: NotificationType;
   postId: number | null;
   commentId: number | null;
+  groupId: number | null;
   actor: PostAuthorDto;
   isRead: boolean;
   createdAt: string;

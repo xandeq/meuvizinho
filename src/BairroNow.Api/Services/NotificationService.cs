@@ -53,6 +53,7 @@ public class NotificationService : INotificationService
             Type = NotificationTypes.GroupJoinApproved,
             PostId = null,
             CommentId = null,
+            GroupId = groupId,
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -65,6 +66,7 @@ public class NotificationService : INotificationService
             Type = NotificationTypes.GroupJoinApproved,
             PostId = null,
             CommentId = null,
+            GroupId = groupId,
             Actor = new Models.DTOs.PostAuthorDto { Id = recipientId },
             IsRead = false,
             CreatedAt = notification.CreatedAt
@@ -100,7 +102,7 @@ public class NotificationService : INotificationService
             Type = NotificationTypes.NewRating,
             PostId = null,
             CommentId = null,
-            Actor = new Models.DTOs.PostAuthorDto { Id = businessOwnerId },
+            Actor = new Models.DTOs.PostAuthorDto { Id = businessOwnerId, DisplayName = raterName },
             IsRead = false,
             CreatedAt = notification.CreatedAt
         };
@@ -141,6 +143,7 @@ public class NotificationService : INotificationService
             Type = NotificationTypes.GroupEvent,
             PostId = null,
             CommentId = null,
+            GroupId = groupId,
             IsRead = false,
             CreatedAt = now
         }).ToList();
@@ -182,6 +185,7 @@ public class NotificationService : INotificationService
                 Type = NotificationTypes.GroupEvent,
                 PostId = null,
                 CommentId = null,
+                GroupId = groupId,
                 Actor = actorDto,
                 IsRead = false,
                 CreatedAt = now

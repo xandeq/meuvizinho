@@ -147,6 +147,7 @@ function ProfileSkeleton() {
 }
 
 function AvatarCircle({ photoUrl, name }: { photoUrl: string | null; name: string }) {
+  const [failed, setFailed] = useState(false);
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -154,13 +155,14 @@ function AvatarCircle({ photoUrl, name }: { photoUrl: string | null; name: strin
     .join("")
     .toUpperCase();
 
-  if (photoUrl) {
+  if (photoUrl && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={photoUrl}
         alt={name}
         className="w-16 h-16 rounded-full object-cover ring-2 ring-border/50 shrink-0"
+        onError={() => setFailed(true)}
       />
     );
   }

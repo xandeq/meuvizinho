@@ -298,7 +298,7 @@ export default function SearchPage() {
             {listingResults.map((listing) => (
               <li key={listing.id} className="py-3 first:pt-0 last:pb-0">
                 <Link
-                  href={`/marketplace/listing/?id=${listing.id}`}
+                  href={`/marketplace/${listing.id}/`}
                   className="flex items-center justify-between gap-3 hover:opacity-80 transition-opacity"
                 >
                   <div className="flex-1 min-w-0">

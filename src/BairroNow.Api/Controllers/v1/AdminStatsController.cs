@@ -8,7 +8,7 @@ using BairroNow.Api.Data;
 namespace BairroNow.Api.Controllers.v1;
 
 [ApiController]
-[Authorize]
+[Authorize(Policy = "Admin")]
 [EnableRateLimiting("authenticated")]
 public class AdminStatsController : ControllerBase
 {

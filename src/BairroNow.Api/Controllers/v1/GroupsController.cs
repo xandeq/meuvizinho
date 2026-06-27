@@ -8,12 +8,14 @@ using BairroNow.Api.Hubs;
 using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Models.Enums;
 using BairroNow.Api.Services;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BairroNow.Api.Controllers.v1;
 
 [ApiController]
 [Route("api/v1/groups")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class GroupsController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -48,14 +50,15 @@ public class GroupsController : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(search))
         {
+            var safeSearch = EscapeLike(search.Trim());
             // EF Core 8 FTS workaround: use IgnoreQueryFilters + manual soft-delete filter
             groups = _db.Groups
                 .AsNoTracking()
                 .IgnoreQueryFilters()
                 .Where(g => g.DeletedAt == null
                          && g.BairroId == bairroId
-                         && (EF.Functions.Like(g.Name, $"%{search}%")
-                             || EF.Functions.Like(g.Description, $"%{search}%")));
+                         && (EF.Functions.Like(g.Name, $"%{safeSearch}%")
+                             || EF.Functions.Like(g.Description, $"%{safeSearch}%")));
         }
 
         var total = await groups.CountAsync(ct);
@@ -88,6 +91,11 @@ public class GroupsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        if (string.IsNullOrWhiteSpace(req.Name) || req.Name.Length > 80)
+            return BadRequest(new { error = "O nome do grupo deve ter entre 1 e 80 caracteres." });
+        if (string.IsNullOrWhiteSpace(req.Description) || req.Description.Length > 500)
+            return BadRequest(new { error = "A descrição deve ter entre 1 e 500 caracteres." });
+
         var group = new Group
         {
             BairroId = req.BairroId,
@@ -100,17 +108,15 @@ public class GroupsController : ControllerBase
             CoverImageUrl = req.CoverImageUrl,
             CreatedAt = DateTime.UtcNow
         };
-        _db.Groups.Add(group);
-        await _db.SaveChangesAsync(ct);
-
         var ownerMember = new GroupMember
         {
-            GroupId = group.Id,
+            Group = group,
             UserId = userId.Value,
             Role = GroupMemberRole.Owner,
             Status = GroupMemberStatus.Active,
             JoinedAt = DateTime.UtcNow
         };
+        _db.Groups.Add(group);
         _db.GroupMembers.Add(ownerMember);
         await _db.SaveChangesAsync(ct);
 
@@ -235,25 +241,27 @@ public class GroupsController : ControllerBase
             return Ok(pending);
         }
 
-        var members = await _db.GroupMembers
+        var baseQuery = _db.GroupMembers
             .AsNoTracking()
-            .Where(m => m.GroupId == id && m.Status == GroupMemberStatus.Active)
+            .Where(m => m.GroupId == id && m.Status == GroupMemberStatus.Active);
+
+        var total = await baseQuery.CountAsync(ct);
+        var members = await baseQuery
             .OrderBy(m => m.JoinedAt)
             .Skip((page - 1) * DefaultPageSize)
             .Take(DefaultPageSize)
             .Select(m => new
             {
                 m.Id,
-                m.UserId,
-                m.Role,
-                m.Status,
+                UserId = m.UserId,
+                Role = m.Role.ToString().ToLower(),
                 m.JoinedAt,
                 DisplayName = m.User!.DisplayName,
                 PhotoUrl = m.User.PhotoUrl
             })
             .ToListAsync(ct);
 
-        return Ok(members);
+        return Ok(new { items = members, total });
     }
 
     // GET /api/v1/groups/{id}/pending — list pending join requests (owner/admin only)
@@ -502,15 +510,24 @@ public class GroupsController : ControllerBase
             .Select(p => new
             {
                 p.Id,
+                GroupId = p.GroupId,
                 p.Body,
                 p.Category,
                 p.CreatedAt,
                 p.EditedAt,
-                AuthorId = p.AuthorId,
-                AuthorName = p.Author!.DisplayName,
-                AuthorPhoto = p.Author.PhotoUrl,
+                p.IsFlagged,
+                Author = new
+                {
+                    Id = p.AuthorId,
+                    DisplayName = p.Author!.DisplayName,
+                    PhotoUrl = p.Author.PhotoUrl,
+                    IsVerified = p.Author.IsVerified
+                },
                 LikeCount = p.Likes.Count,
-                CommentCount = p.Comments.Count(c => c.DeletedAt == null)
+                CommentCount = p.Comments.Count(c => c.DeletedAt == null),
+                IsLikedByMe = p.Likes.Any(l => l.UserId == userId),
+                Images = p.Images.OrderBy(i => i.Order)
+                    .Select(i => new { i.Url, i.Order }).ToList()
             })
             .ToListAsync(ct);
 
@@ -523,6 +540,9 @@ public class GroupsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(req.Body) || req.Body.Length > 2000)
+            return BadRequest(new { error = "O corpo da publicação deve ter entre 1 e 2000 caracteres." });
 
         var isMember = await _db.GroupMembers
             .AsNoTracking()
@@ -542,11 +562,35 @@ public class GroupsController : ControllerBase
         _db.GroupPosts.Add(post);
         await _db.SaveChangesAsync(ct);
 
-        // SignalR: push to group room (best-effort — post is already persisted)
+        // SignalR: push to group room with full author shape (best-effort — post is already persisted)
         try
         {
-            await _hub.Clients.Group($"group:{id}")
-                .SendAsync("NewGroupPost", new { post.Id, post.Body, post.AuthorId, post.CreatedAt });
+            var authorInfo = await _db.Users.AsNoTracking()
+                .Where(u => u.Id == userId.Value)
+                .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified })
+                .FirstOrDefaultAsync(ct);
+
+            await _hub.Clients.Group($"group:{id}").SendAsync("NewGroupPost", new
+            {
+                post.Id,
+                GroupId = id,
+                post.Body,
+                post.Category,
+                post.CreatedAt,
+                EditedAt = (DateTime?)null,
+                IsFlagged = false,
+                Author = new
+                {
+                    Id = userId.Value,
+                    DisplayName = authorInfo?.DisplayName,
+                    PhotoUrl = authorInfo?.PhotoUrl,
+                    IsVerified = authorInfo?.IsVerified ?? false
+                },
+                LikeCount = 0,
+                CommentCount = 0,
+                IsLikedByMe = false,
+                Images = Array.Empty<object>()
+            });
         }
         catch (Exception ex)
         {
@@ -645,6 +689,9 @@ public class GroupsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        if (string.IsNullOrWhiteSpace(req.Body) || req.Body.Length > 1000)
+            return BadRequest(new { error = "O comentário deve ter entre 1 e 1000 caracteres." });
+
         var comment = new GroupComment
         {
             GroupPostId = postId,
@@ -696,6 +743,13 @@ public class GroupsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(req.Title) || req.Title.Length > 120)
+            return BadRequest(new { error = "O título do evento deve ter entre 1 e 120 caracteres." });
+        if (req.StartsAt <= DateTime.UtcNow)
+            return BadRequest(new { error = "A data de início deve ser no futuro." });
+        if (req.EndsAt.HasValue && req.EndsAt <= req.StartsAt)
+            return BadRequest(new { error = "A data de término deve ser após o início." });
 
         var isMember = await _db.GroupMembers
             .AsNoTracking()
@@ -952,6 +1006,30 @@ public class GroupsController : ControllerBase
         return NoContent();
     }
 
+    // Admin: GET /api/v1/groups/flagged-posts?bairroId={n}
+    [HttpGet("flagged-posts")]
+    [Authorize(Policy = "Admin")]
+    public async Task<IActionResult> FlaggedPosts([FromQuery] int bairroId, CancellationToken ct = default)
+    {
+        var posts = await _db.GroupPosts.AsNoTracking()
+            .IgnoreQueryFilters()
+            .Where(p => p.IsFlagged && p.DeletedAt == null && p.Group!.BairroId == bairroId)
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(100)
+            .Select(p => new
+            {
+                p.Id,
+                GroupId   = p.GroupId,
+                GroupName = p.Group!.Name,
+                AuthorName = p.Author!.DisplayName ?? p.Author.Email,
+                p.Body,
+                p.CreatedAt,
+            })
+            .ToListAsync(ct);
+
+        return Ok(posts);
+    }
+
     private async Task<object?> BuildPollDto(int pollId, Guid userId, DateTime now, CancellationToken ct = default)
     {
         return await _db.GroupPolls.AsNoTracking()
@@ -975,6 +1053,10 @@ public class GroupsController : ControllerBase
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    // Escape SQL Server LIKE wildcards so user input is treated as literals.
+    private static string EscapeLike(string s) =>
+        s.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
     private Guid? GetUserId()
     {

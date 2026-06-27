@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Caching.Memory;
 using BairroNow.Api.Constants;
 using BairroNow.Api.Models.DTOs;
@@ -8,6 +9,7 @@ namespace BairroNow.Api.Controllers.v1;
 
 [ApiController]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class CategoriesController : ControllerBase
 {
     private const string DisabledCacheKey = "marketplace:disabled-categories";

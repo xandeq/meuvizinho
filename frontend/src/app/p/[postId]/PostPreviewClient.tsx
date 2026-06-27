@@ -95,7 +95,8 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
     );
   }
 
-  const shareUrl = `https://bairronow.com.br/p/${post.id}`;
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bairronow.com.br";
+  const shareUrl = `${SITE_URL}/p/${post.id}`;
 
   return (
     <div className="min-h-screen bg-bg">

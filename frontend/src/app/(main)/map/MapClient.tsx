@@ -10,6 +10,27 @@ import { useAuthStore } from '@/lib/auth';
 import { getPins, getPois, updateMapPreference } from '@/lib/api/map';
 import type { MapPin, PointOfInterest, MapFilter } from '@/lib/types/map';
 
+function MapPinAvatar({ photoUrl, displayName }: { photoUrl?: string | null; displayName?: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const initial = (displayName?.[0] ?? '?').toUpperCase();
+  if (photoUrl && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photoUrl}
+        alt={displayName ?? ''}
+        className="w-8 h-8 rounded-full object-cover"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-fg text-xs">
+      {initial}
+    </div>
+  );
+}
+
 // Custom marker icons for resident vs business accounts
 function createMarkerIcon(isBusinessAccount?: boolean) {
   const color = isBusinessAccount ? '#D97706' : '#2563EB';
@@ -111,27 +132,17 @@ export default function MapClient() {
               <Popup>
                 <div className="min-w-[180px] space-y-1">
                   <div className="flex items-center gap-2">
-                    {pin.photoUrl ? (
-                      <img
-                        src={pin.photoUrl}
-                        alt={pin.displayName ?? ''}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-fg text-xs">
-                        {pin.displayName?.[0] ?? '?'}
-                      </div>
-                    )}
+                    <MapPinAvatar photoUrl={pin.photoUrl} displayName={pin.displayName} />
                     <div>
                       <p className="font-medium text-sm text-fg">{pin.displayName ?? 'Vizinho'}</p>
                       {pin.isVerified && (
-                        <span className="inline-flex items-center gap-1 bg-secondary text-secondary-fg text-xs px-2 py-0.5 rounded-full">
+                        <span className="inline-flex items-center gap-1 bg-secondary text-white text-xs px-2 py-0.5 rounded-full">
                           Verificado
                         </span>
                       )}
                       {pin.isBusinessAccount && (
                         <>
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-accent/10 text-accent0 rounded px-1.5 py-0.5 mt-1">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-accent/10 text-accent rounded px-1.5 py-0.5 mt-1">
                             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg>
                             Negócio local
                           </span>
@@ -143,12 +154,6 @@ export default function MapClient() {
                     </div>
                   </div>
                   {pin.bio && <p className="text-xs text-muted-fg">{pin.bio}</p>}
-                  <Link
-                    href="/marketplace/"
-                    className="block text-center text-xs bg-primary text-white py-1 px-2 rounded-xl mt-1 hover:bg-primary/90"
-                  >
-                    Ver perfil
-                  </Link>
                 </div>
               </Popup>
             </Marker>

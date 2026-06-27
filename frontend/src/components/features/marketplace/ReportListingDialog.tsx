@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   LISTING_REPORT_REASONS,
   type ListingReportReasonCode,
@@ -23,6 +23,12 @@ export default function ReportListingDialog({
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const submit = async () => {
     if (!reason) return;
@@ -47,13 +53,16 @@ export default function ReportListingDialog({
 
   return (
     <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Denunciar anúncio"
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-card border border-border/50 shadow-xl rounded-2xl max-w-md w-full p-5 space-y-4">
-        <h2 className="text-xl font-extrabold text-fg">Denunciar anúncio</h2>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-listing-dialog-title"
+        className="bg-card border border-border/50 shadow-xl rounded-2xl max-w-md w-full p-5 space-y-4"
+      >
+        <h2 id="report-listing-dialog-title" className="text-xl font-extrabold text-fg">Denunciar anúncio</h2>
 
         {submitted ? (
           <div className="space-y-3">

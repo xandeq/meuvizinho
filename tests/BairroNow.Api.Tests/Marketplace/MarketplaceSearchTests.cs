@@ -29,15 +29,16 @@ public class MarketplaceSearchTests
         fileMock.Setup(f => f.SaveImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("/uploads/listings/x.jpg");
 
-        var config = new Mock<IConfiguration>();
-        config.Setup(c => c.GetSection("Features")["FullTextSearchEnabled"]).Returns("false");
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Features:FullTextSearchEnabled"] = "false" })
+            .Build();
         var svc = new ListingService(db, fileMock.Object,
             new CreateListingRequestValidator(),
             new UpdateListingRequestValidator(),
             Mock.Of<INotificationService>(),
             new MemoryCache(new MemoryCacheOptions()),
             NullLogger<ListingService>.Instance,
-            config.Object);
+            config);
         return (svc, db, sellerId);
     }
 
@@ -69,8 +70,11 @@ public class MarketplaceSearchTests
         var older = await svc.CreateAsync(sellerId, new CreateListingRequest { Title = "Old", Description = "old listing 12345", Price = 10, CategoryCode = "outros", SubcategoryCode = "diversos" }, One());
         var newer = await svc.CreateAsync(sellerId, new CreateListingRequest { Title = "New", Description = "new listing 12345", Price = 20, CategoryCode = "outros", SubcategoryCode = "diversos" }, One());
         // Force deterministic recency ordering without relying on sleep timing
-        await db.Listings.Where(l => l.Id == older.Id).ExecuteUpdateAsync(s => s.SetProperty(l => l.CreatedAt, DateTime.UtcNow.AddMinutes(-1)));
-        await db.Listings.Where(l => l.Id == newer.Id).ExecuteUpdateAsync(s => s.SetProperty(l => l.CreatedAt, DateTime.UtcNow));
+        var olderEntity = await db.Listings.FindAsync(older.Id);
+        olderEntity!.CreatedAt = DateTime.UtcNow.AddMinutes(-1);
+        var newerEntity = await db.Listings.FindAsync(newer.Id);
+        newerEntity!.CreatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
         var page = await svc.GetBairroGridAsync(sellerId, 1, null, null, null, false, null, null, 20);
         page.Items.First().Id.Should().Be(newer.Id);
     }

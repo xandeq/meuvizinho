@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.DTOs;
@@ -11,6 +12,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/search")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class SearchController : ControllerBase
 {
     private readonly IFeedQueryService _feed;
@@ -29,7 +31,7 @@ public class SearchController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
         var results = await _feed.SearchAsync(userId.Value, request, ct);
-        return Ok(results);
+        return Ok(new { items = results, total = results.Count });
     }
 
     // GET /api/v1/search/users?q=termo&skip=0&take=20
@@ -38,6 +40,8 @@ public class SearchController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        if (q.Length > 100) return BadRequest(new { error = "Termo de busca muito longo." });
 
         var caller = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
         if (caller == null || !caller.BairroId.HasValue) return Ok(new { items = Array.Empty<object>(), total = 0 });
@@ -50,9 +54,12 @@ public class SearchController : ControllerBase
             .Where(u => u.BairroId == caller.BairroId.Value && u.IsActive);
 
         if (!string.IsNullOrEmpty(qTrim))
+        {
+            var safe = EscapeLike(qTrim);
             query = query.Where(u =>
-                EF.Functions.Like(u.DisplayName ?? "", "%" + qTrim + "%") ||
-                EF.Functions.Like(u.BusinessName ?? "", "%" + qTrim + "%"));
+                EF.Functions.Like(u.DisplayName ?? "", "%" + safe + "%") ||
+                EF.Functions.Like(u.BusinessName ?? "", "%" + safe + "%"));
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query
@@ -79,6 +86,8 @@ public class SearchController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        if (q.Length > 100) return BadRequest(new { error = "Termo de busca muito longo." });
+
         var caller = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
         if (caller == null || !caller.BairroId.HasValue) return Ok(new { items = Array.Empty<object>(), total = 0 });
 
@@ -91,9 +100,12 @@ public class SearchController : ControllerBase
             .Where(l => l.BairroId == caller.BairroId.Value && l.DeletedAt == null);
 
         if (!string.IsNullOrEmpty(qTrim))
+        {
+            var safe = EscapeLike(qTrim);
             query = query.Where(l =>
-                EF.Functions.Like(l.Title, "%" + qTrim + "%") ||
-                EF.Functions.Like(l.Description, "%" + qTrim + "%"));
+                EF.Functions.Like(l.Title, "%" + safe + "%") ||
+                EF.Functions.Like(l.Description, "%" + safe + "%"));
+        }
 
         var total = await query.CountAsync(ct);
         var items = await query
@@ -113,6 +125,9 @@ public class SearchController : ControllerBase
 
         return Ok(new { items, total });
     }
+
+    private static string EscapeLike(string s) =>
+        s.Replace("[", "[[]").Replace("%", "[%]").Replace("_", "[_]");
 
     private Guid? GetUserId()
     {

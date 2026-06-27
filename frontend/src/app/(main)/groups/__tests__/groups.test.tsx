@@ -13,7 +13,9 @@ jest.mock('@/lib/api/groups', () => ({
   getGroupEvents: jest.fn().mockResolvedValue([]),
   rsvpEvent: jest.fn().mockResolvedValue(undefined),
   deleteGroupPost: jest.fn().mockResolvedValue(undefined),
-  getGroupMembers: jest.fn().mockResolvedValue({ members: [], total: 0 }),
+  toggleGroupPostLike: jest.fn().mockResolvedValue(undefined),
+  createGroupEvent: jest.fn().mockResolvedValue({ id: 1, groupId: 1, title: 'Test Event', description: null, location: null, startsAt: new Date().toISOString(), endsAt: null, rsvpCount: 0, myRsvp: null }),
+  getGroupMembers: jest.fn().mockResolvedValue({ items: [], total: 0 }),
 }));
 
 // Mock auth store
@@ -51,7 +53,7 @@ jest.mock('next/link', () => {
 jest.mock('@/stores/group-store', () => ({
   useGroupStore: jest.fn(() => ({
     groups: [],
-    currentGroup: null,
+    currentGroup: { id: 1, name: 'Test Group', description: 'A group', category: 'Outros', joinPolicy: 'Open', scope: 'Bairro', rules: null, coverImageUrl: null, memberCount: 5, createdAt: '2024-01-01', bairroId: 1, myStatus: 'Active', myRole: 'Owner' },
     posts: [],
     hasMore: false,
     page: 1,
@@ -62,6 +64,7 @@ jest.mock('@/stores/group-store', () => ({
     removePost: jest.fn(),
     resetFeed: jest.fn(),
     incrementPage: jest.fn(),
+    updatePost: jest.fn(),
   })),
 }));
 

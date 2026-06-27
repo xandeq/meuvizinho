@@ -10,6 +10,27 @@ import { useSignalRChat } from "@/hooks/useSignalRChat";
 import { getMessageHistory } from "@/lib/api/chat";
 import type { ConversationDto } from "@/lib/types/marketplace";
 
+function UserPhotoAvatar({ photoUrl, displayName }: { photoUrl: string | null | undefined; displayName: string | null | undefined }) {
+  const [failed, setFailed] = useState(false);
+  const initial = ((displayName ?? "?")[0] ?? "?").toUpperCase();
+  if (photoUrl && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={photoUrl}
+        alt={displayName ?? "Usuário"}
+        className="w-12 h-12 rounded-full object-cover"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-extrabold text-base flex items-center justify-center shrink-0">
+      {initial}
+    </div>
+  );
+}
+
 export interface ChatRoomProps {
   conversationId: number;
   conversation?: ConversationDto | null;
@@ -98,6 +119,7 @@ export default function ChatRoom({
                 src={conversation.listingThumbnailUrl}
                 alt={conversation.listingTitle ?? "Anúncio"}
                 className="w-12 h-12 rounded object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             )}
             <div className="flex-1 min-w-0">
@@ -114,18 +136,7 @@ export default function ChatRoom({
             href={`/business/${conversation.otherUserId}/`}
             className="flex items-center gap-3 p-3 border-b border-border/50 hover:bg-muted transition-colors"
           >
-            {conversation.otherUserPhotoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={conversation.otherUserPhotoUrl}
-                alt={conversation.otherUserDisplayName ?? "Usuário"}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-extrabold text-base flex items-center justify-center shrink-0">
-                {(conversation.otherUserDisplayName ?? "?")[0].toUpperCase()}
-              </div>
-            )}
+            <UserPhotoAvatar photoUrl={conversation.otherUserPhotoUrl} displayName={conversation.otherUserDisplayName} />
             <div className="flex-1 min-w-0">
               <p className="font-bold text-fg truncate">
                 {conversation.otherUserDisplayName ?? "Vizinho"}

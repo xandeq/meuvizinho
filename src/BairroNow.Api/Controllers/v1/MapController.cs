@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.Entities;
@@ -12,6 +13,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/map")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class MapController : ControllerBase
 {
     private readonly AppDbContext _db;

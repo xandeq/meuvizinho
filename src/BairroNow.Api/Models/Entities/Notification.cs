@@ -21,6 +21,7 @@ public class Notification
     public string Type { get; set; } = NotificationTypes.Comment;
     public int? PostId { get; set; }
     public int? CommentId { get; set; }
+    public int? GroupId { get; set; }
     public Guid ActorUserId { get; set; }
     public User? Actor { get; set; }
     public bool IsRead { get; set; }

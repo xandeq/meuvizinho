@@ -30,6 +30,7 @@ export interface GroupPost {
   isFlagged: boolean;
   likeCount: number;
   commentCount: number;
+  isLikedByMe: boolean;
   images: { url: string; order: number }[];
   createdAt: string;
   editedAt: string | null;

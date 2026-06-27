@@ -28,6 +28,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
             src={message.imageUrl}
             alt="Imagem"
             className="rounded-lg mb-1 max-w-full h-auto"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
         )}
         {message.text && (

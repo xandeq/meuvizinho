@@ -1,4 +1,5 @@
-import { HTMLAttributes } from "react";
+"use client";
+import { HTMLAttributes, useState } from "react";
 
 export type AvatarSize = "xs" | "sm" | "md" | "lg" | "xl";
 
@@ -103,6 +104,9 @@ export default function Avatar({
   ...rest
 }: AvatarProps) {
   const s = sizeMap[size];
+  const [imgFailed, setImgFailed] = useState(false);
+
+  const showInitials = !src || imgFailed;
 
   return (
     <div
@@ -111,14 +115,7 @@ export default function Avatar({
         .join(" ")}
       {...rest}
     >
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={src}
-          alt={name ?? "Vizinho"}
-          className={["rounded-full object-cover", s.img].join(" ")}
-        />
-      ) : (
+      {showInitials ? (
         <span
           className={[
             "rounded-full flex items-center justify-center",
@@ -131,6 +128,14 @@ export default function Avatar({
         >
           {initials(name)}
         </span>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src!}
+          alt={name ?? "Vizinho"}
+          className={["rounded-full object-cover", s.img].join(" ")}
+          onError={() => setImgFailed(true)}
+        />
       )}
 
       {verified && (

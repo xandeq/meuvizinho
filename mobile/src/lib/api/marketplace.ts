@@ -54,7 +54,7 @@ export const marketplaceApi = {
   search: async (
     bairroId: number,
     q: string,
-    params: Omit<ListListingsParams, 'bairroId' | 'cursor' | 'take' | 'sort'> = { bairroId }
+    params: Omit<ListListingsParams, 'bairroId' | 'cursor' | 'take' | 'sort'> = {}
   ): Promise<ListingPageResult> => {
     const { data } = await apiClient.get<ListingPageResult>('/api/v1/listings/search', {
       params: {

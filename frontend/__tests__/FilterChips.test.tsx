@@ -14,7 +14,7 @@ describe("FilterChips", () => {
     );
 
     const checkbox = screen.getByRole("checkbox", {
-      name: /Apenas verificados/,
+      name: /Só verificados/,
     });
     expect(checkbox).toBeChecked();
 
@@ -28,7 +28,7 @@ describe("FilterChips", () => {
       />
     );
     expect(
-      screen.getByText(/Vendedor não verificado/)
+      screen.getByText(/inclui não verificados/)
     ).toBeInTheDocument();
   });
 
@@ -54,7 +54,7 @@ describe("FilterChips", () => {
           onChange={jest.fn()}
         />
       );
-      expect(screen.getByRole("button", { name: "Mais recentes" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Recentes" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Menor preço" })).toBeInTheDocument();
       expect(screen.getByRole("button", { name: "Maior preço" })).toBeInTheDocument();
     });
@@ -67,7 +67,7 @@ describe("FilterChips", () => {
         />
       );
       expect(screen.getByRole("button", { name: "Menor preço" })).toHaveAttribute("aria-pressed", "true");
-      expect(screen.getByRole("button", { name: "Mais recentes" })).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: "Recentes" })).toHaveAttribute("aria-pressed", "false");
     });
 
     it("clicking 'Menor preço' fires onChange with sort=price_asc", () => {
@@ -94,14 +94,14 @@ describe("FilterChips", () => {
       expect(onChange).toHaveBeenCalledWith({ sort: "price_desc" });
     });
 
-    it("defaults to 'Mais recentes' when sort is undefined", () => {
+    it("defaults to 'Recentes' when sort is undefined", () => {
       render(
         <FilterChips
           filters={{ verifiedOnly: true }}
           onChange={jest.fn()}
         />
       );
-      expect(screen.getByRole("button", { name: "Mais recentes" })).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getByRole("button", { name: "Recentes" })).toHaveAttribute("aria-pressed", "true");
     });
   });
 });

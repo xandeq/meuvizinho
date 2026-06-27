@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import NotificationBell from "@/components/features/NotificationBell";
 import { useAuthStore } from "@/lib/auth";
 
 export default function FeedHeader() {
@@ -40,8 +39,6 @@ export default function FeedHeader() {
             Moderação
           </Link>
         )}
-
-        <NotificationBell />
       </div>
     </div>
   );

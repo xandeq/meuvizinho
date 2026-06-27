@@ -32,13 +32,14 @@ public class ListingReportTests
         fileMock.Setup(f => f.SaveImageAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("/x.jpg");
 
-        var config = new Mock<IConfiguration>();
-        config.Setup(c => c.GetSection("Features")["FullTextSearchEnabled"]).Returns("false");
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Features:FullTextSearchEnabled"] = "false" })
+            .Build();
         var svc = new ListingService(db, fileMock.Object,
             new CreateListingRequestValidator(), new UpdateListingRequestValidator(),
             Mock.Of<INotificationService>(),
             new MemoryCache(new MemoryCacheOptions()), NullLogger<ListingService>.Instance,
-            config.Object);
+            config);
 
         var files = new FormFileCollection();
         var bytes = new byte[] { 0xFF };

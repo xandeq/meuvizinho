@@ -82,15 +82,17 @@ function AvatarCircle({
   photoUrl: string | null;
   name: string;
 }) {
+  const [failed, setFailed] = useState(false);
   const initial = (name[0] ?? "?").toUpperCase();
 
-  if (photoUrl) {
+  if (photoUrl && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={photoUrl}
         alt={name}
         className="w-12 h-12 rounded-full object-cover border border-border/50 shrink-0"
+        onError={() => setFailed(true)}
       />
     );
   }

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.DTOs;
@@ -12,6 +13,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/admin/moderation")]
 [Authorize(Policy = "Admin")]
+[EnableRateLimiting("authenticated")]
 public class ModerationController : ControllerBase
 {
     private readonly IModerationService _moderation;

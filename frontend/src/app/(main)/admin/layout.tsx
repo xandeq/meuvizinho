@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { useAuthStore } from "@/lib/auth";
 
 const adminNav = [
   { href: "/admin/dashboard/", label: "Dashboard" },
@@ -13,6 +15,19 @@ const adminNav = [
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAdmin = useAuthStore((s) => s.user?.isAdmin === true);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/login/");
+    } else if (!isAdmin) {
+      router.replace("/feed/");
+    }
+  }, [isAuthenticated, isAdmin, router]);
+
+  if (!isAuthenticated || !isAdmin) return null;
 
   return (
     <div className="space-y-4">

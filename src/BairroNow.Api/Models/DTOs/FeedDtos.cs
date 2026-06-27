@@ -104,6 +104,7 @@ public class NotificationDto
     public string Type { get; set; } = string.Empty;
     public int? PostId { get; set; }
     public int? CommentId { get; set; }
+    public int? GroupId { get; set; }
     public PostAuthorDto Actor { get; set; } = new();
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }

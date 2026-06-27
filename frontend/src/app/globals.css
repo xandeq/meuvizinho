@@ -131,6 +131,11 @@ html, body {
   100% { transform: scale(1); opacity: 1; }
 }
 
+/* ─── Safe area utility (iOS home indicator) ─────────────── */
+.pb-safe {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+}
+
 /* ─── Utility classes ────────────────────────────────────── */
 .animate-shimmer {
   background: linear-gradient(

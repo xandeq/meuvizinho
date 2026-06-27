@@ -20,22 +20,33 @@ function relTime(date: string): string {
 function notificationBody(n: NotificationDto): string {
   const who = n.actor.displayName ?? "Alguém";
   switch (n.type) {
-    case "like":            return `${who} curtiu seu post`;
-    case "comment":         return `${who} comentou no seu post`;
-    case "reply":           return `${who} respondeu seu comentário`;
-    case "mention":         return `${who} mencionou você`;
-    case "listing_expired": return `Seu anúncio "${who}" expirou`;
-    case "price_drop":      return `Queda de preço em "${who}"`;
-    default:                return `${who} interagiu com você`;
+    case "like":               return `${who} curtiu seu post`;
+    case "comment":            return `${who} comentou no seu post`;
+    case "reply":              return `${who} respondeu seu comentário`;
+    case "mention":            return `${who} mencionou você`;
+    case "GroupJoinApproved":  return "Sua entrada no grupo foi aprovada";
+    case "NewRating":          return `${who} avaliou seu negócio`;
+    case "GroupEvent":         return `${who} criou um evento no grupo`;
+    case "listing_expired":    return "Seu anúncio expirou";
+    case "price_drop":         return `Queda de preço em um anúncio favorito`;
+    default:                   return `${who} interagiu com você`;
   }
 }
 
 // ─── notification link target ─────────────────────────────────────────────────
 function notificationHref(n: NotificationDto): string {
-  if (n.type === "listing_expired" || n.type === "price_drop") {
-    return n.postId ? `/marketplace/${n.postId}/` : "/marketplace/";
+  switch (n.type) {
+    case "listing_expired":
+    case "price_drop":
+      return n.postId ? `/marketplace/${n.postId}/` : "/marketplace/";
+    case "GroupJoinApproved":
+    case "GroupEvent":
+      return n.groupId ? `/groups/${n.groupId}/` : "/groups/";
+    case "NewRating":
+      return "/profile/";
+    default:
+      return n.postId ? `/feed/post/?id=${n.postId}` : "/feed/";
   }
-  return n.postId ? `/feed/post/?id=${n.postId}` : "/feed/";
 }
 
 // ─── type → icon ─────────────────────────────────────────────────────────────
@@ -283,18 +294,25 @@ export default function NotificationBell() {
             )}
           </div>
 
-          {/* Footer — mark all read */}
-          {unread > 0 && (
-            <div className="px-4 py-2.5 border-t border-border/50 shrink-0">
+          {/* Footer */}
+          <div className="px-4 py-2.5 border-t border-border/50 shrink-0 flex items-center justify-between gap-2">
+            <Link
+              href="/notifications/"
+              onClick={() => setOpen(false)}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Ver todas
+            </Link>
+            {unread > 0 && (
               <button
                 type="button"
                 onClick={() => void markAllRead()}
-                className="w-full text-xs font-semibold text-primary hover:underline text-center py-0.5"
+                className="text-xs font-semibold text-muted-fg hover:text-fg hover:underline"
               >
                 Marcar todas como lidas
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>

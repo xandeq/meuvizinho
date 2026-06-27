@@ -31,7 +31,7 @@ export default function Profile() {
   const save = async () => {
     setSaving(true);
     try {
-      const p = await profileApi.updateMe({ displayName, bio });
+      const p = await profileApi.updateMe({ displayName, bio, isBusinessAccount: profile?.isBusinessAccount ?? false });
       setProfile(p);
       Alert.alert('Sucesso', 'Perfil atualizado.');
     } catch (e: any) {

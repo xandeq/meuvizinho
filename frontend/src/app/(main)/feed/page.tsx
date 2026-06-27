@@ -89,22 +89,24 @@ function FlameIcon({ className }: { className?: string }) {
 }
 
 function TrendingAuthorAvatar({ author }: { author: TrendingAuthor }) {
-  if (author.photoUrl) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={author.photoUrl}
-        alt={author.displayName ?? ""}
-        className="w-8 h-8 rounded-full object-cover shrink-0"
-      />
-    );
-  }
+  const [failed, setFailed] = useState(false);
   const initials = (author.displayName ?? "V")
     .split(" ")
     .slice(0, 2)
     .map((w) => w[0] ?? "")
     .join("")
     .toUpperCase();
+  if (author.photoUrl && !failed) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={author.photoUrl}
+        alt={author.displayName ?? ""}
+        className="w-8 h-8 rounded-full object-cover shrink-0"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
   return (
     <div className="w-8 h-8 rounded-full bg-primary/15 text-primary flex items-center justify-center text-xs font-bold shrink-0">
       {initials}

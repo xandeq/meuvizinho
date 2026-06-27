@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import ListingForm from "@/components/features/marketplace/ListingForm";
+import EmptyState from "@/components/ui/EmptyState";
 import { useAuthStore } from "@/lib/auth";
 import { getListing, updateListing } from "@/lib/api/marketplace";
 import type { ListingDto } from "@/lib/types/marketplace";
@@ -48,13 +49,9 @@ export default function EditListingClient() {
     );
   }
   if (error || !listing)
-    return <p className="text-danger font-semibold">{error ?? "Não encontrado"}</p>;
+    return <EmptyState title={error ?? "Anúncio não encontrado"} description="O anúncio pode ter sido removido ou o link é inválido." />;
   if (user?.id !== listing.sellerId)
-    return (
-      <p className="text-danger font-semibold">
-        Você não tem permissão para editar este anúncio.
-      </p>
-    );
+    return <EmptyState title="Sem permissão" description="Você não tem permissão para editar este anúncio." />;
 
   return (
     <div className="space-y-5 max-w-2xl mx-auto">

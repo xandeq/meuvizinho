@@ -97,7 +97,9 @@ public class EventsController : ControllerBase
             .Where(e =>
                 e.DeletedAt == null &&
                 e.Group!.BairroId == callerBairroId &&
-                e.Group.DeletedAt == null);
+                e.Group.DeletedAt == null &&
+                (e.Group.JoinPolicy == GroupJoinPolicy.Open ||
+                 e.Group.Members.Any(m => m.UserId == userId && m.Status == Models.Enums.GroupMemberStatus.Active)));
 
         if (upcoming)
             query = query.Where(e => e.StartsAt >= now);
@@ -141,8 +143,18 @@ public class EventsController : ControllerBase
         if (!Guid.TryParse(sub, out var userId)) return Unauthorized();
 
         var ev = await _db.GroupEvents
+            .Include(e => e.Group)
             .FirstOrDefaultAsync(e => e.Id == eventId && e.DeletedAt == null, ct);
         if (ev == null) return NotFound(new { error = "Evento não encontrado." });
+
+        // Closed groups: only active members may RSVP
+        if (ev.Group!.JoinPolicy == GroupJoinPolicy.Closed)
+        {
+            var isMember = await _db.GroupMembers.AsNoTracking()
+                .AnyAsync(m => m.GroupId == ev.GroupId && m.UserId == userId && m.Status == Models.Enums.GroupMemberStatus.Active, ct);
+            if (!isMember)
+                return StatusCode(403, new { error = "Apenas membros ativos podem confirmar presença neste evento." });
+        }
 
         var existing = await _db.GroupEventRsvps
             .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId, ct);

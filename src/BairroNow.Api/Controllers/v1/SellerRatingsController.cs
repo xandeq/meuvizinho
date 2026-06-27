@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using BairroNow.Api.Models.DTOs;
 using BairroNow.Api.Services;
 
@@ -9,6 +10,7 @@ namespace BairroNow.Api.Controllers.v1;
 [ApiController]
 [Route("api/v1/sellers/{userId:guid}/ratings")]
 [Authorize]
+[EnableRateLimiting("authenticated")]
 public class SellerRatingsController : ControllerBase
 {
     private readonly IRatingService _ratings;

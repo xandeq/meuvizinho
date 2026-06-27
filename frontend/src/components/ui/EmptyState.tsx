@@ -23,26 +23,16 @@ export default function EmptyState({
   secondaryAction,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-20 px-6 text-center animate-fade-up">
-      <div className="relative">
-        <div
-          aria-hidden
-          className="w-20 h-20 rounded-2xl bg-primary-light border border-primary-mid/30 flex items-center justify-center animate-float"
-        >
-          {icon ?? <DefaultIcon />}
-        </div>
-        <div
-          aria-hidden
-          className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-accent/25 border border-accent/30"
-        />
-        <div
-          aria-hidden
-          className="absolute -bottom-2 -left-2 w-4 h-4 rounded-full bg-secondary/25 border border-secondary/30"
-        />
+    <div className="flex flex-col items-center justify-center gap-5 py-20 px-6 text-center animate-fade-up">
+      <div
+        aria-hidden
+        className="w-16 h-16 rounded-2xl bg-primary-light border border-primary-mid/30 flex items-center justify-center"
+      >
+        {icon ?? <DefaultIcon />}
       </div>
 
-      <div className="max-w-[280px] space-y-2">
-        <p className="text-lg font-bold tracking-tight text-fg">{title}</p>
+      <div className="max-w-[260px] space-y-1.5">
+        <p className="text-base font-semibold text-fg">{title}</p>
         {description && (
           <p className="text-sm text-muted-fg leading-relaxed">{description}</p>
         )}

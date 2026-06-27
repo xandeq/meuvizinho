@@ -64,7 +64,7 @@ export default function PostCard({ post }: { post: Post }) {
         </button>
         <div className="ml-auto">
           <WhatsAppShareButton
-            url={`https://bairronow.com.br/p/${post.id}`}
+            url={`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://bairronow.com.br"}/p/${post.id}`}
           />
         </div>
       </footer>

@@ -57,6 +57,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
             alt={listing.title}
             loading="lazy"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+            onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-2">
@@ -148,7 +149,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           </div>
           <div onClick={(e) => e.preventDefault()}>
             <WhatsAppShareButton
-              url={`https://bairronow.com.br/m/${listing.id}`}
+              url={`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://bairronow.com.br"}/m/${listing.id}`}
               text="Veja esta oferta no BairroNow"
             />
           </div>

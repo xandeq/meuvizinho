@@ -104,7 +104,8 @@ export default function ListingPreviewClient({
     );
   }
 
-  const shareUrl = `https://bairronow.com.br/m/${listing.id}`;
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://bairronow.com.br";
+  const shareUrl = `${SITE_URL}/m/${listing.id}`;
   const cover = listing.photos?.[0];
 
   return (
@@ -142,6 +143,7 @@ export default function ListingPreviewClient({
                 src={cover.url}
                 alt={listing.title}
                 className="w-full h-full object-cover"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             </div>
           )}

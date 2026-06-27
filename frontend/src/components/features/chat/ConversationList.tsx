@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import type { ConversationDto } from "@/lib/types/marketplace";
@@ -9,6 +10,7 @@ export interface ConversationListProps {
 }
 
 function UserAvatar({ name, photoUrl }: { name: string | null; photoUrl: string | null }) {
+  const [failed, setFailed] = useState(false);
   const initials = (name ?? "?")
     .split(" ")
     .slice(0, 2)
@@ -16,13 +18,14 @@ function UserAvatar({ name, photoUrl }: { name: string | null; photoUrl: string 
     .join("")
     .toUpperCase();
 
-  if (photoUrl) {
+  if (photoUrl && !failed) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={photoUrl}
         alt={name ?? "Usuário"}
         className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+        onError={() => setFailed(true)}
       />
     );
   }
@@ -76,6 +79,7 @@ export default function ConversationList({ conversations }: ConversationListProp
                   src={c.listingThumbnailUrl}
                   alt={c.listingTitle ?? "Anúncio"}
                   className="w-12 h-12 rounded-xl object-cover flex-shrink-0"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               ) : (
                 <div className="w-12 h-12 rounded-xl bg-muted flex-shrink-0 flex items-center justify-center">
