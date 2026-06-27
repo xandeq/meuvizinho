@@ -45,3 +45,13 @@ jobs:
       - run: dotnet restore src/BairroNow.Api/BairroNow.Api.csproj
       - run: dotnet build src/BairroNow.Api/BairroNow.Api.csproj -c Release --no-restore
       - run: dotnet test tests/BairroNow.Api.Tests/BairroNow.Api.Tests.csproj -c Release --no-restore
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
