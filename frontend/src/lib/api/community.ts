@@ -3,6 +3,7 @@ import type {
   WhatsAppGroupSummary, WhatsAppGroupDetail, WhatsAppGroupKind,
   CondominiumSummary, CondominiumDetail, CondominiumRole,
   PendingWhatsAppGroup, PendingClaim,
+  SecurityAlertSummary, SecurityAlertDetail, SecurityAlertKind,
 } from '@/lib/types/community';
 
 // ─── Diretório de grupos de WhatsApp ────────────────────────────────────────
@@ -108,4 +109,42 @@ export async function approveClaim(claimId: number): Promise<void> {
 
 export async function rejectClaim(claimId: number, note?: string): Promise<void> {
   await api.post(`/api/v1/condominiums/claims/${claimId}/reject`, { note });
+}
+
+// ─── Alertas de Segurança (Wave Q) ──────────────────────────────────────────
+
+export async function getSecurityAlerts(
+  bairroId: number,
+  params?: { kind?: string; status?: string; page?: number },
+): Promise<SecurityAlertSummary[]> {
+  const { data } = await api.get<SecurityAlertSummary[]>('/api/v1/security-alerts', {
+    params: { bairroId, ...params },
+  });
+  return data;
+}
+
+export async function getSecurityAlert(id: number): Promise<SecurityAlertDetail> {
+  const { data } = await api.get<SecurityAlertDetail>(`/api/v1/security-alerts/${id}`);
+  return data;
+}
+
+export async function createSecurityAlert(body: {
+  bairroId: number;
+  kind: SecurityAlertKind;
+  description: string;
+  locationDescription?: string;
+  latitude?: number;
+  longitude?: number;
+}): Promise<{ id: number; kind: string; status: string }> {
+  const { data } = await api.post('/api/v1/security-alerts', body);
+  return data;
+}
+
+export async function upvoteSecurityAlert(id: number): Promise<{ upvoteCount: number }> {
+  const { data } = await api.post(`/api/v1/security-alerts/${id}/upvote`);
+  return data;
+}
+
+export async function resolveSecurityAlert(id: number, note?: string): Promise<void> {
+  await api.post(`/api/v1/security-alerts/${id}/resolve`, { note });
 }

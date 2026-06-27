@@ -1,4 +1,4 @@
-name: PR — Community Integration Checks (Wave P)
+name: PR — Community Integration Checks (Wave P + Wave Q)
 # Valida a branch feat/whatsapp-condo-directory contra SQL Server REAL.
 # Jobs complementam (não substituem) o pr-checks.yml existente.
 #
@@ -69,7 +69,7 @@ jobs:
       - name: Build (Release)
         run: dotnet build src/BairroNow.Api/BairroNow.Api.csproj -c Release --no-restore
 
-      - name: Unit tests (176 existentes + 22 novos Wave P)
+      - name: Unit tests (189 pass + 2 skip — Wave P + Wave Q)
         run: |
           dotnet test tests/BairroNow.Api.Tests/BairroNow.Api.Tests.csproj \
             -c Release --no-restore --verbosity normal \
@@ -284,6 +284,9 @@ jobs:
             || { echo "❌ POST claims esperava 201, recebeu $CLSTATUS — body: $CLBODY"; exit 1; }
           echo "✅ POST /api/v1/condominiums/$CONDO_ID/claims → $CLSTATUS (ClaimPending)"
 
+          # Exporta TOKEN para steps seguintes (Smoke E reutiliza o mesmo utilizador)
+          echo "CI_JWT_TOKEN=$TOKEN" >> $GITHUB_ENV
+
           echo ""
           echo "=== Smoke C completo: submit→moderar→listar, claim→create: OK ==="
 
@@ -312,6 +315,36 @@ jobs:
           [[ "$S" = "204" || "$S" = "200" ]] \
             || { echo "❌ CORS preflight POST condominiums esperava 204/200, recebeu $S"; exit 1; }
           echo "✅ CORS preflight POST /api/v1/condominiums → $S"
+
+      # ── Fase E: Wave Q — Alertas de Segurança ────────────────────────────────
+      - name: Smoke E — security alerts (Wave Q)
+        run: |
+          set -e
+          BASE="http://localhost:5050"
+
+          # E1. GET lista pública (anônimo) → 200
+          S=$(curl -s -o /dev/null -w "%{http_code}" "$BASE/api/v1/security-alerts?bairroId=1")
+          [ "$S" = "200" ] || { echo "❌ GET security-alerts esperava 200, recebeu $S"; exit 1; }
+          echo "✅ GET /api/v1/security-alerts?bairroId=1 → $S (anônimo OK)"
+
+          # E2. POST sem token → 401 (auth enforced)
+          S=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/security-alerts" \
+            -H "Content-Type: application/json" \
+            -d '{"bairroId":1,"kind":"Suspeito","description":"teste sem auth"}')
+          [ "$S" = "401" ] || { echo "❌ POST security-alerts sem token esperava 401, recebeu $S"; exit 1; }
+          echo "✅ POST /api/v1/security-alerts (sem token) → $S (auth enforced)"
+
+          # E3. POST com token válido mas usuário não-verificado → 403
+          # (reutiliza CI_JWT_TOKEN exportado pelo Smoke C; usuário nunca faz onboarding)
+          S=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/v1/security-alerts" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $CI_JWT_TOKEN" \
+            -d '{"bairroId":1,"kind":"Suspeito","description":"teste usuario nao verificado"}')
+          [ "$S" = "403" ] || { echo "❌ POST security-alerts (não-verificado) esperava 403, recebeu $S"; exit 1; }
+          echo "✅ POST /api/v1/security-alerts (não-verificado) → $S (isVerified guard OK)"
+
+          echo ""
+          echo "=== Smoke E completo: Wave Q security-alerts OK ==="
 
       - name: Parar Kestrel
         if: always()

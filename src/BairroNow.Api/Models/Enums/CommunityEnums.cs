@@ -16,3 +16,11 @@ public enum CondominiumRole { Sindico, SubSindico, Administradora, Conselheiro }
 
 // Estado de uma reivindicação de condomínio.
 public enum CondominiumClaimStatus { Pending, Approved, Rejected }
+
+// ─── Wave Q: Alertas de Segurança Geolocalizados ────────────────────────────
+
+// Tipo do alerta de segurança reportado por um morador verificado.
+public enum SecurityAlertKind { Furto, Suspeito, Incendio, Acidente, Outros }
+
+// Estado do alerta — Active enquanto relevante, Resolved quando encerrado.
+public enum SecurityAlertStatus { Active, Resolved }
