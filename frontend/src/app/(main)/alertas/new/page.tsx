@@ -66,7 +66,7 @@ export default function NewAlertaPage() {
           <h1 className="text-2xl font-extrabold text-fg">Verificação necessária</h1>
           <p className="text-muted-fg">Apenas moradores verificados podem reportar alertas de segurança.</p>
         </div>
-        <Button variant="primary" onClick={() => router.push('/onboarding/cep-lookup')}>Verificar meu endereço</Button>
+        <Button variant="primary" onClick={() => router.push('/cep-lookup/')}>Verificar meu endereço</Button>
       </div>
     );
   }

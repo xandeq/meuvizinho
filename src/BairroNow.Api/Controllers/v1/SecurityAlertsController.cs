@@ -6,11 +6,13 @@ using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Models.Enums;
+using BairroNow.Api.Services;
 
 namespace BairroNow.Api.Controllers.v1;
 
 // Wave Q — Alertas de segurança geolocalizados do bairro.
 // Moradores verificados reportam; qualquer um lê; admins resolvem.
+// Wave R — notifica todos os moradores verificados do bairro ao criar um alerta.
 [ApiController]
 [Route("api/v1/security-alerts")]
 [Authorize]
@@ -18,9 +20,14 @@ namespace BairroNow.Api.Controllers.v1;
 public class SecurityAlertsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly INotificationService _notifications;
     private const int DefaultPageSize = 20;
 
-    public SecurityAlertsController(AppDbContext db) => _db = db;
+    public SecurityAlertsController(AppDbContext db, INotificationService notifications)
+    {
+        _db = db;
+        _notifications = notifications;
+    }
 
     // GET /api/v1/security-alerts?bairroId={n}&kind=&status=Active&page=
     // Lista alertas do bairro. Público (anônimo pode ver).
@@ -141,6 +148,19 @@ public class SecurityAlertsController : ControllerBase
         };
         _db.SecurityAlerts.Add(alert);
         await _db.SaveChangesAsync(ct);
+
+        // Fire-and-forget: notify all verified bairro residents (Wave R).
+        // Uses Portuguese label matching the frontend enum labels.
+        var kindLabel = alert.Kind switch
+        {
+            SecurityAlertKind.Furto     => "Furto",
+            SecurityAlertKind.Suspeito  => "Pessoa Suspeita",
+            SecurityAlertKind.Incendio  => "Incêndio",
+            SecurityAlertKind.Acidente  => "Acidente",
+            _                           => "Ocorrência",
+        };
+        _ = _notifications.NotifySecurityAlertAsync(
+            alert.BairroId, userId.Value, alert.Id, kindLabel, alert.Description, ct);
 
         return Created($"/api/v1/security-alerts/{alert.Id}",
             new { alert.Id, Kind = alert.Kind.ToString(), Status = alert.Status.ToString() });

@@ -335,6 +335,84 @@ public class NotificationService : INotificationService
         _ = SendExpoPushAsync(recipientId, type, actor?.DisplayName, postId, ct);
     }
 
+    // Wave R: broadcast security alert to all verified residents of the same bairro.
+    // PostId is repurposed to carry the alertId (same pattern as ListingExpired uses PostId=listingId).
+    // Capped at 200 recipients per alert to avoid runaway DB reads on large bairros.
+    public async Task NotifySecurityAlertAsync(int bairroId, Guid reporterUserId, int alertId, string kindLabel, string description, CancellationToken ct = default)
+    {
+        const int RecipientCap = 200;
+        var recipients = await _db.Users.AsNoTracking()
+            .Where(u => u.BairroId == bairroId
+                     && u.IsVerified
+                     && u.Id != reporterUserId
+                     && u.DeletedAt == null)
+            .Select(u => new { u.Id })
+            .Take(RecipientCap)
+            .ToListAsync(ct);
+
+        if (recipients.Count == 0) return;
+
+        if (recipients.Count == RecipientCap)
+            _logger.LogInformation(
+                "NotifySecurityAlertAsync: capped at {Cap} recipients for bairro {BairroId}",
+                RecipientCap, bairroId);
+
+        var now = DateTime.UtcNow;
+        var shortDesc = description.Length > 60 ? description[..57] + "…" : description;
+        var body = $"🚨 {kindLabel} no seu bairro: {shortDesc}";
+
+        var notifications = recipients.Select(u => new Notification
+        {
+            UserId = u.Id,
+            ActorUserId = reporterUserId,
+            Type = NotificationTypes.SecurityAlert,
+            PostId = alertId,   // PostId carries alertId (see NotifyListingExpiredAsync precedent)
+            CommentId = null,
+            GroupId = null,
+            IsRead = false,
+            CreatedAt = now,
+        }).ToList();
+
+        _db.Notifications.AddRange(notifications);
+        await _db.SaveChangesAsync(ct);
+
+        var reporter = await _db.Users.AsNoTracking()
+            .Where(u => u.Id == reporterUserId)
+            .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified, u.IsBusinessAccount, u.BusinessName, u.BusinessCategory })
+            .FirstOrDefaultAsync(ct);
+
+        var actorDto = new Models.DTOs.PostAuthorDto
+        {
+            Id = reporterUserId,
+            DisplayName = reporter?.DisplayName,
+            PhotoUrl = reporter?.PhotoUrl,
+            IsVerified = reporter?.IsVerified ?? false,
+            IsBusinessAccount = reporter?.IsBusinessAccount ?? false,
+            BusinessName = reporter?.BusinessName,
+            BusinessCategory = reporter?.BusinessCategory,
+        };
+
+        foreach (var (recipient, notif) in recipients.Zip(notifications))
+        {
+            var dto = new Models.DTOs.NotificationDto
+            {
+                Id = notif.Id,
+                Type = NotificationTypes.SecurityAlert,
+                PostId = alertId,
+                CommentId = null,
+                GroupId = null,
+                Actor = actorDto,
+                IsRead = false,
+                CreatedAt = now,
+            };
+
+            try { await _hub.Clients.User(recipient.Id.ToString()).SendAsync("notification", dto, ct); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR security_alert to {UserId}", recipient.Id); }
+
+            _ = SendExpoPushBodyAsync(recipient.Id, body, NotificationTypes.SecurityAlert, alertId, ct);
+        }
+    }
+
     // Wave P: DM push notification
     public async Task NotifyNewMessageAsync(Guid recipientId, Guid senderId, int conversationId, CancellationToken ct = default)
     {

@@ -230,7 +230,7 @@ export default function AlertasPage() {
       {user && !user.isVerified && (
         <p className="text-xs text-muted-fg text-center">
           Apenas moradores verificados podem reportar alertas.{' '}
-          <Link href="/onboarding/cep-lookup" className="text-primary hover:underline font-medium">
+          <Link href="/cep-lookup/" className="text-primary hover:underline font-medium">
             Verificar endereço
           </Link>
         </p>
