@@ -30,6 +30,7 @@ public class CondominiumsController : ControllerBase
 
     // GET /api/v1/condominiums?bairroId={n}&search=&page=
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> List(
         [FromQuery] int bairroId,
         [FromQuery] string? search,
@@ -76,6 +77,7 @@ public class CondominiumsController : ControllerBase
 
     // GET /api/v1/condominiums/{id} — detalhe + grupos verificados + minha reivindicação.
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     public async Task<IActionResult> Get(int id, CancellationToken ct = default)
     {
         var userId = GetUserId();

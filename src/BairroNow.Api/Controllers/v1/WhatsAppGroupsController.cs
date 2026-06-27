@@ -30,6 +30,7 @@ public class WhatsAppGroupsController : ControllerBase
     // GET /api/v1/whatsapp-groups?bairroId={n}&kind=&search=&page=
     // Lista apenas grupos verificados do bairro.
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> List(
         [FromQuery] int bairroId,
         [FromQuery] string? kind,
@@ -84,6 +85,7 @@ public class WhatsAppGroupsController : ControllerBase
 
     // GET /api/v1/whatsapp-groups/{id} — detalhe (inclui o link de convite).
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     public async Task<IActionResult> Get(int id, CancellationToken ct = default)
     {
         var userId = GetUserId();
@@ -182,6 +184,7 @@ public class WhatsAppGroupsController : ControllerBase
 
     // POST /api/v1/whatsapp-groups/{id}/click — registra clique e retorna o link.
     [HttpPost("{id:int}/click")]
+    [AllowAnonymous]
     public async Task<IActionResult> Click(int id, CancellationToken ct = default)
     {
         var inviteUrl = await _db.WhatsAppGroups.AsNoTracking()
