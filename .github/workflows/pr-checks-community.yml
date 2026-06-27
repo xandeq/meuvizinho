@@ -213,20 +213,21 @@ jobs:
 
           # 1. Registrar usuário de teste
           echo "--- Registrando usuário CI ---"
-          REG=$(curl -sf -X POST "$BASE/api/v1/auth/register" \
+          REG_STATUS=$(curl -s -o /tmp/reg_body.txt -w "%{http_code}" -X POST "$BASE/api/v1/auth/register" \
             -H "Content-Type: application/json" \
-            -d '{"email":"ci-wavep@test.bairronow","password":"Teste@CI2026!","confirmPassword":"Teste@CI2026!","acceptedPrivacyPolicy":true}' \
-            || echo '{"error":"register_failed"}')
-          echo "Register: $REG"
+            -d '{"email":"ci-wavep@test.bairronow","password":"Teste@CI2026!","confirmPassword":"Teste@CI2026!","acceptedPrivacyPolicy":true}')
+          REG_BODY=$(cat /tmp/reg_body.txt)
+          echo "Register HTTP $REG_STATUS: $REG_BODY"
 
-          # 2. Login → obter accessToken
+          # 2. Login → obter accessToken (mesmo se register retornou 409 por duplicidade)
           echo "--- Login ---"
-          LOGIN=$(curl -sf -X POST "$BASE/api/v1/auth/login" \
+          LOGIN_STATUS=$(curl -s -o /tmp/login_body.txt -w "%{http_code}" -X POST "$BASE/api/v1/auth/login" \
             -H "Content-Type: application/json" \
-            -d '{"email":"ci-wavep@test.bairronow","password":"Teste@CI2026!"}' \
-            || echo '{}')
+            -d '{"email":"ci-wavep@test.bairronow","password":"Teste@CI2026!"}')
+          LOGIN=$(cat /tmp/login_body.txt)
+          echo "Login HTTP $LOGIN_STATUS: $LOGIN"
           TOKEN=$(echo "$LOGIN" | python3 -c \
-            "import sys,json; d=json.load(sys.stdin); print(d.get('accessToken',''))")
+            "import sys,json; d=json.load(sys.stdin); print(d.get('accessToken',''))" 2>/dev/null || echo '')
           [ -n "$TOKEN" ] \
             || { echo "❌ Falhou ao obter JWT. Login response: $LOGIN"; exit 1; }
           echo "✅ Login OK — token obtido"
