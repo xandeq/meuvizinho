@@ -68,9 +68,9 @@ jobs:
         run: |
           python3 -c "
           import ftplib, io
-          ftp = ftplib.FTP('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
+          ftp = ftplib.FTP_TLS('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
           ftp.login('${{ secrets.SMARTERASP_FTP_USER }}', '${{ secrets.SMARTERASP_FTP_PASSWORD }}')
-          ftp.set_pasv(True); ftp.cwd('/bairronow-api')
+          ftp.prot_p(); ftp.set_pasv(True); ftp.cwd('/bairronow-api')
           ftp.storbinary('STOR app_offline.htm', io.BytesIO(b'<html>Updating</html>'))
           ftp.quit()
           "
@@ -86,7 +86,7 @@ jobs:
           password: ${{ secrets.SMARTERASP_FTP_PASSWORD }}
           local-dir: ./publish/
           server-dir: /bairronow-api/
-          protocol: ftp
+          protocol: ftps
           exclude: |
             **/app_offline.htm
 
@@ -95,9 +95,9 @@ jobs:
         run: |
           python3 -c "
           import ftplib
-          ftp = ftplib.FTP('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
+          ftp = ftplib.FTP_TLS('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
           ftp.login('${{ secrets.SMARTERASP_FTP_USER }}', '${{ secrets.SMARTERASP_FTP_PASSWORD }}')
-          ftp.set_pasv(True); ftp.cwd('/bairronow-api')
+          ftp.prot_p(); ftp.set_pasv(True); ftp.cwd('/bairronow-api')
           try: ftp.delete('app_offline.htm')
           except: pass
           ftp.quit()
