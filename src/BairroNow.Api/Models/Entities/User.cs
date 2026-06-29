@@ -59,5 +59,10 @@ public class User
     public string? BusinessPhone { get; set; }
     public string? BusinessWebsite { get; set; }
 
+    // Subscription / Trial
+    public string Plan { get; set; } = "free";    // "free" | "premium"
+    public DateTime? PlanExpiresAt { get; set; }  // null = free forever
+    public DateTime? TrialUsedAt { get; set; }    // non-null = trial already consumed
+
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 }

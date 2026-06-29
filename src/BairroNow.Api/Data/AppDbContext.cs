@@ -98,6 +98,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.EmailConfirmed).HasDefaultValue(false);
             entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
             entity.Property(e => e.AcceptedPrivacyPolicyVersion).HasDefaultValue(1);
+            entity.Property(e => e.Plan).HasMaxLength(50).HasDefaultValue("free");
+            entity.HasIndex(e => new { e.Plan, e.PlanExpiresAt }).HasDatabaseName("IX_Users_Plan_PlanExpiresAt");
             entity.HasQueryFilter(u => u.IsActive);
         });
 

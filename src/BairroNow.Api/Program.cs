@@ -323,6 +323,7 @@ try
     builder.Services.AddHostedService<DocumentRetentionService>();
     builder.Services.AddHostedService<AnonymizationSchedulerService>();
     builder.Services.AddHostedService<ListingExpiryService>();
+    builder.Services.AddHostedService<TrialExpiryService>();
     builder.Services.AddScoped<AccountService>();
     builder.Services.AddScoped<OcrService>();
 
