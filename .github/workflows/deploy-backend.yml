@@ -68,11 +68,13 @@ jobs:
         run: |
           python3 -c "
           import ssl, ftplib, io
-          _orig_unwrap = ssl.SSLObject.unwrap
-          def _safe_unwrap(self):
-            try: return _orig_unwrap(self)
-            except OSError: pass
-          ssl.SSLObject.unwrap = _safe_unwrap
+          def _patch(cls):
+            orig = cls.unwrap
+            def safe(self):
+              try: return orig(self)
+              except OSError: pass
+            cls.unwrap = safe
+          _patch(ssl.SSLObject); _patch(ssl.SSLSocket)
           ftp = ftplib.FTP_TLS('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
           ftp.login('${{ secrets.SMARTERASP_FTP_USER }}', '${{ secrets.SMARTERASP_FTP_PASSWORD }}')
           ftp.prot_p(); ftp.set_pasv(True); ftp.cwd('/bairronow-api')
@@ -101,11 +103,13 @@ jobs:
         run: |
           python3 -c "
           import ssl, ftplib
-          _orig_unwrap = ssl.SSLObject.unwrap
-          def _safe_unwrap(self):
-            try: return _orig_unwrap(self)
-            except OSError: pass
-          ssl.SSLObject.unwrap = _safe_unwrap
+          def _patch(cls):
+            orig = cls.unwrap
+            def safe(self):
+              try: return orig(self)
+              except OSError: pass
+            cls.unwrap = safe
+          _patch(ssl.SSLObject); _patch(ssl.SSLSocket)
           ftp = ftplib.FTP_TLS('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
           ftp.login('${{ secrets.SMARTERASP_FTP_USER }}', '${{ secrets.SMARTERASP_FTP_PASSWORD }}')
           ftp.prot_p(); ftp.set_pasv(True); ftp.cwd('/bairronow-api')
