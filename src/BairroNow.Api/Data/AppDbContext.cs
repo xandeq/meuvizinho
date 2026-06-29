@@ -63,6 +63,9 @@ public class AppDbContext : DbContext
     public DbSet<Condominium> Condominiums => Set<Condominium>();
     public DbSet<CondominiumClaim> CondominiumClaims => Set<CondominiumClaim>();
 
+    // Wave Q — Alertas de Segurança Geolocalizados
+    public DbSet<SecurityAlert> SecurityAlerts => Set<SecurityAlert>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -698,6 +701,24 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Condominium).WithMany(c => c.Claims).HasForeignKey(e => e.CondominiumId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(e => new { e.CondominiumId, e.Status });
+        });
+
+        // ─── Wave Q: SecurityAlert (alertas de segurança geolocalizados) ───
+        modelBuilder.Entity<SecurityAlert>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Kind).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.LocationDescription).HasMaxLength(300);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.ResolutionNote).HasMaxLength(500);
+            entity.HasOne(e => e.Bairro).WithMany().HasForeignKey(e => e.BairroId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.ReportedByUser).WithMany().HasForeignKey(e => e.ReportedByUserId).OnDelete(DeleteBehavior.SetNull);
+            // Índice principal: listagem por bairro + status (mais frequente).
+            entity.HasIndex(e => new { e.BairroId, e.Status });
+            // Índice temporal para ordenação reverse-chrono.
+            entity.HasIndex(e => new { e.BairroId, e.CreatedAt });
         });
     }
 

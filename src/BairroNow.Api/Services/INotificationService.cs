@@ -18,4 +18,7 @@ public interface INotificationService
 
     // Wave P: DM push — fired when recipient is offline (not in SignalR conv room)
     Task NotifyNewMessageAsync(Guid recipientId, Guid senderId, int conversationId, CancellationToken ct = default);
+
+    // Wave R: security alert broadcast to all verified bairro residents
+    Task NotifySecurityAlertAsync(int bairroId, Guid reporterUserId, int alertId, string kindLabel, string description, CancellationToken ct = default);
 }

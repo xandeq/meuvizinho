@@ -29,6 +29,7 @@ function notificationBody(n: NotificationDto): string {
     case "GroupEvent":         return `${who} criou um evento no grupo`;
     case "listing_expired":    return "Seu anúncio expirou";
     case "price_drop":         return `Queda de preço em um anúncio favorito`;
+    case "security_alert":     return `${who} reportou uma ocorrência no bairro`;
     default:                   return `${who} interagiu com você`;
   }
 }
@@ -44,6 +45,8 @@ function notificationHref(n: NotificationDto): string {
       return n.groupId ? `/groups/${n.groupId}/` : "/groups/";
     case "NewRating":
       return "/profile/";
+    case "security_alert":
+      return n.postId ? `/alertas/${n.postId}/` : "/alertas/";
     default:
       return n.postId ? `/feed/post/?id=${n.postId}` : "/feed/";
   }
@@ -124,6 +127,15 @@ function TypeIcon({ type }: { type: NotificationType | string }) {
         <svg className="w-4 h-4 text-secondary shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
           <polyline points="17 18 23 18 23 12" />
+        </svg>
+      );
+    case "security_alert":
+      return (
+        // warning triangle
+        <svg className="w-4 h-4 text-danger shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+          <line x1="12" y1="9" x2="12" y2="13" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
       );
     default:

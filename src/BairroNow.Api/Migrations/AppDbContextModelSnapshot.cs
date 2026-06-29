@@ -1451,6 +1451,75 @@ namespace BairroNow.Api.Migrations
                     b.ToTable("SellerRatings");
                 });
 
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.SecurityAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BairroId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
+                    b.Property<string>("LocationDescription")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
+
+                    b.Property<Guid?>("ReportedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("ResolvedByUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ResolutionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UpvoteCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BairroId", "CreatedAt");
+
+                    b.HasIndex("BairroId", "Status");
+
+                    b.HasIndex("ReportedByUserId");
+
+                    b.ToTable("SecurityAlerts");
+                });
+
             modelBuilder.Entity("BairroNow.Api.Models.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2394,6 +2463,24 @@ namespace BairroNow.Api.Migrations
                     b.Navigation("Listing");
 
                     b.Navigation("Seller");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.SecurityAlert", b =>
+                {
+                    b.HasOne("BairroNow.Api.Models.Entities.Bairro", "Bairro")
+                        .WithMany()
+                        .HasForeignKey("BairroId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BairroNow.Api.Models.Entities.User", "ReportedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReportedByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Bairro");
+
+                    b.Navigation("ReportedByUser");
                 });
 
             modelBuilder.Entity("BairroNow.Api.Models.Entities.User", b =>

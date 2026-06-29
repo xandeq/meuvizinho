@@ -11,6 +11,7 @@ public static class NotificationTypes
     public const string GroupEvent = "GroupEvent";               // group event created
     public const string ListingExpired = "listing_expired";      // 15 chars ✓ — seller alert
     public const string PriceDrop = "price_drop";                // 10 chars ✓ — favoriter alert
+    public const string SecurityAlert = "security_alert";        // 14 chars ✓ — Wave R bairro alert
 }
 
 public class Notification

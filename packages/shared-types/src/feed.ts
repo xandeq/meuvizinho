@@ -18,7 +18,8 @@ export type NotificationType =
   | "NewRating"
   | "GroupEvent"
   | "listing_expired"
-  | "price_drop";
+  | "price_drop"
+  | "security_alert";
 
 export interface PostImageDto {
   url: string;

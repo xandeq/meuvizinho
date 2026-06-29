@@ -114,3 +114,44 @@ export const WHATSAPP_KIND_LABELS: Record<WhatsAppGroupKind, string> = {
   Comercio: 'Comércio',
   Interesse: 'Interesse',
 };
+
+// ─── Wave Q: Alertas de Segurança Geolocalizados ────────────────────────────
+
+export type SecurityAlertKind = 'Furto' | 'Suspeito' | 'Incendio' | 'Acidente' | 'Outros';
+export type SecurityAlertStatus = 'Active' | 'Resolved';
+
+export interface SecurityAlertSummary {
+  id: number;
+  bairroId: number;
+  kind: SecurityAlertKind;
+  description: string;
+  locationDescription: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  status: SecurityAlertStatus;
+  upvoteCount: number;
+  reportedBy: string | null;
+  createdAt: string;
+  resolvedAt: string | null;
+}
+
+export interface SecurityAlertDetail extends SecurityAlertSummary {
+  resolutionNote: string | null;
+  reportedByUserId: string | null;
+}
+
+export const SECURITY_ALERT_KIND_LABELS: Record<SecurityAlertKind, string> = {
+  Furto: 'Furto',
+  Suspeito: 'Pessoa Suspeita',
+  Incendio: 'Incêndio',
+  Acidente: 'Acidente',
+  Outros: 'Outros',
+};
+
+export const SECURITY_ALERT_KIND_EMOJI: Record<SecurityAlertKind, string> = {
+  Furto: '🔓',
+  Suspeito: '👁️',
+  Incendio: '🔥',
+  Acidente: '🚗',
+  Outros: '⚠️',
+};

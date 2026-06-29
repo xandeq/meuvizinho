@@ -271,12 +271,154 @@ moderação, denúncias, notificações+push, LGPD (anonimização/retenção).
 ### Domínio → meuvizinho.com.br (touchpoints pro launch web)
 1. Backend `appsettings.json`: `FrontendUrl` = https://meuvizinho.com.br
    (1 config dirige TODOS os emails: magic-link, confirmar email, reset senha, boas-vindas)
-2. Backend CORS `AllowedOrigins`: adicionar meuvizinho.com.br
+2. Backend CORS `AllowedOrigins`: **JÁ PRÉ-ADICIONADO** em appsettings.json (commit em PR #16).
+   Entrada meuvizinho.com.br e www.meuvizinho.com.br já estão no array — sem deploy extra no dia.
 3. `.github/workflows/deploy-frontend.yml`: novo docroot HostGator + domínio
-4. DNS: meuvizinho.com.br → Cloudflare → HostGator + SSL (Cloudflare Full)
+4. DNS: meuvizinho.com.br → Cloudflare → HostGator + SSL (Cloudflare Full Strict)
 5. **Decisão recomendada:** manter API em `api.bairronow.com.br` no dia 1 (só o domínio do
    front muda → launch trivial); migrar API depois.
 6. Mobile (depois): `mobile/src/lib/signalr.ts`, `mobile/src/features/share/utils/share.ts`
+
+### RUNBOOK 08/07 — Migração meuvizinho.com.br (~30 min, coordenado)
+
+**Pré-condição:** P4 fechado verde. Janela fora de pico (sugestão: 03h–04h BRT).
+
+**Passo 1 — Cert frontend/HostGator (~5 min)**
+- Cloudflare → SSL/TLS → Origin Server → Create Certificate
+- Domains: `meuvizinho.com.br`, `*.meuvizinho.com.br`
+- Validity: 15 years
+- Copiar PEM + chave privada
+- HostGator cPanel → SSL/TLS → Install Certificate em meuvizinho.com.br
+
+**Passo 2 — Cert backend/SmarterASP (~5 min)**
+- Gerar segundo Origin Cert (ou wildcard que cubra ambos se mesmo Cloudflare account):
+  `api.meuvizinho.com.br` + `meuvizinho.com.br`  ← se quiser migrar API futuramente
+- SmarterASP → IIS → Sites → bairronow-api → Bindings → Add HTTPS 443 → selecionar cert novo
+  (manter o binding bairronow enquanto TTL do DNS drena)
+
+**Passo 3 — Deploy backend: FrontendUrl + cookie domain (~10 min)**
+```bash
+# appsettings.json: atualizar FrontendUrl para meuvizinho.com.br
+# Verificar se cookie Domain está configurado (ver Program.cs SessionOptions)
+# Commit + push → deploy automático via deploy-backend.yml
+```
+Verificar pós-deploy: `GET https://api.bairronow.com.br/health/ready` → 200
+
+**Passo 4 — Deploy frontend + DNS flip (~10 min)**
+- Atualizar `deploy-frontend.yml`: `server-dir` → docroot de meuvizinho.com.br no HostGator
+- Push → build e deploy automático
+- Cloudflare: adicionar zona meuvizinho.com.br (ou apontar NS) → A/CNAME para HostGator IP
+- SSL mode: Full Strict (origin cert já instalado no Passo 1)
+- Always Use HTTPS: ON
+
+**Efeito colateral esperado e aceitável — logout único:**
+O refresh token é um cookie `SameSite=None; Partitioned` (CHIPS). O cookie é chaveado por
+`(api.bairronow.com.br, bairronow.com.br)`. Após o frontend mover para `meuvizinho.com.br`,
+o top-level site muda → chave do cookie muda → cookie antigo não é enviado → usuários fazem
+re-login uma vez. A API não muda de host (permanece `api.bairronow.com.br`), então o efeito
+é isolado à troca de domínio do frontend. Comunicar no app 24h antes se houver base ativa.
+
+### RUNBOOK P4 — Rotação de credenciais + deploy Wave R (executar em ordem exata)
+
+> ⚠️ A chave _OLD (88 chars, atual em prod) foi referenciada nesta sessão Claude — trate o
+> rollback para ela como REDE TEMPORÁRIA de mismatch de deploy, não estado final seguro.
+> Se precisar usar _OLD em rollback, re-rotacione imediatamente depois (sem echo).
+>
+> ⚠️ `gh secret set <<< "$VAR"` vaza no ps/history. Use sempre redirecionamento de ARQUIVO.
+
+**Ordem obrigatória — não pular, não reordenar:**
+
+**(a) Salvar _OLD antes de qualquer rotação (bash, sem echo)**
+```bash
+source ~/.claude/.secrets.env
+printf '%s' "$BAIRRONOW_JWT_KEY" > /tmp/jwt_old.txt
+echo "BAIRRONOW_JWT_KEY_OLD=$(cat /tmp/jwt_old.txt)" >> ~/.claude/.secrets.env
+```
+
+**(b) Capturar token pré-deploy AGORA (chave antiga ainda em prod)**
+```bash
+# Token vai para arquivo — não aparece no terminal nem no history
+curl -s -X POST https://api.bairronow.com.br/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"<EMAIL>\",\"password\":\"<SENHA>\"}" \
+  | python3 -c "import sys,json; open('/tmp/pre_token.txt','w').write(json.load(sys.stdin)['accessToken'])"
+```
+Se capturado APÓS o deploy, o teste inverso de invalidação é inútil.
+
+**(c) Rotar JWT_KEY + CONN_STRING (via arquivo, sem heredoc)**
+```bash
+# Gerar nova chave (32 bytes = 256 bits, base64url)
+python3 -c "import secrets,base64; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())" \
+  > /tmp/jwt_new.txt
+
+# Setar no GitHub Secret VIA ARQUIVO — não <<< (vaza em ps/history)
+gh secret set BAIRRONOW_JWT_KEY < /tmp/jwt_new.txt
+
+# Atualizar senha DB + CONN_STRING da mesma forma
+# gh secret set BAIRRONOW_CONN_STRING < /tmp/conn_new.txt
+
+# Atualizar ~/.claude/.secrets.env
+NEW_KEY=$(cat /tmp/jwt_new.txt)
+sed -i "s|^BAIRRONOW_JWT_KEY=.*|BAIRRONOW_JWT_KEY=$NEW_KEY|" ~/.claude/.secrets.env
+
+rm -f /tmp/jwt_new.txt /tmp/jwt_old.txt
+```
+
+**(d) Branch protection — antes do merge**
+Ativar nos settings do repo: 7 checks required do PR #16 incluindo gitleaks.
+
+**(e) Instalar Origin Cert *.bairronow.com.br no SmarterASP (manual)**
+```bash
+# Verificação pré-flip — substitua <ORIGIN_IP> pelo IP do servidor SmarterASP
+# (disponível no painel SmarterASP → Server Information)
+curl --resolve api.bairronow.com.br:443:<ORIGIN_IP> \
+     https://api.bairronow.com.br/health/ready \
+     --insecure -v --max-time 15 2>&1 \
+  | grep -E "Connected|certificate|subject|CN=|SSL connection|HTTP/"
+# Verde = TLS handshake OK + 200. PARAR aqui se falhar — NÃO mergear, NÃO flipar SSL.
+```
+
+**(f) Merge PR #16 → deploy automático (rotação + bug fix /alertas)**
+```bash
+# Só após (e) verde e branch protection ativa
+gh pr merge 16 --merge --delete-branch
+# CI: build → test → migrations → publish → FTPS deploy → smoke
+```
+
+**(g) Validação pós-deploy (bash, um só shell)**
+```bash
+# 1. Health
+curl -fsSL https://api.bairronow.com.br/health/ready
+
+# 2. Login com nova chave (prova que rotação foi aplicada)
+curl -s -X POST https://api.bairronow.com.br/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"<EMAIL>\",\"password\":\"<SENHA>\"}" | python3 -m json.tool
+# Esperado: {"accessToken":"eyJ..."} — nova chave valida novo token
+
+# 3. Teste inverso — token antigo DEVE retornar 401
+curl -s https://api.bairronow.com.br/api/v1/feed \
+  -H "Authorization: Bearer $(cat /tmp/pre_token.txt)" \
+  -w "\nHTTP_STATUS:%{http_code}"
+# Esperado: HTTP_STATUS:401 — prova que chave velha foi descartada
+# Se 200: duas chaves ativas → investigar ANTES de continuar
+
+# 4. Bug fix /alertas (navega sem redirecionar para /cep-lookup/)
+curl -fsSL https://api.bairronow.com.br/api/v1/security-alerts -w "\nHTTP_STATUS:%{http_code}"
+# Esperado: HTTP_STATUS:200 ou 401 (autenticado), NÃO 404
+```
+
+**(h) Flip SSL: Flexible → Full Strict (só com (e) verde)**
+Cloudflare → SSL/TLS → Overview → Full (Strict) + Always Use HTTPS: ON.
+
+**(i) Limpeza**
+```bash
+rm -f /tmp/pre_token.txt
+# Após confirmar que nova chave funciona em prod — apagar _OLD do secrets.env
+sed -i '/^BAIRRONOW_JWT_KEY_OLD=/d' ~/.claude/.secrets.env
+```
+
+---
 
 ### Punch-list priorizado — Web-first 09/07
 
@@ -326,4 +468,4 @@ NÃO deployado (sem push — aguardando domínio/decisão).
 
 ---
 
-*Última atualização: 23/06/2026 — diferencial Wave P implementado, revisado e testado*
+*Última atualização: 28/06/2026 — runbook 08/07 adicionado; CORS meuvizinho pré-adicionado (PR #16); FTPS fix em deploy-backend.yml (P2.5 fechado)*
