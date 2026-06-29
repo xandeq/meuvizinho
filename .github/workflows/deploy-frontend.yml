@@ -39,6 +39,7 @@ jobs:
         run: pnpm --filter @bairronow/frontend exec tsc --noEmit
         env:
           NEXT_PUBLIC_API_URL: https://api.bairronow.com.br
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
       - name: Unit tests
         run: pnpm --filter @bairronow/frontend test --passWithNoTests
@@ -47,6 +48,7 @@ jobs:
         run: pnpm --filter @bairronow/frontend build
         env:
           NEXT_PUBLIC_API_URL: https://api.bairronow.com.br
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
 
       - name: Deploy via FTP to HostGator
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
