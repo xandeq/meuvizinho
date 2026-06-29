@@ -67,7 +67,12 @@ jobs:
       - name: Place app_offline.htm
         run: |
           python3 -c "
-          import ftplib, io
+          import ssl, ftplib, io
+          _orig_unwrap = ssl.SSLObject.unwrap
+          def _safe_unwrap(self):
+            try: return _orig_unwrap(self)
+            except OSError: pass
+          ssl.SSLObject.unwrap = _safe_unwrap
           ftp = ftplib.FTP_TLS('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
           ftp.login('${{ secrets.SMARTERASP_FTP_USER }}', '${{ secrets.SMARTERASP_FTP_PASSWORD }}')
           ftp.prot_p(); ftp.set_pasv(True); ftp.cwd('/bairronow-api')
@@ -95,7 +100,12 @@ jobs:
         if: always()
         run: |
           python3 -c "
-          import ftplib
+          import ssl, ftplib
+          _orig_unwrap = ssl.SSLObject.unwrap
+          def _safe_unwrap(self):
+            try: return _orig_unwrap(self)
+            except OSError: pass
+          ssl.SSLObject.unwrap = _safe_unwrap
           ftp = ftplib.FTP_TLS('${{ secrets.SMARTERASP_FTP_HOST }}', timeout=60)
           ftp.login('${{ secrets.SMARTERASP_FTP_USER }}', '${{ secrets.SMARTERASP_FTP_PASSWORD }}')
           ftp.prot_p(); ftp.set_pasv(True); ftp.cwd('/bairronow-api')
