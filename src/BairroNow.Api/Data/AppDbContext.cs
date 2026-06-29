@@ -1,3 +1,4 @@
+// Wave P + master merged 2026-06-29
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Models.Enums;
