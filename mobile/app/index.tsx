@@ -15,7 +15,7 @@ export default function Index() {
   return (
     <View style={styles.container}>
       <Image source={require('../assets/brand/icon.png')} style={styles.logo} />
-      <Text style={styles.title}>BairroNow</Text>
+      <Text style={styles.title}>Meu Vizinho</Text>
       <Text style={styles.subtitle}>O bairro inteligente brasileiro</Text>
       <View style={{ height: 32 }} />
       <Button title="Entrar" onPress={() => router.push('/login')} />

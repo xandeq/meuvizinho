@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "BairroNow",
-    "slug": "bairronow",
-    "scheme": "bairronow",
+    "name": "Meu Vizinho",
+    "slug": "meuvizinho",
+    "scheme": "meuvizinho",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/brand/icon.png",
@@ -11,11 +11,11 @@
     "splash": {
       "image": "./assets/brand/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#3B82F6"
+      "backgroundColor": "#19975d"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bairronow.app",
+      "bundleIdentifier": "com.meuvizinho.app",
       "infoPlist": {
         "NSCameraUsageDescription": "Precisamos acessar sua câmera para enviar comprovante de residência",
         "NSPhotoLibraryUsageDescription": "Precisamos acessar suas fotos para enviar comprovante de residência"
@@ -24,9 +24,9 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/brand/icon.png",
-        "backgroundColor": "#3B82F6"
+        "backgroundColor": "#19975d"
       },
-      "package": "com.bairronow.app",
+      "package": "com.meuvizinho.app",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
@@ -37,7 +37,7 @@
       "expo-router",
       ["expo-notifications", {
         "icon": "./assets/brand/icon.png",
-        "color": "#2563EB",
+        "color": "#19975d",
         "sounds": []
       }],
       ["react-native-maps", {
@@ -48,7 +48,7 @@
     "extra": {
       "apiUrl": "https://api.bairronow.com.br",
       "eas": {
-        "projectId": "bairronow"
+        "projectId": "meuvizinho"
       }
     }
   }

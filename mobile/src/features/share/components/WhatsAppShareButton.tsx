@@ -8,7 +8,7 @@ interface Props {
   text?: string;
 }
 
-export default function WhatsAppShareButton({ url, text = 'Veja este post no BairroNow' }: Props) {
+export default function WhatsAppShareButton({ url, text = 'Veja este post no Meu Vizinho' }: Props) {
   return (
     <TouchableOpacity
       onPress={() => shareToWhatsApp(url, text)}

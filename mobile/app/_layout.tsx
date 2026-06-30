@@ -30,7 +30,7 @@ function RootNavigator() {
         }}
       >
         {/* Auth screens */}
-        <Stack.Screen name="index" options={{ title: 'BairroNow' }} />
+        <Stack.Screen name="index" options={{ title: 'Meu Vizinho' }} />
         <Stack.Screen name="login" options={{ title: 'Entrar' }} />
         <Stack.Screen name="register" options={{ title: 'Criar conta' }} />
         <Stack.Screen name="cep-lookup" options={{ title: 'Seu endereco' }} />

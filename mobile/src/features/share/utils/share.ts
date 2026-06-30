@@ -14,9 +14,9 @@ export async function shareToWhatsApp(url: string, text: string) {
 }
 
 export function getPostShareUrl(postId: string) {
-  return `https://bairronow.com.br/p/${postId}`;
+  return `https://meuvizinho.com.br/p/${postId}`;
 }
 
 export function getListingShareUrl(listingId: string) {
-  return `https://bairronow.com.br/m/${listingId}`;
+  return `https://meuvizinho.com.br/m/${listingId}`;
 }

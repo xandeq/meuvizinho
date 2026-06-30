@@ -22,7 +22,7 @@ export default function LgpdScreen() {
       // Share as text via system share sheet
       await Share.share({
         message: jsonStr,
-        title: 'BairroNow - Meus Dados',
+        title: 'Meu Vizinho - Meus Dados',
       });
       Alert.alert('Sucesso', 'Dados exportados com sucesso.');
     } catch (e: any) {

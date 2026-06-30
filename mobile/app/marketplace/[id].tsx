@@ -155,7 +155,7 @@ export default function ListingDetailScreen() {
         <View style={{ height: 8 }} />
         <WhatsAppShareButton
           url={getListingShareUrl(String(listing.id))}
-          text="Veja esta oferta no BairroNow"
+          text="Veja esta oferta no Meu Vizinho"
         />
         <View style={{ height: 8 }} />
         {!isOwner && (
