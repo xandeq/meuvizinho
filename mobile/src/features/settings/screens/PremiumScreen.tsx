@@ -3,14 +3,7 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, Linking, ScrollVi
 import Constants from 'expo-constants';
 import { apiClient } from '../../../lib/api';
 import { useTheme } from '../../../theme/ThemeContext';
-
-interface SubscriptionStatus {
-  plan: 'free' | 'premium';
-  planExpiresAt: string | null;
-  isOnTrial: boolean;
-  isEligibleForTrial: boolean;
-  daysRemaining: number | null;
-}
+import { statusTitle, statusHint, type SubscriptionStatus } from '../premium-logic';
 
 // Preencher via app.json extra quando o produto Kiwify existir
 const CHECKOUT_URL = (Constants.expoConfig?.extra?.kiwifyCheckoutUrl as string) || '';
@@ -70,18 +63,8 @@ export default function PremiumScreen() {
         <ActivityIndicator style={{ marginVertical: 24 }} color={colors.primary} />
       ) : status && (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.cardTitle, { color: colors.fg }]}>
-            {isPremium ? `Plano Premium ativo${status.isOnTrial ? ' (trial)' : ''}` : 'Você está no plano gratuito'}
-          </Text>
-          <Text style={[styles.cardSub, { color: colors.muted }]}>
-            {isPremium
-              ? status.daysRemaining != null && status.daysRemaining > 0
-                ? `${status.daysRemaining} ${status.daysRemaining === 1 ? 'dia restante' : 'dias restantes'}`
-                : 'Expira hoje'
-              : status.isEligibleForTrial
-                ? 'Experimente grátis por 14 dias — sem cartão de crédito.'
-                : 'Seu trial já foi utilizado. Assine para voltar ao Premium.'}
-          </Text>
+          <Text style={[styles.cardTitle, { color: colors.fg }]}>{statusTitle(status)}</Text>
+          <Text style={[styles.cardSub, { color: colors.muted }]}>{statusHint(status)}</Text>
         </View>
       )}
 
