@@ -43,15 +43,42 @@ WHM_HOST=$(getsecret WHM_HOST); WHM_PORT=$(getsecret WHM_PORT); WHM_USER=$(getse
 curl -sk "https://${WHM_HOST}:${WHM_PORT}/json-api/cpanel?api.version=1&cpanel_jsonapi_user=${CPANEL_USER}&cpanel_jsonapi_apiversion=2&cpanel_jsonapi_module=AddonDomain&cpanel_jsonapi_func=addaddondomain&newdomain=${DOMAIN}&subdomain=meuvizinho&dir=%2F${DOMAIN}" \
   -H "Authorization: whm ${WHM_USER}:${WHM_TOKEN}" | python -m json.tool | head -30
 
+# --- 5/6 SSL Flexible na zona nova (origem HostGator sem cert pro domínio) ---
+echo "== 5/6 SSL Flexible na zona ${DOMAIN} =="
+cf -X PATCH "https://api.cloudflare.com/client/v4/zones/${ZID}/settings/ssl" \
+  --data '{"value":"flexible"}' | python -c "import sys,json;d=json.load(sys.stdin);print('ssl flexible OK' if d.get('success') else d.get('errors'))"
+
+# --- 6/6 Redirect 301 bairronow -> meuvizinho (rodar SÓ após zona nova ficar active) ---
+if [ "${SKIP_REDIRECT:-0}" != "1" ]; then
+  echo "== 6/6 Redirect 301 bairronow.com.br -> ${DOMAIN} =="
+  OLD_ZID=$(cf "https://api.cloudflare.com/client/v4/zones?name=bairronow.com.br" | python -c "import sys,json;print(json.load(sys.stdin)['result'][0]['id'])")
+  cf -X PUT "https://api.cloudflare.com/client/v4/zones/${OLD_ZID}/rulesets/phases/http_request_dynamic_redirect/entrypoint" \
+    --data "{
+      \"rules\": [{
+        \"action\": \"redirect\",
+        \"expression\": \"true\",
+        \"description\": \"301 bairronow -> meuvizinho (go-live rebrand)\",
+        \"action_parameters\": {
+          \"from_value\": {
+            \"status_code\": 301,
+            \"preserve_query_string\": true,
+            \"target_url\": { \"expression\": \"concat(\\\"https://${DOMAIN}\\\", http.request.uri.path)\" }
+          }
+        }
+      }]
+    }" | python -c "import sys,json;d=json.load(sys.stdin);print('redirect 301 OK' if d.get('success') else d.get('errors'))"
+else
+  echo "== 6/6 Redirect PULADO (SKIP_REDIRECT=1) — rodar depois que a zona nova estiver active =="
+fi
+
 cat <<'EOF'
 
 == PRÓXIMOS PASSOS MANUAIS ==
 1. Registro.br: apontar nameservers do domínio para os NS acima (painel registro.br)
 2. Aguardar propagação (zona sai de "pending" para "active" no Cloudflare)
-3. SSL Cloudflare: modo Flexible (origem HostGator sem cert para o novo domínio)
-4. Merge do branch golive/meuvizinho-frontendurl (flip FrontendUrl no backend)
-5. Re-rodar workflow deploy-frontend (workflow_dispatch) — publica em /meuvizinho.com.br/
-6. Atualizar GitHub secret NEXT_PUBLIC_SITE_URL -> https://meuvizinho.com.br (se ainda aponta pro antigo)
-7. Smoke: curl https://meuvizinho.com.br/login/ + https://api.bairronow.com.br/health/ready
-8. Redirect 301 bairronow.com.br -> meuvizinho.com.br (Cloudflare Redirect Rule na zona bairronow)
+   > Dica: rodar o script com SKIP_REDIRECT=1 antes da propagação; depois rodar de novo sem a flag
+3. Merge do branch golive/meuvizinho-frontendurl (flip FrontendUrl no backend)
+4. Re-rodar workflow deploy-frontend (workflow_dispatch) — publica em /meuvizinho.com.br/
+5. Atualizar GitHub secret NEXT_PUBLIC_SITE_URL -> https://meuvizinho.com.br (se ainda aponta pro antigo)
+6. Smoke: curl https://meuvizinho.com.br/login/ + https://api.bairronow.com.br/health/ready
 EOF
