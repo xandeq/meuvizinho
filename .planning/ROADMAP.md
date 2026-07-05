@@ -85,6 +85,22 @@ Key upgrades:
 
 </details>
 
+## Estado real (reconciliado 2026-07-04)
+
+> As waves C–R (maio/junho) rodaram fora do fluxo GSD formal. Resumo do que foi
+> entregue além do planejado aqui (detalhes nos PRs #4–#22 do GitHub):
+
+- ✅ **v1.2 na prática**: PWA (manifest/sw/sitemap/robots), busca unificada + FULLTEXT,
+  perfis de negócio + ratings + galeria + analytics, DMs diretos, notificações (bell SignalR),
+  grupos com enquetes/eventos/RSVP, listing expiry 30d, alertas de segurança de bairro (Q/R),
+  diretório WhatsApp + condomínios com síndico (Wave P), design system audit.
+- ✅ **Rebrand Meu Vizinho** completo no código (web #18, go-live #19, mobile #20) —
+  aguardando registro de meuvizinho.com.br (2026-07-08). Ver `docs/GO-LIVE-MEUVIZINHO.md`.
+- ✅ **Monetização**: trial Premium 14 dias + worker de expiração (#21, em prod);
+  webhook Kiwify pronto no branch `feat/kiwify-webhook` (aguarda produto no painel + token).
+- ⏳ Pendentes do plano v1.2 original: marker clustering no mapa, invite links de grupo,
+  roster de membros, EAS push notifications (externo).
+
 ## Next Milestone
 
 ### 🔵 v1.2 "Comunidade Completa" — In Planning (2026-05-16)
