@@ -9,10 +9,10 @@ import { statusTitle, statusHint, type SubscriptionStatus } from '../premium-log
 const CHECKOUT_URL = (Constants.expoConfig?.extra?.kiwifyCheckoutUrl as string) || '';
 
 const BENEFITS = [
-  { title: 'Destaque nos anúncios', desc: 'Seus anúncios do marketplace aparecem no topo do bairro.' },
-  { title: 'Selo Premium', desc: 'Badge exclusivo no seu perfil e nas suas publicações.' },
-  { title: 'Alertas em primeira mão', desc: 'Notificações de segurança e novidades sem atraso.' },
-  { title: 'Grupos e enquetes ilimitados', desc: 'Crie quantos grupos e enquetes quiser.' },
+  { title: 'Selo Premium ⭐', desc: 'Badge exclusivo nos seus anúncios do marketplace.' },
+  { title: 'Apoie o Meu Vizinho', desc: 'Sua assinatura mantém a plataforma no ar e sem anúncios de terceiros.' },
+  { title: 'Destaque nos anúncios', desc: 'Em breve: seus anúncios com prioridade no bairro.' },
+  { title: 'Alertas em primeira mão', desc: 'Em breve: notificações de segurança sem atraso.' },
 ];
 
 export default function PremiumScreen() {
