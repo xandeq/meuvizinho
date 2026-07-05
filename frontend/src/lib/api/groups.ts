@@ -71,3 +71,13 @@ export async function getGroupMembers(groupId: number, page = 0, pageSize = 20) 
   );
   return res.data;
 }
+
+export async function createGroupInvite(groupId: number): Promise<{ token: string; expiresAt: string; groupName: string }> {
+  const { data } = await api.post<{ token: string; expiresAt: string; groupName: string }>(`/api/v1/groups/${groupId}/invite`);
+  return data;
+}
+
+export async function joinGroupByInvite(token: string): Promise<{ groupId: number; status: string }> {
+  const { data } = await api.post<{ groupId: number; status: string }>('/api/v1/groups/join/invite', { token });
+  return data;
+}

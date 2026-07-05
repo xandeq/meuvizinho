@@ -341,6 +341,77 @@ public class GroupsController : ControllerBase
         return Ok(new { rejected = true });
     }
 
+    // POST /api/v1/groups/{id}/invite — generate invite link token (owner/admin only)
+    // Stateless HMAC token, 7-day expiry; entry via invite is Active even in closed groups.
+    [HttpPost("{id:int}/invite")]
+    public async Task<IActionResult> CreateInvite(int id, [FromServices] IConfiguration config, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var secret = config["Jwt:Key"];
+        if (string.IsNullOrEmpty(secret)) return StatusCode(503);
+
+        var member = await _db.GroupMembers.AsNoTracking()
+            .FirstOrDefaultAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
+        if (member == null || member.Role == GroupMemberRole.Member)
+            return Forbid();
+
+        var group = await _db.Groups.AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == id && g.DeletedAt == null, ct);
+        if (group == null) return NotFound();
+
+        var expiresAt = DateTime.UtcNow.Add(GroupInviteToken.DefaultLifetime);
+        var token = GroupInviteToken.Create(id, expiresAt, secret);
+        return Ok(new { token, expiresAt, groupName = group.Name });
+    }
+
+    // POST /api/v1/groups/join/invite — join via invite token (Active, bypasses approval)
+    [HttpPost("join/invite")]
+    public async Task<IActionResult> JoinByInvite([FromBody] JoinByInviteRequest req, [FromServices] IConfiguration config, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var secret = config["Jwt:Key"];
+        if (string.IsNullOrEmpty(secret)) return StatusCode(503);
+
+        if (!GroupInviteToken.TryValidate(req.Token, secret, DateTime.UtcNow, out var groupId))
+            return BadRequest(new { error = "Convite inválido ou expirado." });
+
+        var group = await _db.Groups.AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == groupId && g.DeletedAt == null, ct);
+        if (group == null) return NotFound(new { error = "Grupo não encontrado." });
+
+        var existing = await _db.GroupMembers
+            .FirstOrDefaultAsync(m => m.GroupId == groupId && m.UserId == userId.Value, ct);
+
+        if (existing != null)
+        {
+            if (existing.Status == GroupMemberStatus.Banned)
+                return StatusCode(403, new { error = "Banned from this group" });
+            if (existing.Status != GroupMemberStatus.Active)
+            {
+                existing.Status = GroupMemberStatus.Active;
+                await _db.SaveChangesAsync(ct);
+            }
+            return Ok(new { groupId, status = GroupMemberStatus.Active.ToString() });
+        }
+
+        _db.GroupMembers.Add(new GroupMember
+        {
+            GroupId = groupId,
+            UserId = userId.Value,
+            Role = GroupMemberRole.Member,
+            Status = GroupMemberStatus.Active,
+            JoinedAt = DateTime.UtcNow
+        });
+        await _db.SaveChangesAsync(ct);
+        return Ok(new { groupId, status = GroupMemberStatus.Active.ToString() });
+    }
+
+    public sealed record JoinByInviteRequest(string Token);
+
     // POST /api/v1/groups/{id}/members — join group
     // GRP-002: Open=Active immediately, Closed=PendingApproval
     [HttpPost("{id:int}/members")]
