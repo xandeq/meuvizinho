@@ -146,6 +146,15 @@ export default function ListingCard({ listing }: ListingCardProps) {
             {listing.sellerIsVerified && (
               <VerifiedBadge verified size="sm" />
             )}
+            {listing.sellerIsPremium && (
+              <span
+                className="inline-flex items-center rounded-full bg-accent/10 text-accent text-[10px] font-bold px-1.5 py-0.5 leading-none"
+                title="Membro Premium"
+                aria-label="Membro Premium"
+              >
+                ⭐
+              </span>
+            )}
           </div>
           <div onClick={(e) => e.preventDefault()}>
             <WhatsAppShareButton
