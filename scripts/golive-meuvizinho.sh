@@ -4,7 +4,7 @@
 # Requer: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, WHM_HOST, WHM_PORT, WHM_USER, WHM_API_TOKEN em ~/.claude/.secrets.env
 set -euo pipefail
 
-DOMAIN="meuvizinho.com.br"
+DOMAIN="${DOMAIN:-meuvizinhoapp.com.br}"
 HOSTGATOR_IP="108.167.132.104"                        # mesmo A record do bairronow.com.br
 API_ORIGIN="partiurock-003-site16.mtempurl.com"       # SmarterASP origin (mesmo do api.bairronow)
 CPANEL_USER="cleardesk"                               # conta cPanel que hospeda bairronow.com.br
@@ -40,7 +40,7 @@ cf "https://api.cloudflare.com/client/v4/zones/${ZID}" | python -c "import sys,j
 
 echo "== 4/4 Criando addon domain no cPanel HostGator (vhost + FTP dir) =="
 WHM_HOST=$(getsecret WHM_HOST); WHM_PORT=$(getsecret WHM_PORT); WHM_USER=$(getsecret WHM_USER); WHM_TOKEN=$(getsecret WHM_API_TOKEN)
-curl -sk "https://${WHM_HOST}:${WHM_PORT}/json-api/cpanel?api.version=1&cpanel_jsonapi_user=${CPANEL_USER}&cpanel_jsonapi_apiversion=2&cpanel_jsonapi_module=AddonDomain&cpanel_jsonapi_func=addaddondomain&newdomain=${DOMAIN}&subdomain=meuvizinho&dir=%2F${DOMAIN}" \
+curl -sk "https://${WHM_HOST}:${WHM_PORT}/json-api/cpanel?api.version=1&cpanel_jsonapi_user=${CPANEL_USER}&cpanel_jsonapi_apiversion=2&cpanel_jsonapi_module=AddonDomain&cpanel_jsonapi_func=addaddondomain&newdomain=${DOMAIN}&subdomain=meuvizinhoapp&dir=%2F${DOMAIN}" \
   -H "Authorization: whm ${WHM_USER}:${WHM_TOKEN}" | python -m json.tool | head -30
 
 # --- 5/6 SSL Flexible na zona nova (origem HostGator sem cert pro domínio) ---
