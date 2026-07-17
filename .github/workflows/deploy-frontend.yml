@@ -63,7 +63,9 @@ jobs:
       - name: Smoke test
         run: |
           sleep 5
-          for route in / login/ register/ feed/ premium/ marketplace/ profile/ cep-lookup/; do
+          # NOTE: /premium/ intentionally excluded — only exists on the
+          # unmerged feat/kiwify-webhook branch, not master.
+          for route in / login/ register/ feed/ marketplace/ profile/ cep-lookup/; do
             code=$(curl -s -o /dev/null -w "%{http_code}" "https://meuvizinhoapp.com.br/$route")
             echo "GET /$route -> $code"
             if [ "$code" -ge 400 ]; then

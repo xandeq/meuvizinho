@@ -19,7 +19,7 @@ const PUBLIC_ROUTES = [
   "/register/",
   "/forgot-password/",
   "/privacy-policy/",
-  "/premium/",
+  // /premium/ excluded — only exists on unmerged feat/kiwify-webhook branch.
   "/auth/magic-link/",
 ];
 
