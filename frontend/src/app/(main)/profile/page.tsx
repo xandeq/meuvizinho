@@ -245,6 +245,18 @@ export default function ProfilePage() {
         setBusinessDescription(p.businessDescription ?? "");
         setBusinessPhone(p.businessPhone ?? "");
         setBusinessWebsite(p.businessWebsite ?? "");
+        // Keep the cached auth user in sync — it's only refreshed on
+        // login, so isVerified (set by admin approval, not a client
+        // action) would otherwise stay stale for the rest of the
+        // session and block verified-only actions like posting.
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser && currentUser.isVerified !== p.isVerified) {
+          useAuthStore.getState().setUser({
+            ...currentUser,
+            isVerified: p.isVerified,
+            displayName: p.displayName,
+          });
+        }
       })
       .catch((e) => {
         if (!mounted) return;
