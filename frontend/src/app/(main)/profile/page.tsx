@@ -456,6 +456,8 @@ export default function ProfilePage() {
         ) : (
           <div className="space-y-4">
             <FormField
+              id="displayName"
+              name="displayName"
               label="Nome de exibicao"
               type="text"
               value={displayName}
@@ -505,6 +507,8 @@ export default function ProfilePage() {
               {isBusinessAccount && (
                 <div className="space-y-4 pl-1">
                   <FormField
+                    id="businessName"
+                    name="businessName"
                     label="Nome do negocio"
                     type="text"
                     value={businessName}
@@ -514,6 +518,8 @@ export default function ProfilePage() {
                     placeholder="Ex: Padaria Boa Vista"
                   />
                   <FormField
+                    id="businessCategory"
+                    name="businessCategory"
                     label="Categoria"
                     type="text"
                     value={businessCategory}
@@ -536,6 +542,8 @@ export default function ProfilePage() {
                     <p className="text-xs text-fg/60 mt-1">{businessDescription.length}/300</p>
                   </div>
                   <FormField
+                    id="businessPhone"
+                    name="businessPhone"
                     label="Telefone"
                     type="tel"
                     value={businessPhone}
@@ -544,6 +552,8 @@ export default function ProfilePage() {
                     placeholder="Ex: (27) 99999-0000"
                   />
                   <FormField
+                    id="businessWebsite"
+                    name="businessWebsite"
                     label="Website"
                     type="url"
                     value={businessWebsite}

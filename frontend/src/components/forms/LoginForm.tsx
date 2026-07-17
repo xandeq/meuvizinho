@@ -176,6 +176,8 @@ export default function LoginForm() {
         </div>
 
         <FormField
+          id="totpCode"
+          name="totpCode"
           label="Código TOTP"
           type="text"
           inputMode="numeric"

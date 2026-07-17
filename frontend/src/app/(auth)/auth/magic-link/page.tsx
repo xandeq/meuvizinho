@@ -66,6 +66,8 @@ function MagicLinkForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <FormField
+          id="email"
+          name="email"
           label="E-mail"
           type="email"
           placeholder="seu@email.com"

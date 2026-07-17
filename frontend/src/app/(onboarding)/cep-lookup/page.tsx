@@ -78,6 +78,8 @@ export default function CEPLookupPage() {
           CEP → Comprovante
         </p>
         <FormField
+          id="cep"
+          name="cep"
           label="CEP"
           type="text"
           inputMode="numeric"

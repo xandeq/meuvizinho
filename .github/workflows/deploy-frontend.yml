@@ -63,5 +63,12 @@ jobs:
       - name: Smoke test
         run: |
           sleep 5
-          curl -fsSL https://meuvizinhoapp.com.br/login/ -o /dev/null
+          for route in / login/ register/ feed/ premium/ marketplace/ profile/ cep-lookup/; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "https://meuvizinhoapp.com.br/$route")
+            echo "GET /$route -> $code"
+            if [ "$code" -ge 400 ]; then
+              echo "::error::Frontend smoke failed: /$route returned $code"
+              exit 1
+            fi
+          done
           echo "Frontend smoke OK"

@@ -147,6 +147,24 @@ try
                     Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
                         ?? throw new InvalidOperationException("JWT key not configured")))
             };
+
+            // SignalR's browser client can't set the Authorization header on the
+            // WebSocket upgrade handshake — it sends the JWT via an access_token
+            // query string param instead. Without this, every /hubs/* connection
+            // gets rejected with 401 during the WS upgrade.
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
 
     // Only register Google OAuth when real credentials are present — AddGoogle()

@@ -47,13 +47,15 @@ test.describe("verification flow", () => {
     // Login in UI
     await page.goto("/login/");
     await page.getByLabel(/e-?mail/i).fill(email);
-    await page.getByLabel(/senha/i).fill(STRONG_PASSWORD);
+    await page.getByLabel(/^senha$/i).fill(STRONG_PASSWORD);
     await page.getByRole("button", { name: /entrar/i }).click();
     await page.waitForURL(/\/cep-lookup/, { timeout: 15_000 });
 
-    // CEP lookup
-    await page.getByPlaceholder(/cep/i).first().fill("29101010");
-    await page.getByRole("button", { name: /confirmar/i }).click();
+    // CEP lookup — two-step UI: fill CEP -> "Buscar endereco" (API lookup) ->
+    // result card appears -> "Confirmar e continuar" (commits address, navigates on).
+    await page.getByLabel("CEP", { exact: true }).fill("29101010");
+    await page.getByRole("button", { name: /buscar endereco/i }).click();
+    await page.getByRole("button", { name: /confirmar e continuar/i }).click();
     await page.waitForURL(/\/proof-upload/, { timeout: 15_000 });
 
     // Proof upload via hidden input (file picker workaround)
@@ -100,6 +102,26 @@ test.describe("verification flow", () => {
     // Visit profile, expect verified badge
     await page.goto("/profile/");
     await expect(page.getByText(/vizinho verificado/i)).toBeVisible({
+      timeout: 15_000,
+    });
+
+    // Now that the account is verified, confirm it can post with a photo
+    // (PostComposer requires isVerified — this is the real end-to-end path
+    // from registration to publishing content with an uploaded image).
+    const postBody = `E2E foto ${timestamp}`;
+    await page.goto("/feed/");
+    await page.getByRole("button", { name: /novo post/i }).click();
+    await page.getByPlaceholder(/o que está acontecendo/i).fill(postBody);
+    await page
+      .locator('input[type="file"]')
+      .setInputFiles(path.join(__dirname, "..", "fixtures", "proof.png"));
+    // Wait for client-side compression to finish and enable the submit button.
+    await expect(page.getByRole("button", { name: /^publicar$/i })).toBeEnabled({
+      timeout: 15_000,
+    });
+    await page.getByRole("button", { name: /^publicar$/i }).click();
+    await expect(page.getByText(postBody)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByAltText(/imagem 1/i).first()).toBeVisible({
       timeout: 15_000,
     });
 
