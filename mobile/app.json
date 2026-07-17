@@ -42,7 +42,8 @@
           "color": "#19975d",
           "sounds": []
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "extra": {
       "apiUrl": "https://api.bairronow.com.br",
