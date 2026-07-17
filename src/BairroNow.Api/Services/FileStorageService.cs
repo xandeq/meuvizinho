@@ -20,10 +20,12 @@ public class FileStorageService : IFileStorageService
     };
 
     private readonly IWebHostEnvironment _env;
+    private readonly string _apiBaseUrl;
 
-    public FileStorageService(IWebHostEnvironment env)
+    public FileStorageService(IWebHostEnvironment env, IConfiguration config)
     {
         _env = env;
+        _apiBaseUrl = (config["ApiBaseUrl"] ?? "").TrimEnd('/');
     }
 
     public async Task<(string relativePath, string sha256)> SaveProofAsync(Stream content, string fileName, string contentType, CancellationToken ct = default)
@@ -98,7 +100,12 @@ public class FileStorageService : IFileStorageService
         var fileAbs = Path.Combine(absDir, guid + ".jpg");
         await File.WriteAllBytesAsync(fileAbs, outBytes, ct);
 
-        return fileRel;
+        // These URLs are served directly as <img src> on the frontend, which
+        // runs on a different origin than this API — a bare relative path
+        // would resolve against the FRONTEND's domain and 404. Proofs don't
+        // need this: they're streamed through an authenticated proxy
+        // endpoint (VerificationService.OpenProof), never rendered directly.
+        return string.IsNullOrEmpty(_apiBaseUrl) ? fileRel : $"{_apiBaseUrl}{fileRel}";
     }
 
     private static async Task<byte[]> ResizeToJpegAsync(MemoryStream ms, CancellationToken ct)
