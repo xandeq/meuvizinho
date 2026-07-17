@@ -35,21 +35,24 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-notifications", {
-        "icon": "./assets/brand/icon.png",
-        "color": "#19975d",
-        "sounds": []
-      }],
-      ["react-native-maps", {
-        "androidGoogleMapsApiKey": "YOUR_ANDROID_GOOGLE_MAPS_API_KEY",
-        "iosGoogleMapsApiKey": "YOUR_IOS_GOOGLE_MAPS_API_KEY"
-      }]
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/brand/icon.png",
+          "color": "#19975d",
+          "sounds": []
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://api.bairronow.com.br",
       "eas": {
-        "projectId": "meuvizinho"
+        "projectId": "05d6afa2-b8c1-4f85-9e43-a2ca10c65a63"
+      },
+      "router": {
+        "origin": false
       }
-    }
+    },
+    "owner": "xandeq"
   }
 }
