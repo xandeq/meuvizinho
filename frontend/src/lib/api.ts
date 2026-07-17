@@ -58,7 +58,18 @@ api.interceptors.response.use(
   async (error) => {
     const url = error.config?.url ?? '';
     const isAuthEndpoint = AUTH_ENDPOINTS.some((ep) => url.includes(ep));
-    if (error.response?.status === 401 && !error.config._retry && !isAuthEndpoint) {
+    // 403 here isn't a genuine permission denial as often as it looks: our
+    // claim-based policies (VerifiedOnly, Admin) bake is_verified/is_admin
+    // into the JWT at login time, so a user approved mid-session keeps
+    // getting 403 from a stale token until it naturally expires. One
+    // refresh-and-retry (guarded by _retry, same as 401) picks up the
+    // current claims; if it's a real denial the retry still fails and
+    // surfaces normally.
+    const shouldRefresh =
+      (error.response?.status === 401 || error.response?.status === 403) &&
+      !error.config._retry &&
+      !isAuthEndpoint;
+    if (shouldRefresh) {
       error.config._retry = true;
       try {
         const { data } = await api.post('/api/v1/auth/refresh');
