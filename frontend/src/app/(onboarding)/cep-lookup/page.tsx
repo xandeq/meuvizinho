@@ -7,6 +7,7 @@ import FormField from "@/components/ui/FormField";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { cepApi } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth";
 import { useOnboardingStore } from "@/lib/onboarding";
 import { cepSchema } from "@bairronow/shared-validators";
 import type { CepLookupResult } from "@bairronow/shared-types";
@@ -52,6 +53,17 @@ export default function CEPLookupPage() {
     if (!result) return;
     setAddress(result);
     setStep("proof");
+    // Keep the cached auth user in sync — pages like /feed/ gate on
+    // user.bairroId and would otherwise bounce a freshly-confirmed
+    // user back to /cep-lookup/ until their next full login.
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser && result.bairroId !== null) {
+      useAuthStore.getState().setUser({
+        ...currentUser,
+        bairroId: result.bairroId,
+        bairroName: result.bairroNome,
+      });
+    }
     router.push("/proof-upload/");
   };
 
