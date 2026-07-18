@@ -58,6 +58,7 @@ export default function GroupClient() {
   // Pending members tab state
   const [pending, setPending] = useState<PendingMember[]>([]);
   const [pendingLoading, setPendingLoading] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.bairronow.com.br';
 
@@ -240,9 +241,30 @@ export default function GroupClient() {
               Solicitação enviada
             </button>
           ) : currentGroup.myStatus === 'Active' ? (
-            <span className="shrink-0 text-sm font-semibold px-4 py-2 rounded-xl bg-muted text-muted-fg">
-              Membro
-            </span>
+            <div className="shrink-0 flex items-center gap-2">
+              {isAdminOrOwner && (
+                <button
+                  onClick={async () => {
+                    const { createGroupInvite } = await import('@/lib/api/groups');
+                    try {
+                      const { token } = await createGroupInvite(groupId);
+                      const url = `${window.location.origin}/groups/join/?token=${token}`;
+                      await navigator.clipboard.writeText(url);
+                      setInviteCopied(true);
+                      setTimeout(() => setInviteCopied(false), 3000);
+                    } catch {
+                      // clipboard indisponível ou API falhou — silencioso
+                    }
+                  }}
+                  className="text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+                >
+                  {inviteCopied ? 'Link copiado!' : 'Convidar'}
+                </button>
+              )}
+              <span className="text-sm font-semibold px-4 py-2 rounded-xl bg-muted text-muted-fg">
+                Membro
+              </span>
+            </div>
           ) : (
             <button
               onClick={async () => {
