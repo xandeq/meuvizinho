@@ -9,9 +9,9 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/brand/icon.png",
+      "image": "./assets/brand/adaptive-icon-foreground.png",
       "resizeMode": "contain",
-      "backgroundColor": "#19975d"
+      "backgroundColor": "#2563EB"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,8 +23,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/brand/icon.png",
-        "backgroundColor": "#19975d"
+        "foregroundImage": "./assets/brand/adaptive-icon-foreground.png",
+        "backgroundColor": "#2563EB"
       },
       "package": "com.meuvizinho.app",
       "edgeToEdgeEnabled": true,
@@ -38,8 +38,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/brand/icon.png",
-          "color": "#19975d",
+          "icon": "./assets/brand/adaptive-icon-foreground.png",
+          "color": "#2563EB",
           "sounds": []
         }
       ],
