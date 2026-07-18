@@ -208,6 +208,22 @@ export default function CondominiumClient() {
         </div>
       </section>
 
+      {/* Comunicados */}
+      <section className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-fg">Comunicados</h2>
+            <p className="text-sm text-muted-fg">Avisos oficiais publicados pelo síndico deste condomínio.</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/condominios/${condoId}/comunicados`}><Button variant="primary" size="sm">Ver comunicados</Button></Link>
+          {condo.isMySindico && (
+            <Link href={`/condominios/${condoId}/gerenciar/comunicados`}><Button variant="secondary" size="sm">Gerenciar comunicados</Button></Link>
+          )}
+        </div>
+      </section>
+
       {/* WhatsApp groups */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">

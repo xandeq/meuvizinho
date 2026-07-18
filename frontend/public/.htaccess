@@ -41,11 +41,23 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/comunicados/[0-9]+/?$ /condominios/placeholder/comunicados/placeholder/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^condominios/[0-9]+/areas-comuns/?$ /condominios/placeholder/areas-comuns/index.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/comunicados/?$ /condominios/placeholder/comunicados/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^condominios/[0-9]+/gerenciar/areas-comuns/?$ /condominios/placeholder/gerenciar/areas-comuns/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/gerenciar/comunicados/?$ /condominios/placeholder/gerenciar/comunicados/index.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
