@@ -448,6 +448,67 @@ namespace BairroNow.Api.Migrations
                     b.ToTable("Condominiums");
                 });
 
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.CondominiumAnnouncement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<Guid>("AuthorUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CondominiumId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsImportant")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPinned")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("CondominiumId", "PublishedAt");
+
+                    b.HasIndex("CondominiumId", "IsPinned", "PublishedAt")
+                        .IsDescending(false, true, true)
+                        .HasFilter("[DeletedAt] IS NULL");
+
+                    b.ToTable("CondominiumAnnouncements");
+                });
+
             modelBuilder.Entity("BairroNow.Api.Models.Entities.CondominiumClaim", b =>
                 {
                     b.Property<int>("Id")
@@ -2220,6 +2281,25 @@ namespace BairroNow.Api.Migrations
                     b.Navigation("SindicoUser");
                 });
 
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.CondominiumAnnouncement", b =>
+                {
+                    b.HasOne("BairroNow.Api.Models.Entities.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("BairroNow.Api.Models.Entities.Condominium", "Condominium")
+                        .WithMany("Announcements")
+                        .HasForeignKey("CondominiumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Condominium");
+                });
+
             modelBuilder.Entity("BairroNow.Api.Models.Entities.CondominiumClaim", b =>
                 {
                     b.HasOne("BairroNow.Api.Models.Entities.Condominium", "Condominium")
@@ -2831,6 +2911,8 @@ namespace BairroNow.Api.Migrations
 
             modelBuilder.Entity("BairroNow.Api.Models.Entities.Condominium", b =>
                 {
+                    b.Navigation("Announcements");
+
                     b.Navigation("Claims");
 
                     b.Navigation("CommonAreas");

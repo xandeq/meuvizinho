@@ -231,6 +231,10 @@ try
     builder.Services.AddScoped<IModerationService, ModerationService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
 
+    // Wave T: autorização condomínio (síndico/admin/morador) compartilhada entre
+    // os controllers de reservas e de comunicados.
+    builder.Services.AddScoped<ICondominiumAccessService, CondominiumAccessService>();
+
     // Phase 4 (04-01) Marketplace + Ratings services
     builder.Services.AddScoped<IListingService, ListingService>();
     builder.Services.AddScoped<IRatingService, RatingService>();

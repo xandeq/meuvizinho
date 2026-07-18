@@ -36,4 +36,5 @@ public class Condominium
     public ICollection<CondominiumClaim> Claims { get; set; } = new List<CondominiumClaim>();
     public ICollection<CondominiumResident> Residents { get; set; } = new List<CondominiumResident>();
     public ICollection<CommonArea> CommonAreas { get; set; } = new List<CommonArea>();
+    public ICollection<CondominiumAnnouncement> Announcements { get; set; } = new List<CondominiumAnnouncement>();
 }

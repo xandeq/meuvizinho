@@ -27,4 +27,7 @@ public interface INotificationService
     Task NotifyResidentReviewedAsync(Guid residentUserId, Guid reviewerId, int condominiumId, string condominiumName, string statusLabel, CancellationToken ct = default);
     Task NotifyReservationPendingAsync(Guid sindicoId, Guid requesterId, int condominiumId, string areaName, CancellationToken ct = default);
     Task NotifyReservationReviewedAsync(Guid ownerUserId, Guid reviewerId, int condominiumId, string areaName, bool approved, CancellationToken ct = default);
+
+    // Wave T: comunicado oficial publicado — batch para todos os moradores aprovados
+    Task NotifyAnnouncementPublishedAsync(int condominiumId, Guid authorId, int announcementId, string title, string condominiumName, bool isImportant, CancellationToken ct = default);
 }

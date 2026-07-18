@@ -21,6 +21,7 @@ namespace BairroNow.Api.Controllers.v1;
 public class CondominiumReservationsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly ICondominiumAccessService _access;
     private readonly INotificationService _notifications;
     private readonly ILogger<CondominiumReservationsController> _logger;
     private const int DefaultPageSize = 20;
@@ -28,10 +29,12 @@ public class CondominiumReservationsController : ControllerBase
 
     public CondominiumReservationsController(
         AppDbContext db,
+        ICondominiumAccessService access,
         INotificationService notifications,
         ILogger<CondominiumReservationsController> logger)
     {
         _db = db;
+        _access = access;
         _notifications = notifications;
         _logger = logger;
     }
@@ -777,35 +780,13 @@ public class CondominiumReservationsController : ControllerBase
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    // Contexto de acesso do usuário ao condomínio: síndico, admin ou morador aprovado.
-    internal sealed record CondoAccess(Condominium Condo, bool IsSindico, bool IsAdmin, bool IsApprovedResident)
-    {
-        public bool CanManage => IsSindico || IsAdmin;
-        public bool CanUse => IsApprovedResident || IsSindico || IsAdmin;
-    }
-
-    private async Task<CondoAccess?> LoadAccessAsync(int condominiumId, Guid userId, CancellationToken ct)
-    {
-        var condo = await _db.Condominiums.AsNoTracking()
-            .FirstOrDefaultAsync(c => c.Id == condominiumId && c.DeletedAt == null, ct);
-        if (condo == null) return null;
-
-        var isAdmin = await _db.Users.AsNoTracking()
-            .Where(u => u.Id == userId)
-            .Select(u => u.IsAdmin)
-            .FirstOrDefaultAsync(ct);
-        var isSindico = condo.SindicoUserId == userId;
-        var isApprovedResident = await _db.CondominiumResidents.AsNoTracking()
-            .AnyAsync(r => r.CondominiumId == condominiumId && r.UserId == userId
-                        && r.Status == CondominiumResidentStatus.Approved, ct);
-
-        return new CondoAccess(condo, isSindico, isAdmin, isApprovedResident);
-    }
+    // Wave T: autorização extraída para ICondominiumAccessService (compartilhada
+    // com CondominiumAnnouncementsController) — zero duplicação da lógica.
+    private Task<CondoAccess?> LoadAccessAsync(int condominiumId, Guid userId, CancellationToken ct)
+        => _access.LoadAccessAsync(condominiumId, userId, ct);
 
     // 403 com dica de próximo passo para quem ainda não é morador aprovado.
-    private ObjectResult ForbidWithHint() =>
-        StatusCode(StatusCodes.Status403Forbidden,
-            new { error = "Apenas moradores aprovados podem acessar. Solicite seu vínculo de morador ao condomínio." });
+    private static ObjectResult ForbidWithHint() => CondominiumAccessService.ForbidWithHint();
 
     private static string? ValidateAreaFields(
         string name, string? description, string? rules, int? capacity,
@@ -882,12 +863,7 @@ public class CondominiumReservationsController : ControllerBase
         _ => DateTime.SpecifyKind(dt, DateTimeKind.Utc)
     };
 
-    private Guid? GetUserId()
-    {
-        var sub = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                  ?? User.FindFirst("sub")?.Value;
-        return Guid.TryParse(sub, out var id) ? id : null;
-    }
+    private Guid? GetUserId() => User.GetUserId();
 }
 
 public record CreateResidentRequest(string? Unit);

@@ -72,6 +72,9 @@ public class AppDbContext : DbContext
     public DbSet<CommonArea> CommonAreas => Set<CommonArea>();
     public DbSet<AreaReservation> AreaReservations => Set<AreaReservation>();
 
+    // Wave T — Comunicados oficiais do síndico
+    public DbSet<CondominiumAnnouncement> Announcements => Set<CondominiumAnnouncement>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -781,6 +784,27 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.CommonAreaId, e.StartUtc, e.EndUtc });
             entity.HasIndex(e => new { e.CondominiumId, e.Status });
             entity.HasIndex(e => new { e.UserId, e.StartUtc });
+        });
+
+        // ─── Wave T: CondominiumAnnouncement (comunicados oficiais do síndico) ───
+        modelBuilder.Entity<CondominiumAnnouncement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(160);
+            // Sem HasMaxLength de propósito: nvarchar(max) — comunicado pode ser
+            // bem longo; o controller valida <= 20000 chars.
+            entity.Property(e => e.Body).IsRequired();
+            entity.Property(e => e.IsImportant).HasDefaultValue(false);
+            entity.Property(e => e.IsPinned).HasDefaultValue(false);
+            entity.HasOne(e => e.Condominium).WithMany(c => c.Announcements).HasForeignKey(e => e.CondominiumId).OnDelete(DeleteBehavior.Cascade);
+            // Restrict: igual ao User FK de AreaReservation (evita cascade multi-path).
+            entity.HasOne(e => e.Author).WithMany().HasForeignKey(e => e.AuthorUserId).OnDelete(DeleteBehavior.Restrict);
+            // Índice da listagem: fixados primeiro, depois recentes; só ativos.
+            entity.HasIndex(e => new { e.CondominiumId, e.IsPinned, e.PublishedAt })
+                .IsDescending(false, true, true)
+                .HasFilter("[DeletedAt] IS NULL");
+            entity.HasIndex(e => new { e.CondominiumId, e.PublishedAt });
         });
     }
 

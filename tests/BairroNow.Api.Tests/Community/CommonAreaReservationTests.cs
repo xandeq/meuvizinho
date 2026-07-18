@@ -32,7 +32,8 @@ public class CommonAreaReservationTests
     {
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
         var ctrl = new CondominiumReservationsController(
-            db, Mock.Of<INotificationService>(), NullLogger<CondominiumReservationsController>.Instance);
+            db, new CondominiumAccessService(db), Mock.Of<INotificationService>(),
+            NullLogger<CondominiumReservationsController>.Instance);
         ctrl.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")) }

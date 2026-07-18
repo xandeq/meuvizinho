@@ -16,6 +16,7 @@ public static class NotificationTypes
     public const string ResidentReviewed = "res_reviewed";       // 12 chars ✓ — Wave S: morador, vínculo revisado
     public const string ReservationPending = "resv_pending";     // 12 chars ✓ — Wave S: síndico, reserva na fila
     public const string ReservationReviewed = "resv_reviewed";   // 13 chars ✓ — Wave S: morador, reserva revisada
+    public const string AnnouncementPublished = "annc_new";      // 8 chars ✓ — Wave T: morador, comunicado publicado
 }
 
 public class Notification

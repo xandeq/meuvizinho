@@ -492,6 +492,99 @@ public class NotificationService : INotificationService
         _ = SendExpoPushBodyAsync(recipientId, body, type, condominiumId, ct);
     }
 
+    // ─── Wave T: comunicado oficial do síndico ───────────────────────────────
+
+    // Batch para todos os moradores aprovados (exceto o autor), seguindo o padrão
+    // de NotifyGroupEventCreatedAsync + NotifySecurityAlertAsync. Deep-link:
+    // PostId=announcementId e GroupId=condominiumId (mesmo precedente de repurpose
+    // de PostId do SecurityAlert). O SaveChanges das rows é aguardado; os pushes
+    // Expo são fire-and-forget — nunca bloqueiam a resposta HTTP.
+    public async Task NotifyAnnouncementPublishedAsync(int condominiumId, Guid authorId, int announcementId, string title, string condominiumName, bool isImportant, CancellationToken ct = default)
+    {
+        // Cap de destinatários em condomínio grande (igual ao cap 200 do SecurityAlert).
+        const int RecipientCap = 500;
+        var recipients = await _db.CondominiumResidents.AsNoTracking()
+            .Where(r => r.CondominiumId == condominiumId
+                     && r.Status == Models.Enums.CondominiumResidentStatus.Approved
+                     && r.UserId != authorId)
+            .Select(r => r.UserId)
+            .Distinct()
+            .Take(RecipientCap)
+            .ToListAsync(ct);
+
+        if (recipients.Count == 0) return;
+
+        if (recipients.Count == RecipientCap)
+            _logger.LogInformation(
+                "NotifyAnnouncementPublishedAsync: capped at {Cap} recipients for condominium {CondominiumId}",
+                RecipientCap, condominiumId);
+
+        var now = DateTime.UtcNow;
+        var notifications = recipients.Select(uid => new Notification
+        {
+            UserId = uid,
+            ActorUserId = authorId,
+            Type = NotificationTypes.AnnouncementPublished,
+            PostId = announcementId,   // PostId carrega o announcementId (precedente SecurityAlert)
+            CommentId = null,
+            GroupId = condominiumId,   // GroupId carrega o condominiumId p/ deep-link
+            IsRead = false,
+            CreatedAt = now,
+        }).ToList();
+
+        _db.Notifications.AddRange(notifications);
+        await _db.SaveChangesAsync(ct);
+
+        // Importante: destaque + push com prioridade alta e som.
+        var body = isImportant
+            ? $"📢 IMPORTANTE: {title}"
+            : $"{condominiumName}: {title}";
+
+        var author = await _db.Users.AsNoTracking()
+            .Where(u => u.Id == authorId)
+            .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified, u.IsBusinessAccount, u.BusinessName, u.BusinessCategory })
+            .FirstOrDefaultAsync(ct);
+
+        var actorDto = new Models.DTOs.PostAuthorDto
+        {
+            Id = authorId,
+            DisplayName = author?.DisplayName,
+            PhotoUrl = author?.PhotoUrl,
+            IsVerified = author?.IsVerified ?? false,
+            IsBusinessAccount = author?.IsBusinessAccount ?? false,
+            BusinessName = author?.BusinessName,
+            BusinessCategory = author?.BusinessCategory,
+        };
+
+        // Lotes de 50 (mesmo BatchSize de NotifyGroupEventCreatedAsync).
+        const int BatchSize = 50;
+        if (recipients.Count > BatchSize)
+            _logger.LogInformation(
+                "NotifyAnnouncementPublishedAsync: notifying {Total} residents for condominium {CondominiumId} in batches of {BatchSize}",
+                recipients.Count, condominiumId, BatchSize);
+
+        foreach (var (uid, notif) in recipients.Zip(notifications))
+        {
+            var dto = new Models.DTOs.NotificationDto
+            {
+                Id = notif.Id,
+                Type = NotificationTypes.AnnouncementPublished,
+                PostId = announcementId,
+                CommentId = null,
+                GroupId = condominiumId,
+                Actor = actorDto,
+                IsRead = false,
+                CreatedAt = now,
+            };
+
+            try { await _hub.Clients.User(uid.ToString()).SendAsync("notification", dto, ct); }
+            catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR announcement to {UserId}", uid); }
+
+            _ = SendExpoPushBodyAsync(uid, body, NotificationTypes.AnnouncementPublished, announcementId, ct,
+                priority: isImportant ? "high" : null);
+        }
+    }
+
     private async Task SendExpoPushAsync(Guid recipientId, string type, string? actorName, int? postId, CancellationToken ct)
     {
         try
@@ -539,8 +632,10 @@ public class NotificationService : INotificationService
         }
     }
 
-    // Overload for pre-built body strings (Wave I system notifications)
-    private async Task SendExpoPushBodyAsync(Guid recipientId, string body, string type, int? refId, CancellationToken ct)
+    // Overload for pre-built body strings (Wave I system notifications).
+    // Wave T: parâmetro opcional `priority` — "high" adiciona priority + sound ao
+    // payload Expo (comunicado importante); null mantém o payload original intacto.
+    private async Task SendExpoPushBodyAsync(Guid recipientId, string body, string type, int? refId, CancellationToken ct, string? priority = null)
     {
         try
         {
@@ -551,16 +646,29 @@ public class NotificationService : INotificationService
 
             if (string.IsNullOrEmpty(recipient?.ExpoPushToken)) return;
 
-            var payload = new[]
-            {
-                new
+            object payload = priority == null
+                ? (object)new[]
                 {
-                    to = recipient.ExpoPushToken,
-                    title = "BairroNow",
-                    body,
-                    data = new { type, refId }
+                    new
+                    {
+                        to = recipient.ExpoPushToken,
+                        title = "BairroNow",
+                        body,
+                        data = new { type, refId }
+                    }
                 }
-            };
+                : new[]
+                {
+                    new
+                    {
+                        to = recipient.ExpoPushToken,
+                        title = "BairroNow",
+                        body,
+                        data = new { type, refId },
+                        priority,
+                        sound = "default"
+                    }
+                };
 
             using var content = new StringContent(
                 JsonSerializer.Serialize(payload),
