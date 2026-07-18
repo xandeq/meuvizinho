@@ -35,6 +35,34 @@
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^groups/[0-9]+/events/?$ /groups/placeholder/events/index.html [L]
 
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/areas-comuns/[0-9]+/?$ /condominios/placeholder/areas-comuns/placeholder/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/areas-comuns/?$ /condominios/placeholder/areas-comuns/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/gerenciar/areas-comuns/?$ /condominios/placeholder/gerenciar/areas-comuns/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/gerenciar/moradores/?$ /condominios/placeholder/gerenciar/moradores/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/gerenciar/reservas/?$ /condominios/placeholder/gerenciar/reservas/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/minhas-reservas/?$ /condominios/placeholder/minhas-reservas/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/vincular/?$ /condominios/placeholder/vincular/index.html [L]
+
   # Generic dynamic-segment fallbacks
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
@@ -47,6 +75,10 @@
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^groups/[0-9]+/?$ /groups/placeholder/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/?$ /condominios/placeholder/index.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d

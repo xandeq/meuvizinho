@@ -187,6 +187,27 @@ export default function CondominiumClient() {
         </div>
       ) : null}
 
+      {/* Áreas comuns */}
+      <section className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-fg">Áreas comuns</h2>
+            <p className="text-sm text-muted-fg">Reserve o salão de festas, churrasqueira e outros espaços do prédio.</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/condominios/${condoId}/areas-comuns`}><Button variant="primary" size="sm">Ver áreas comuns</Button></Link>
+          {condo.isMySindico ? (
+            <>
+              <Link href={`/condominios/${condoId}/gerenciar/reservas`}><Button variant="secondary" size="sm">Gerenciar reservas</Button></Link>
+              <Link href={`/condominios/${condoId}/gerenciar/moradores`}><Button variant="secondary" size="sm">Gerenciar moradores</Button></Link>
+            </>
+          ) : (
+            <Link href={`/condominios/${condoId}/vincular`}><Button variant="outline" size="sm">Vincular minha unidade</Button></Link>
+          )}
+        </div>
+      </section>
+
       {/* WhatsApp groups */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
