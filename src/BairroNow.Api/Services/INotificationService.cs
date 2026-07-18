@@ -21,4 +21,10 @@ public interface INotificationService
 
     // Wave R: security alert broadcast to all verified bairro residents
     Task NotifySecurityAlertAsync(int bairroId, Guid reporterUserId, int alertId, string kindLabel, string description, CancellationToken ct = default);
+
+    // Wave S: reserva de áreas comuns — vínculo de morador + fluxo de aprovação
+    Task NotifyResidentRequestAsync(Guid sindicoId, Guid requesterId, int condominiumId, string condominiumName, CancellationToken ct = default);
+    Task NotifyResidentReviewedAsync(Guid residentUserId, Guid reviewerId, int condominiumId, string condominiumName, string statusLabel, CancellationToken ct = default);
+    Task NotifyReservationPendingAsync(Guid sindicoId, Guid requesterId, int condominiumId, string areaName, CancellationToken ct = default);
+    Task NotifyReservationReviewedAsync(Guid ownerUserId, Guid reviewerId, int condominiumId, string areaName, bool approved, CancellationToken ct = default);
 }

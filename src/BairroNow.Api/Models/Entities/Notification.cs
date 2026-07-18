@@ -12,6 +12,10 @@ public static class NotificationTypes
     public const string ListingExpired = "listing_expired";      // 15 chars ✓ — seller alert
     public const string PriceDrop = "price_drop";                // 10 chars ✓ — favoriter alert
     public const string SecurityAlert = "security_alert";        // 14 chars ✓ — Wave R bairro alert
+    public const string ResidentRequest = "res_request";         // 11 chars ✓ — Wave S: síndico, novo vínculo
+    public const string ResidentReviewed = "res_reviewed";       // 12 chars ✓ — Wave S: morador, vínculo revisado
+    public const string ReservationPending = "resv_pending";     // 12 chars ✓ — Wave S: síndico, reserva na fila
+    public const string ReservationReviewed = "resv_reviewed";   // 13 chars ✓ — Wave S: morador, reserva revisada
 }
 
 public class Notification

@@ -424,6 +424,74 @@ public class NotificationService : INotificationService
         _ = SendExpoPushBodyAsync(recipientId, $"{name} te enviou uma mensagem", "NewMessage", conversationId, ct);
     }
 
+    // ─── Wave S: reserva de áreas comuns ─────────────────────────────────────
+
+    public Task NotifyResidentRequestAsync(Guid sindicoId, Guid requesterId, int condominiumId, string condominiumName, CancellationToken ct = default)
+        => CreateSystemNotificationAsync(sindicoId, requesterId, NotificationTypes.ResidentRequest, condominiumId,
+            $"Novo pedido de vínculo de morador em {condominiumName}", ct);
+
+    public Task NotifyResidentReviewedAsync(Guid residentUserId, Guid reviewerId, int condominiumId, string condominiumName, string statusLabel, CancellationToken ct = default)
+        => CreateSystemNotificationAsync(residentUserId, reviewerId, NotificationTypes.ResidentReviewed, condominiumId,
+            $"Seu vínculo com {condominiumName} foi {statusLabel}", ct);
+
+    public Task NotifyReservationPendingAsync(Guid sindicoId, Guid requesterId, int condominiumId, string areaName, CancellationToken ct = default)
+        => CreateSystemNotificationAsync(sindicoId, requesterId, NotificationTypes.ReservationPending, condominiumId,
+            $"Nova reserva aguardando aprovação: {areaName}", ct);
+
+    public Task NotifyReservationReviewedAsync(Guid ownerUserId, Guid reviewerId, int condominiumId, string areaName, bool approved, CancellationToken ct = default)
+        => CreateSystemNotificationAsync(ownerUserId, reviewerId, NotificationTypes.ReservationReviewed, condominiumId,
+            approved ? $"Sua reserva de {areaName} foi aprovada" : $"Sua reserva de {areaName} foi recusada", ct);
+
+    // Wave S: notificação de sistema com corpo pronto. PostId carrega o condominiumId
+    // (mesmo precedente de SecurityAlert, que usa PostId=alertId).
+    private async Task CreateSystemNotificationAsync(Guid recipientId, Guid actorId, string type, int condominiumId, string body, CancellationToken ct)
+    {
+        if (recipientId == actorId) return;
+
+        var notification = new Notification
+        {
+            UserId = recipientId,
+            ActorUserId = actorId,
+            Type = type,
+            PostId = condominiumId,
+            CommentId = null,
+            IsRead = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        _db.Notifications.Add(notification);
+        await _db.SaveChangesAsync(ct);
+
+        var actor = await _db.Users.AsNoTracking()
+            .Where(u => u.Id == actorId)
+            .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified, u.IsBusinessAccount, u.BusinessName, u.BusinessCategory })
+            .FirstOrDefaultAsync(ct);
+
+        var dto = new NotificationDto
+        {
+            Id = notification.Id,
+            Type = type,
+            PostId = condominiumId,
+            CommentId = null,
+            Actor = new PostAuthorDto
+            {
+                Id = actorId,
+                DisplayName = actor?.DisplayName,
+                PhotoUrl = actor?.PhotoUrl,
+                IsVerified = actor?.IsVerified ?? false,
+                IsBusinessAccount = actor?.IsBusinessAccount ?? false,
+                BusinessName = actor?.BusinessName,
+                BusinessCategory = actor?.BusinessCategory,
+            },
+            IsRead = false,
+            CreatedAt = notification.CreatedAt
+        };
+
+        try { await _hub.Clients.User(recipientId.ToString()).SendAsync("notification", dto, ct); }
+        catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR notification to {UserId}", recipientId); }
+
+        _ = SendExpoPushBodyAsync(recipientId, body, type, condominiumId, ct);
+    }
+
     private async Task SendExpoPushAsync(Guid recipientId, string type, string? actorName, int? postId, CancellationToken ct)
     {
         try

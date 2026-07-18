@@ -17,6 +17,14 @@ public enum CondominiumRole { Sindico, SubSindico, Administradora, Conselheiro }
 // Estado de uma reivindicação de condomínio.
 public enum CondominiumClaimStatus { Pending, Approved, Rejected }
 
+// ─── Wave S: Reserva de áreas comuns de condomínio ──────────────────────────
+
+// Estado do vínculo morador↔condomínio. Revoked (e não delete) preserva histórico.
+public enum CondominiumResidentStatus { Pending, Approved, Rejected, Revoked }
+
+// Estado de uma reserva de área comum.
+public enum AreaReservationStatus { Pending, Approved, Rejected, Cancelled }
+
 // ─── Wave Q: Alertas de Segurança Geolocalizados ────────────────────────────
 
 // Tipo do alerta de segurança reportado por um morador verificado.

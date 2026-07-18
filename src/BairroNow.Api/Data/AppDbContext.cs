@@ -67,6 +67,11 @@ public class AppDbContext : DbContext
     // Wave Q — Alertas de Segurança Geolocalizados
     public DbSet<SecurityAlert> SecurityAlerts => Set<SecurityAlert>();
 
+    // Wave S — Reserva de áreas comuns de condomínio
+    public DbSet<CondominiumResident> CondominiumResidents => Set<CondominiumResident>();
+    public DbSet<CommonArea> CommonAreas => Set<CommonArea>();
+    public DbSet<AreaReservation> AreaReservations => Set<AreaReservation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -722,6 +727,60 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.BairroId, e.Status });
             // Índice temporal para ordenação reverse-chrono.
             entity.HasIndex(e => new { e.BairroId, e.CreatedAt });
+        });
+
+        // ─── Wave S: CondominiumResident (vínculo morador↔condomínio) ───
+        modelBuilder.Entity<CondominiumResident>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Unit).HasMaxLength(60);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.ReviewNote).HasMaxLength(500);
+            entity.HasOne(e => e.Condominium).WithMany(c => c.Residents).HasForeignKey(e => e.CondominiumId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
+            // Um único vínculo ATIVO (Pending/Approved) por usuário por condomínio;
+            // Rejected/Revoked não contam — permite re-solicitar depois.
+            entity.HasIndex(e => new { e.CondominiumId, e.UserId }).IsUnique().HasFilter("[Status] IN ('Pending','Approved')");
+            entity.HasIndex(e => new { e.CondominiumId, e.Status });
+            entity.HasIndex(e => e.UserId);
+        });
+
+        // ─── Wave S: CommonArea (área comum reservável) ───
+        modelBuilder.Entity<CommonArea>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(120);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.Rules).HasMaxLength(2000);
+            entity.Property(e => e.CoverImageUrl).HasMaxLength(500);
+            entity.Property(e => e.RequiresApproval).HasDefaultValue(true);
+            entity.Property(e => e.MinAdvanceHours).HasDefaultValue(0);
+            entity.Property(e => e.MaxAdvanceDays).HasDefaultValue(90);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.HasOne(e => e.Condominium).WithMany(c => c.CommonAreas).HasForeignKey(e => e.CondominiumId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.CondominiumId, e.Name }).IsUnique().HasFilter("[DeletedAt] IS NULL");
+            entity.HasIndex(e => new { e.CondominiumId, e.IsActive });
+        });
+
+        // ─── Wave S: AreaReservation (reserva de área comum) ───
+        modelBuilder.Entity<AreaReservation>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Title).HasMaxLength(120);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.ReviewNote).HasMaxLength(500);
+            entity.HasOne(e => e.CommonArea).WithMany(a => a.Reservations).HasForeignKey(e => e.CommonAreaId).OnDelete(DeleteBehavior.Cascade);
+            // NoAction: CommonArea já cascateia de Condominium — evita múltiplos
+            // caminhos de cascade (restrição do SQL Server).
+            entity.HasOne(e => e.Condominium).WithMany().HasForeignKey(e => e.CondominiumId).OnDelete(DeleteBehavior.NoAction);
+            entity.HasOne(e => e.User).WithMany().HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.Restrict);
+            // Detecção de conflito de horário na mesma área.
+            entity.HasIndex(e => new { e.CommonAreaId, e.StartUtc, e.EndUtc });
+            entity.HasIndex(e => new { e.CondominiumId, e.Status });
+            entity.HasIndex(e => new { e.UserId, e.StartUtc });
         });
     }
 

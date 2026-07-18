@@ -34,4 +34,6 @@ public class Condominium
 
     public ICollection<WhatsAppGroup> WhatsAppGroups { get; set; } = new List<WhatsAppGroup>();
     public ICollection<CondominiumClaim> Claims { get; set; } = new List<CondominiumClaim>();
+    public ICollection<CondominiumResident> Residents { get; set; } = new List<CondominiumResident>();
+    public ICollection<CommonArea> CommonAreas { get; set; } = new List<CommonArea>();
 }
