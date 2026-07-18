@@ -13,10 +13,7 @@ function JoinByInvite() {
   const attempted = useRef(false);
 
   useEffect(() => {
-    if (!token) {
-      setError("Link de convite inválido.");
-      return;
-    }
+    if (!token) return;
     if (attempted.current) return;
     attempted.current = true;
 
@@ -28,12 +25,14 @@ function JoinByInvite() {
       });
   }, [token, router]);
 
+  const displayError = error ?? (!token ? "Link de convite inválido." : null);
+
   return (
     <div className="container mx-auto px-4 py-16 max-w-md text-center">
-      {error ? (
+      {displayError ? (
         <div className="rounded-2xl border border-border/50 bg-card p-8">
           <p className="font-semibold text-fg mb-2">Convite não aceito</p>
-          <p className="text-sm text-muted-fg mb-6" role="alert">{error}</p>
+          <p className="text-sm text-muted-fg mb-6" role="alert">{displayError}</p>
           <Link href="/groups/" className="text-sm font-semibold text-primary hover:underline">
             Ver grupos do bairro
           </Link>
