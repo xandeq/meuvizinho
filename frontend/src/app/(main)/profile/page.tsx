@@ -365,12 +365,20 @@ export default function ProfilePage() {
                 size="xl"
               />
             </div>
-            <Link
-              href="/profile/settings/"
-              className="mb-1 text-xs font-semibold text-muted-fg border border-border/50 bg-card px-3 py-1.5 rounded-xl hover:text-primary hover:border-primary/30 transition-all duration-200"
-            >
-              Configurações
-            </Link>
+            <div className="flex items-center gap-2 mb-1">
+              <Link
+                href="/premium/"
+                className="text-xs font-semibold text-accent border border-accent/30 bg-accent/5 px-3 py-1.5 rounded-xl hover:bg-accent/10 transition-all duration-200"
+              >
+                ⭐ Premium
+              </Link>
+              <Link
+                href="/profile/settings/"
+                className="text-xs font-semibold text-muted-fg border border-border/50 bg-card px-3 py-1.5 rounded-xl hover:text-primary hover:border-primary/30 transition-all duration-200"
+              >
+                Configurações
+              </Link>
+            </div>
           </div>
           <h1 className="text-2xl font-extrabold text-fg leading-tight">
             {profile.displayName ?? "(sem nome)"}

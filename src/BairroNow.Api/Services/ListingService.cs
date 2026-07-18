@@ -469,6 +469,7 @@ public class ListingService : IListingService
         SellerId = l.SellerId,
         SellerDisplayName = l.Seller?.DisplayName ?? string.Empty,
         SellerIsVerified = l.Seller?.IsVerified ?? false,
+        SellerIsPremium = l.Seller?.Plan == Models.Enums.SubscriptionPlan.Premium,
         BairroId = l.BairroId,
         Title = l.Title,
         Description = l.Description,

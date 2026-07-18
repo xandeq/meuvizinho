@@ -16,6 +16,7 @@ export interface ListingDto {
   sellerId: string; // Guid
   sellerDisplayName: string;
   sellerIsVerified: boolean;
+  sellerIsPremium?: boolean;
   bairroId: number;
   title: string;
   description: string;

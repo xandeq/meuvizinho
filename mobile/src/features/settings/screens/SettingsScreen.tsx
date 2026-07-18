@@ -48,6 +48,15 @@ export default function SettingsScreen() {
         </Pressable>
       </View>
 
+      {/* Premium link */}
+      <Pressable
+        onPress={() => router.push('/premium')}
+        style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
+      >
+        <Text style={[styles.optionText, { color: colors.fg }]}>Meu Vizinho Premium</Text>
+        <Text style={{ color: colors.muted, fontSize: 18 }}>{'>'}</Text>
+      </Pressable>
+
       {/* LGPD link */}
       <Pressable
         onPress={() => router.push('/lgpd')}

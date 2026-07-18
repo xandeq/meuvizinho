@@ -32,6 +32,7 @@ public class ListingDto
     public Guid SellerId { get; set; }
     public string SellerDisplayName { get; set; } = string.Empty;
     public bool SellerIsVerified { get; set; }
+    public bool SellerIsPremium { get; set; }
     public int BairroId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
