@@ -789,6 +789,10 @@ public class AppDbContext : DbContext
         // ─── Wave T: CondominiumAnnouncement (comunicados oficiais do síndico) ───
         modelBuilder.Entity<CondominiumAnnouncement>(entity =>
         {
+            // A migration criou a tabela como CondominiumAnnouncements; sem isso a
+            // convenção usa o nome do DbSet (Announcements) e o SQL aponta pra
+            // tabela errada em runtime.
+            entity.ToTable("CondominiumAnnouncements");
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).UseIdentityColumn();
             entity.Property(e => e.Title).IsRequired().HasMaxLength(160);
