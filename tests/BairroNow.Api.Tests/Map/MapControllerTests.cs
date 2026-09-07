@@ -7,6 +7,7 @@ using BairroNow.Api.Controllers.v1;
 using BairroNow.Api.Data;
 using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Services;
+using Microsoft.Extensions.Configuration;
 using System.Security.Claims;
 using Xunit;
 
@@ -25,7 +26,10 @@ public class MapControllerTests
 
     private static MapController BuildController(AppDbContext db, ICoordinateFuzzingService? fuzz = null)
     {
-        fuzz ??= new CoordinateFuzzingService();
+        fuzz ??= new CoordinateFuzzingService(
+            new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?> { ["Map:FuzzKey"] = "chave-de-teste-para-hmac-do-fuzzing" })
+                .Build());
         var controller = new MapController(db, fuzz);
         var userId = Guid.NewGuid();
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };

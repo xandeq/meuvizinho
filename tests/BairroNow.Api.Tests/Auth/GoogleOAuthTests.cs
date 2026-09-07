@@ -37,7 +37,8 @@ public class GoogleOAuthTests : IDisposable
         {
             ["Jwt:Key"] = "test-key-must-be-at-least-32-characters-long-for-hmac",
             ["Jwt:Issuer"] = "BairroNow",
-            ["Jwt:Audience"] = "BairroNow"
+            ["Jwt:Audience"] = "BairroNow",
+            ["Google:ClientId"] = "cliente-esperado.apps.googleusercontent.com"
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(configData).Build();
 
@@ -96,7 +97,9 @@ public class GoogleOAuthTests : IDisposable
         {
             email = "mobile@gmail.com",
             email_verified = "true",
-            sub = "google-mobile-123"
+            sub = "google-mobile-123",
+            aud = "cliente-esperado.apps.googleusercontent.com",
+            iss = "https://accounts.google.com"
         });
 
         var mockHandler = new Mock<HttpMessageHandler>();
@@ -117,6 +120,73 @@ public class GoogleOAuthTests : IDisposable
         error.Should().BeNull();
         response.Should().NotBeNull();
         response!.AccessToken.Should().Be("test-jwt");
+    }
+
+    [Fact]
+    public async Task GoogleSignInMobileAsync_RejectsTokenIssuedToAnotherApp()
+    {
+        // Regressao de seguranca: o endpoint tokeninfo valida a assinatura mas
+        // aceita id_token emitido para QUALQUER client OAuth do Google. Sem
+        // conferir o `aud`, um token que a vitima gerou em outro app podia ser
+        // replayado aqui e devolvia sessao completa (takeover, inclusive
+        // pulando o TOTP, ja que este fluxo emite token direto).
+        var tokenInfo = JsonSerializer.Serialize(new
+        {
+            email = "vitima@gmail.com",
+            email_verified = "true",
+            sub = "google-mobile-999",
+            aud = "app-de-terceiro.apps.googleusercontent.com",
+            iss = "https://accounts.google.com"
+        });
+
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(tokenInfo)
+            });
+
+        var client = new HttpClient(mockHandler.Object);
+        _httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(client);
+
+        var (response, _, error) = await _service.GoogleSignInMobileAsync("token-de-outro-app");
+
+        response.Should().BeNull();
+        error.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GoogleSignInMobileAsync_RejectsTokenWithForeignIssuer()
+    {
+        var tokenInfo = JsonSerializer.Serialize(new
+        {
+            email = "vitima@gmail.com",
+            email_verified = "true",
+            sub = "google-mobile-888",
+            aud = "cliente-esperado.apps.googleusercontent.com",
+            iss = "https://accounts.evil.example"
+        });
+
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(tokenInfo)
+            });
+
+        var client = new HttpClient(mockHandler.Object);
+        _httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(client);
+
+        var (response, _, error) = await _service.GoogleSignInMobileAsync("token-issuer-errado");
+
+        response.Should().BeNull();
+        error.Should().NotBeNull();
     }
 
     [Fact]
