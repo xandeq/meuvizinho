@@ -10,6 +10,8 @@ using BairroNow.Api.Models.DTOs;
 using BairroNow.Api.Models.Entities;
 using OtpNet;
 
+using System.Linq;
+
 namespace BairroNow.Api.Services;
 
 public class AuthService : IAuthService
@@ -282,6 +284,38 @@ public class AuthService : IAuthService
             var json = await response.Content.ReadAsStringAsync(ct);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
+
+            // O endpoint tokeninfo valida a ASSINATURA do token, mas aceita
+            // token emitido para QUALQUER client OAuth do Google. Sem conferir
+            // o `aud`, um id_token que a vitima gerou em outro app (qualquer um
+            // que use "entrar com Google") podia ser replayado aqui e devolvia
+            // sessao completa no BairroNow — takeover de conta, inclusive admin,
+            // e ainda por cima pulando o TOTP (este fluxo emite token direto).
+            var allowedAudiences = _configuration.GetSection("Google:AllowedClientIds").Get<string[]>();
+            if (allowedAudiences is null || allowedAudiences.Length == 0)
+            {
+                var single = _configuration["Google:ClientId"];
+                allowedAudiences = string.IsNullOrWhiteSpace(single)
+                    ? Array.Empty<string>()
+                    : new[] { single };
+            }
+
+            if (allowedAudiences.Length == 0)
+            {
+                _logger.LogError("Google:ClientId nao configurado — recusando login Google mobile.");
+                return (null, null, "Login Google nao configurado.");
+            }
+
+            var aud = root.TryGetProperty("aud", out var a) ? a.GetString() : null;
+            if (string.IsNullOrEmpty(aud) || !allowedAudiences.Contains(aud, StringComparer.Ordinal))
+            {
+                _logger.LogWarning("Login Google mobile recusado: aud nao autorizado.");
+                return (null, null, "Token Google invalido.");
+            }
+
+            var iss = root.TryGetProperty("iss", out var i) ? i.GetString() : null;
+            if (iss is not ("accounts.google.com" or "https://accounts.google.com"))
+                return (null, null, "Token Google invalido.");
 
             var emailVerified = root.TryGetProperty("email_verified", out var ev) ? ev.GetString() : null;
             if (emailVerified != "true")
