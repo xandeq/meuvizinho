@@ -9,12 +9,14 @@ public class AccountService
 {
     private readonly AppDbContext _db;
     private readonly IEmailService _emailService;
+    private readonly IFileStorageService _files;
     private readonly ILogger<AccountService> _logger;
 
-    public AccountService(AppDbContext db, IEmailService emailService, ILogger<AccountService> logger)
+    public AccountService(AppDbContext db, IEmailService emailService, IFileStorageService files, ILogger<AccountService> logger)
     {
         _db = db;
         _emailService = emailService;
+        _files = files;
         _logger = logger;
     }
 
@@ -108,15 +110,24 @@ public class AccountService
 
         foreach (var v in verifications)
         {
+            bool deletedOk;
             try
             {
-                if (File.Exists(v.ProofFilePath))
-                    File.Delete(v.ProofFilePath);
+                deletedOk = _files.DeleteProof(v.ProofFilePath);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete proof file {Path}", v.ProofFilePath);
+                continue; // keep ProofFilePath — DocumentRetentionService only retries Approved/Rejected,
+                          // so a Pending verification's proof here would otherwise never get cleaned up
             }
+
+            if (!deletedOk)
+            {
+                _logger.LogError("DeleteProof returned false for {Path} (Verification {Id}) on account deletion — not marking as deleted", v.ProofFilePath, v.Id);
+                continue;
+            }
+
             v.ProofFilePath = "";
             v.DocumentDeletedAt = DateTime.UtcNow;
         }

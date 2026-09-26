@@ -15,6 +15,8 @@ using BairroNow.Api.Hubs;
 using BairroNow.Api.Middleware;
 using BairroNow.Api.Services;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 using Microsoft.Extensions.FileProviders;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Memory;
@@ -29,10 +31,40 @@ try
 
     // Serilog — FromLogContext pulls in CorrelationId pushed by
     // CorrelationIdMiddleware so every log line carries it downstream.
+    // IIS on SmarterASP runs with stdoutLogEnabled="false" (web.config), so Console-only
+    // logging is discarded in production — nothing is ever recoverable by a correlationId.
+    // Warning+ also goes to SQL Server (same DB as the app) so admin can query by
+    // CorrelationId/UserId when a user reports "erro ao publicar".
     builder.Host.UseSerilog((context, services, configuration) =>
+    {
         configuration.ReadFrom.Configuration(context.Configuration)
             .Enrich.FromLogContext()
-            .WriteTo.Console());
+            .WriteTo.Console();
+
+        // AutoCreateSqlTable connects and creates the table SYNCHRONOUSLY right here,
+        // during host build — if SQL Server is briefly unreachable at boot (deploy race,
+        // transient network blip), an unguarded call would take the WHOLE APP down for a
+        // logging sink. Never let this be more fatal than the Console-only baseline.
+        var connString = context.Configuration.GetConnectionString("Default");
+        if (!string.IsNullOrWhiteSpace(connString))
+        {
+            try
+            {
+                configuration.WriteTo.MSSqlServer(
+                    connectionString: connString,
+                    sinkOptions: new MSSqlServerSinkOptions
+                    {
+                        TableName = "Logs",
+                        AutoCreateSqlTable = true,
+                    },
+                    restrictedToMinimumLevel: LogEventLevel.Warning);
+            }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Serilog MSSqlServer sink unavailable at startup — continuing with Console-only logging");
+            }
+        }
+    });
 
     // DbContext
     builder.Services.AddDbContext<AppDbContext>(options =>
@@ -161,6 +193,20 @@ try
                     if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
                     {
                         context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                },
+                // The TOTP gate's temp token (AuthController.GenerateTotpTempToken) shares
+                // this scheme's key/issuer/audience, so without this check it would be a
+                // fully valid Bearer token for every [Authorize] route for its 5-minute
+                // lifetime. Its only legitimate use is as a request-BODY field on
+                // POST /auth/login/totp-verify (AuthService.VerifyTotpAsync parses it
+                // manually there) — it should never reach this pipeline as a header at all.
+                OnTokenValidated = context =>
+                {
+                    if (context.Principal?.HasClaim(c => c.Type == "totp_pending") == true)
+                    {
+                        context.Fail("Token pendente de verificacao TOTP nao pode ser usado como sessao.");
                     }
                     return Task.CompletedTask;
                 }

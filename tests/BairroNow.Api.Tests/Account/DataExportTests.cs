@@ -20,7 +20,7 @@ public class DataExportTests : IDisposable
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         _db = new AppDbContext(options);
-        _service = new AccountService(_db, Mock.Of<IEmailService>(), Mock.Of<ILogger<AccountService>>());
+        _service = new AccountService(_db, Mock.Of<IEmailService>(), Mock.Of<IFileStorageService>(), Mock.Of<ILogger<AccountService>>());
     }
 
     public void Dispose() => _db.Dispose();

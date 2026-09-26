@@ -1,8 +1,14 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("login full flow — production validation", () => {
-  const TEST_EMAIL = "e2e-test-2026@bairronow-ci.com";
-  const TEST_PASSWORD = "Teste@2026!";
+  const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? "e2e-test-2026@bairronow-ci.com";
+  const TEST_PASSWORD =
+    process.env.E2E_TEST_PASSWORD ??
+    (() => {
+      throw new Error(
+        "E2E_TEST_PASSWORD env var is required — no hardcoded fallback (this account exists in production)."
+      );
+    })();
 
   test("successful login redirects away from /login/", async ({ page }) => {
     const apiCalls: { url: string; status: number }[] = [];

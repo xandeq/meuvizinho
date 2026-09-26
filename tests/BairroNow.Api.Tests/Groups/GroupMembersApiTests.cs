@@ -24,7 +24,7 @@ public class GroupMembersApiTests
     private static GroupsController BuildController(AppDbContext db, Guid userId)
     {
         var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
-        var ctrl = new GroupsController(db, null!, null!, null!);
+        var ctrl = new GroupsController(db, null!, null!, null!, null!);
         ctrl.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Test")) }

@@ -22,7 +22,7 @@ public class AccountDeletionTests : IDisposable
             .Options;
         _db = new AppDbContext(options);
         _emailServiceMock = new Mock<IEmailService>();
-        _service = new AccountService(_db, _emailServiceMock.Object, Mock.Of<ILogger<AccountService>>());
+        _service = new AccountService(_db, _emailServiceMock.Object, Mock.Of<IFileStorageService>(), Mock.Of<ILogger<AccountService>>());
     }
 
     public void Dispose() => _db.Dispose();

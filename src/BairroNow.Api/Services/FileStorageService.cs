@@ -136,10 +136,26 @@ public class FileStorageService : IFileStorageService
 
     public Stream? OpenProof(string relativePath)
     {
-        var webRoot = ResolveWebRoot();
-        var trimmed = relativePath.TrimStart('/');
-        var abs = Path.Combine(webRoot, trimmed.Replace("/", Path.DirectorySeparatorChar.ToString()));
+        var abs = ResolveProofPath(relativePath);
         if (!File.Exists(abs)) return null;
         return File.OpenRead(abs);
+    }
+
+    // Same resolution as OpenProof: the DB stores a path relative to wwwroot,
+    // which must be resolved against WebRootPath, not the process CWD.
+    public bool DeleteProof(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath)) return false;
+        var abs = ResolveProofPath(relativePath);
+        if (!File.Exists(abs)) return false;
+        File.Delete(abs);
+        return true;
+    }
+
+    private string ResolveProofPath(string relativePath)
+    {
+        var webRoot = ResolveWebRoot();
+        var trimmed = relativePath.TrimStart('/');
+        return Path.Combine(webRoot, trimmed.Replace("/", Path.DirectorySeparatorChar.ToString()));
     }
 }
