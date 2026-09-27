@@ -44,11 +44,12 @@ public class DocumentRetentionService : BackgroundService
     {
         using var scope = _services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var files = scope.ServiceProvider.GetRequiredService<IFileStorageService>();
 
         var cutoff = DateTime.UtcNow.AddDays(-90);
 
         var expiredDocs = await db.Verifications.IgnoreQueryFilters()
-            .Where(v => v.Status == VerificationStatus.Approved
+            .Where(v => (v.Status == VerificationStatus.Approved || v.Status == VerificationStatus.Rejected)
                 && v.ReviewedAt != null
                 && v.ReviewedAt < cutoff
                 && v.DocumentDeletedAt == null
@@ -58,14 +59,25 @@ public class DocumentRetentionService : BackgroundService
         var deleted = 0;
         foreach (var v in expiredDocs)
         {
+            bool deletedOk;
             try
             {
-                if (File.Exists(v.ProofFilePath))
-                    File.Delete(v.ProofFilePath);
+                deletedOk = files.DeleteProof(v.ProofFilePath);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to delete expired document {Path}", v.ProofFilePath);
+                continue; // keep ProofFilePath so the next run retries the delete
+            }
+
+            if (!deletedOk)
+            {
+                // File already gone, or the stored path doesn't resolve — either way, DON'T
+                // mark it deleted: that would make the record unrecoverable (empty path, no
+                // way to retry) while the file may still exist somewhere. Log loudly so this
+                // is investigated instead of silently accumulating.
+                _logger.LogError("DeleteProof returned false for {Path} (Verification {Id}) — file not found at resolved path, not marking as deleted", v.ProofFilePath, v.Id);
+                continue;
             }
 
             v.ProofFilePath = "";

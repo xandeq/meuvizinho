@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Caching.Memory;
@@ -79,9 +80,9 @@ public class CepLookupService : ICepLookupService
                     if (doc.RootElement.TryGetProperty("location", out var locEl) &&
                         locEl.TryGetProperty("coordinates", out var coord))
                     {
-                        if (coord.TryGetProperty("latitude", out var latEl) && double.TryParse(latEl.GetString(), out var lat))
+                        if (coord.TryGetProperty("latitude", out var latEl) && double.TryParse(latEl.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lat))
                             result.Lat = lat;
-                        if (coord.TryGetProperty("longitude", out var lngEl) && double.TryParse(lngEl.GetString(), out var lng))
+                        if (coord.TryGetProperty("longitude", out var lngEl) && double.TryParse(lngEl.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lng))
                             result.Lng = lng;
                     }
                 }
@@ -94,6 +95,33 @@ public class CepLookupService : ICepLookupService
 
         if (result == null)
             throw new CepNotFoundException(digits);
+
+        // ViaCEP (primary) never returns coordinates. Enrich with BrasilAPI just for lat/lng
+        // when we resolved via ViaCEP — best-effort, never overrides address fields already set.
+        if (result.Lat == null || result.Lng == null)
+        {
+            try
+            {
+                var geoResp = await _http.GetAsync($"https://brasilapi.com.br/api/cep/v2/{digits}", ct);
+                if (geoResp.IsSuccessStatusCode)
+                {
+                    using var geoStream = await geoResp.Content.ReadAsStreamAsync(ct);
+                    using var geoDoc = await JsonDocument.ParseAsync(geoStream, cancellationToken: ct);
+                    if (geoDoc.RootElement.TryGetProperty("location", out var locEl) &&
+                        locEl.TryGetProperty("coordinates", out var coord))
+                    {
+                        if (coord.TryGetProperty("latitude", out var latEl) && double.TryParse(latEl.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lat))
+                            result.Lat = lat;
+                        if (coord.TryGetProperty("longitude", out var lngEl) && double.TryParse(lngEl.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var lng))
+                            result.Lng = lng;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "BrasilAPI coordinate enrichment failed for {Cep}", digits);
+            }
+        }
 
         // Match bairro in our DB
         var matched = await _bairroService.MatchBairroAsync(result.Bairro, result.Localidade, result.Uf, ct);

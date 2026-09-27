@@ -312,7 +312,7 @@ public class ListingServiceTests
         await act.Should().ThrowAsync<ListingValidationException>().WithMessage("*vendidos*");
     }
 
-    [Fact(Skip = "EF InMemory completes ops synchronously so tasks run sequentially — second call sees post-first-commit state and throws. Concurrent renew safety is covered by integration tests against SQL Server.")]
+    [Fact(Skip = "EF InMemory doesn't enforce RowVersion, so it can't exercise the DbUpdateConcurrencyException retry path at all — needs a real SQL Server integration test. Also: as of the concurrency-safety fix, the assertion below (\"both succeed, listing active\") no longer matches the intended behavior — the second call now reloads and re-validates against the already-renewed state, which correctly throws ListingValidationException (>7 days remaining) instead of silently re-renewing. This test needs to be rewritten against SQL Server, not just re-enabled.")]
     public async Task RenewAsync_SimultaneousCalls_BothSucceedAndListingIsActive()
     {
         // Simulate two browser tabs calling RenewAsync simultaneously on the same expired listing.

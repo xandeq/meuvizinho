@@ -21,14 +21,16 @@ public class GroupsController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IHubContext<NotificationHub> _hub;
     private readonly INotificationService _notifications;
+    private readonly IOffensiveWordFilter _filter;
     private readonly ILogger<GroupsController> _logger;
     private const int DefaultPageSize = 20;
 
-    public GroupsController(AppDbContext db, IHubContext<NotificationHub> hub, INotificationService notifications, ILogger<GroupsController> logger)
+    public GroupsController(AppDbContext db, IHubContext<NotificationHub> hub, INotificationService notifications, IOffensiveWordFilter filter, ILogger<GroupsController> logger)
     {
         _db = db;
         _hub = hub;
         _notifications = notifications;
+        _filter = filter;
         _logger = logger;
     }
 
@@ -621,51 +623,62 @@ public class GroupsController : ControllerBase
 
         if (!isMember) return Forbid();
 
+        var author = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
+        if (author == null || !author.IsVerified) return Forbid();
+
+        var isOffensive = _filter.Contains(req.Body);
+
         var post = new GroupPost
         {
             GroupId = id,
             AuthorId = userId.Value,
             Category = req.Category,
             Body = req.Body,
-            IsPublished = true,
+            IsFlagged = isOffensive,
+            IsPublished = !isOffensive,
             CreatedAt = DateTime.UtcNow
         };
         _db.GroupPosts.Add(post);
         await _db.SaveChangesAsync(ct);
 
-        // SignalR: push to group room with full author shape (best-effort — post is already persisted)
-        try
+        // SignalR: push to group room with full author shape (best-effort — post is already persisted).
+        // Skipped for flagged posts — IsPublished=false means the post shouldn't reach members'
+        // feeds at all; broadcasting it live would bypass the moderation gate above entirely.
+        if (!isOffensive)
         {
-            var authorInfo = await _db.Users.AsNoTracking()
-                .Where(u => u.Id == userId.Value)
-                .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified })
-                .FirstOrDefaultAsync(ct);
-
-            await _hub.Clients.Group($"group:{id}").SendAsync("NewGroupPost", new
+            try
             {
-                post.Id,
-                GroupId = id,
-                post.Body,
-                post.Category,
-                post.CreatedAt,
-                EditedAt = (DateTime?)null,
-                IsFlagged = false,
-                Author = new
+                var authorInfo = await _db.Users.AsNoTracking()
+                    .Where(u => u.Id == userId.Value)
+                    .Select(u => new { u.DisplayName, u.PhotoUrl, u.IsVerified })
+                    .FirstOrDefaultAsync(ct);
+
+                await _hub.Clients.Group($"group:{id}").SendAsync("NewGroupPost", new
                 {
-                    Id = userId.Value,
-                    DisplayName = authorInfo?.DisplayName,
-                    PhotoUrl = authorInfo?.PhotoUrl,
-                    IsVerified = authorInfo?.IsVerified ?? false
-                },
-                LikeCount = 0,
-                CommentCount = 0,
-                IsLikedByMe = false,
-                Images = Array.Empty<object>()
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "SignalR push failed for group {GroupId} post {PostId}", id, post.Id);
+                    post.Id,
+                    GroupId = id,
+                    post.Body,
+                    post.Category,
+                    post.CreatedAt,
+                    EditedAt = (DateTime?)null,
+                    IsFlagged = false,
+                    Author = new
+                    {
+                        Id = userId.Value,
+                        DisplayName = authorInfo?.DisplayName,
+                        PhotoUrl = authorInfo?.PhotoUrl,
+                        IsVerified = authorInfo?.IsVerified ?? false
+                    },
+                    LikeCount = 0,
+                    CommentCount = 0,
+                    IsLikedByMe = false,
+                    Images = Array.Empty<object>()
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "SignalR push failed for group {GroupId} post {PostId}", id, post.Id);
+            }
         }
 
         return Created($"/api/v1/groups/{id}/posts/{post.Id}", new { post.Id });
@@ -763,6 +776,17 @@ public class GroupsController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.Body) || req.Body.Length > 1000)
             return BadRequest(new { error = "O comentário deve ter entre 1 e 1000 caracteres." });
 
+        var isMember = await _db.GroupMembers
+            .AsNoTracking()
+            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
+        if (!isMember) return Forbid();
+
+        var author = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
+        if (author == null || !author.IsVerified) return Forbid();
+
+        if (_filter.Contains(req.Body))
+            return BadRequest(new { error = "Comentário contém conteúdo não permitido." });
+
         var comment = new GroupComment
         {
             GroupPostId = postId,
@@ -844,7 +868,10 @@ public class GroupsController : ControllerBase
         _db.GroupEvents.Add(ev);
         await _db.SaveChangesAsync(ct);
 
-        _ = _notifications.NotifyGroupEventCreatedAsync(id, userId.Value, ev.Title, ev.Id);
+        // Awaited: this writes Notification rows via the request-scoped DbContext —
+        // fire-and-forget here would race the response and lose the DB writes when the
+        // scope is disposed. Only the leaf-level Expo push send inside stays fire-and-forget.
+        await _notifications.NotifyGroupEventCreatedAsync(id, userId.Value, ev.Title, ev.Id, ct);
 
         return Created($"/api/v1/groups/{id}/events/{ev.Id}", new { ev.Id });
     }

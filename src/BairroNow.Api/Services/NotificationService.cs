@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using BairroNow.Api.Data;
 using BairroNow.Api.Hubs;
 using BairroNow.Api.Models.DTOs;
@@ -18,17 +19,20 @@ public class NotificationService : INotificationService
     private readonly IHubContext<NotificationHub> _hub;
     private readonly ILogger<NotificationService> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IServiceScopeFactory _scopeFactory;
 
     public NotificationService(
         AppDbContext db,
         IHubContext<NotificationHub> hub,
         ILogger<NotificationService> logger,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        IServiceScopeFactory scopeFactory)
     {
         _db = db;
         _hub = hub;
         _logger = logger;
         _httpClientFactory = httpClientFactory;
+        _scopeFactory = scopeFactory;
     }
 
     public Task NotifyCommentAsync(Guid recipientId, Guid actorId, int postId, int commentId, CancellationToken ct = default)
@@ -414,14 +418,27 @@ public class NotificationService : INotificationService
     }
 
     // Wave P: DM push notification
+    // Called fire-and-forget from ChatService (`_ = _notifications.NotifyNewMessageAsync(...)`)
+    // — same caveat as SendExpoPushAsync/SendExpoPushBodyAsync: own scope, own DbContext,
+    // CancellationToken.None, and a try/catch so an unobserved task exception can't result
+    // from a disposed scope.
     public async Task NotifyNewMessageAsync(Guid recipientId, Guid senderId, int conversationId, CancellationToken ct = default)
     {
-        var sender = await _db.Users.AsNoTracking()
-            .Where(u => u.Id == senderId)
-            .Select(u => new { u.DisplayName })
-            .FirstOrDefaultAsync(ct);
-        var name = sender?.DisplayName ?? "Alguém";
-        _ = SendExpoPushBodyAsync(recipientId, $"{name} te enviou uma mensagem", "NewMessage", conversationId, ct);
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var sender = await db.Users.AsNoTracking()
+                .Where(u => u.Id == senderId)
+                .Select(u => new { u.DisplayName })
+                .FirstOrDefaultAsync(CancellationToken.None);
+            var name = sender?.DisplayName ?? "Alguém";
+            _ = SendExpoPushBodyAsync(recipientId, $"{name} te enviou uma mensagem", "NewMessage", conversationId, ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "NotifyNewMessageAsync failed for recipient {RecipientId}", recipientId);
+        }
     }
 
     // ─── Wave S: reserva de áreas comuns ─────────────────────────────────────
@@ -585,14 +602,20 @@ public class NotificationService : INotificationService
         }
     }
 
+    // Fire-and-forget entry point (`_ = SendExpoPushAsync(...)`): the caller's request
+    // may finish — and its DI scope/DbContext get disposed — before this task's await
+    // resumes. Never touch the injected `_db` or the caller's `ct` here; use a fresh
+    // scope and CancellationToken.None so the push still lands after the response.
     private async Task SendExpoPushAsync(Guid recipientId, string type, string? actorName, int? postId, CancellationToken ct)
     {
         try
         {
-            var recipient = await _db.Users.AsNoTracking()
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var recipient = await db.Users.AsNoTracking()
                 .Where(u => u.Id == recipientId)
                 .Select(u => new { u.ExpoPushToken })
-                .FirstOrDefaultAsync(ct);
+                .FirstOrDefaultAsync(CancellationToken.None);
 
             if (string.IsNullOrEmpty(recipient?.ExpoPushToken)) return;
 
@@ -635,14 +658,18 @@ public class NotificationService : INotificationService
     // Overload for pre-built body strings (Wave I system notifications).
     // Wave T: parâmetro opcional `priority` — "high" adiciona priority + sound ao
     // payload Expo (comunicado importante); null mantém o payload original intacto.
+    // Same fire-and-forget caveat as SendExpoPushAsync above: own scope, own DbContext,
+    // CancellationToken.None — never the request-scoped `_db`/`ct`.
     private async Task SendExpoPushBodyAsync(Guid recipientId, string body, string type, int? refId, CancellationToken ct, string? priority = null)
     {
         try
         {
-            var recipient = await _db.Users.AsNoTracking()
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var recipient = await db.Users.AsNoTracking()
                 .Where(u => u.Id == recipientId)
                 .Select(u => new { u.ExpoPushToken })
-                .FirstOrDefaultAsync(ct);
+                .FirstOrDefaultAsync(CancellationToken.None);
 
             if (string.IsNullOrEmpty(recipient?.ExpoPushToken)) return;
 

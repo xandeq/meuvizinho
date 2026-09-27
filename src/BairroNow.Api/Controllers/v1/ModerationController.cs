@@ -57,6 +57,7 @@ public class ModerationController : ControllerBase
 
         user.IsBanned = true;
         user.IsActive = false;
+        await RevokeAllRefreshTokensAsync(user.Id, GetIpAddress(), ct);
 
         _db.AuditLogs.Add(new AuditLog
         {
@@ -136,6 +137,7 @@ public class ModerationController : ControllerBase
 
         user.IsBanned = true;
         user.IsActive = false;
+        await RevokeAllRefreshTokensAsync(user.Id, GetIpAddress(), ct);
 
         _db.AuditLogs.Add(new AuditLog
         {
@@ -162,4 +164,22 @@ public class ModerationController : ControllerBase
 
     private string GetIpAddress() =>
         HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "unknown";
+
+    // Revokes refresh tokens so the ban survives the next token refresh (previously it
+    // didn't — the user could keep refreshing indefinitely). NOTE: this does NOT invalidate
+    // an access token already issued — JWTs are stateless and stay valid for up to their
+    // 15-minute lifetime (Jwt:AccessTokenExpirationMinutes) even after this runs. Killing a
+    // live session instantly would need a per-request ban check (e.g. a revocation list),
+    // which this does not implement.
+    private async Task RevokeAllRefreshTokensAsync(Guid userId, string ipAddress, CancellationToken ct)
+    {
+        var tokens = await _db.RefreshTokens
+            .Where(t => t.UserId == userId && !t.IsRevoked)
+            .ToListAsync(ct);
+        foreach (var t in tokens)
+        {
+            t.IsRevoked = true;
+            t.RevokedByIp = ipAddress;
+        }
+    }
 }

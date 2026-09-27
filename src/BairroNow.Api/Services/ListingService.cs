@@ -123,22 +123,42 @@ public class ListingService : IListingService
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == listingId, ct)
             ?? throw new ListingNotFoundException();
         if (listing.SellerId != sellerId) throw new ListingForbiddenException("Apenas o vendedor pode editar.");
-        if (listing.Status == ListingStatus.Removed)
-            throw new ListingValidationException("Anúncios removidos não podem ser editados.");
-        if (listing.Status == ListingStatus.Sold)
-            throw new ListingValidationException("Anúncios vendidos não podem ser editados.");
 
         var validation = await _updateValidator.ValidateAsync(dto, ct);
         if (!validation.IsValid)
             throw new ListingValidationException(string.Join("; ", validation.Errors.Select(e => e.ErrorMessage)));
 
-        var oldPrice = listing.Price;
-        if (dto.Title != null) listing.Title = dto.Title.Trim();
-        if (dto.Description != null) listing.Description = dto.Description.Trim();
-        if (dto.Price.HasValue) listing.Price = dto.Price.Value;
-        if (dto.CategoryCode != null) listing.CategoryCode = dto.CategoryCode;
-        if (dto.SubcategoryCode != null) listing.SubcategoryCode = dto.SubcategoryCode;
-        listing.UpdatedAt = DateTime.UtcNow;
+        // Re-validated on every attempt against the CURRENT state (fresh after a reload) —
+        // never blindly re-apply stale field values over a concurrent state change (e.g. an
+        // admin removing the listing while the seller edits it in another tab).
+        decimal oldPrice = 0;
+        void ValidateAndApply()
+        {
+            if (listing.Status == ListingStatus.Removed)
+                throw new ListingValidationException("Anúncios removidos não podem ser editados.");
+            if (listing.Status == ListingStatus.Sold)
+                throw new ListingValidationException("Anúncios vendidos não podem ser editados.");
+
+            oldPrice = listing.Price;
+            if (dto.Title != null) listing.Title = dto.Title.Trim();
+            if (dto.Description != null) listing.Description = dto.Description.Trim();
+            if (dto.Price.HasValue) listing.Price = dto.Price.Value;
+            if (dto.CategoryCode != null) listing.CategoryCode = dto.CategoryCode;
+            if (dto.SubcategoryCode != null) listing.SubcategoryCode = dto.SubcategoryCode;
+            listing.UpdatedAt = DateTime.UtcNow;
+        }
+
+        ValidateAndApply();
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await ReloadOrThrowNotFoundAsync(listing, ct);
+            ValidateAndApply();
+            await _db.SaveChangesAsync(ct);
+        }
 
         _db.AuditLogs.Add(new AuditLog
         {
@@ -149,7 +169,6 @@ public class ListingService : IListingService
             IpAddress = "system",
             Details = $"oldPrice={oldPrice}; newPrice={listing.Price}"
         });
-
         await _db.SaveChangesAsync(ct);
         InvalidateGridCache(listing.BairroId);
 
@@ -182,9 +201,26 @@ public class ListingService : IListingService
             ?? throw new ListingNotFoundException();
         if (listing.SellerId != sellerId) throw new ListingForbiddenException("Apenas o vendedor pode marcar como vendido.");
 
-        listing.Status = ListingStatus.Sold;
-        listing.SoldAt = DateTime.UtcNow;
-        listing.UpdatedAt = DateTime.UtcNow;
+        void ValidateAndApply()
+        {
+            if (listing.Status == ListingStatus.Removed)
+                throw new ListingValidationException("Anúncio removido não pode ser marcado como vendido.");
+            listing.Status = ListingStatus.Sold;
+            listing.SoldAt = DateTime.UtcNow;
+            listing.UpdatedAt = DateTime.UtcNow;
+        }
+
+        ValidateAndApply();
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await ReloadOrThrowNotFoundAsync(listing, ct);
+            ValidateAndApply();
+            await _db.SaveChangesAsync(ct);
+        }
 
         _db.AuditLogs.Add(new AuditLog
         {
@@ -194,7 +230,6 @@ public class ListingService : IListingService
             UserId = sellerId,
             IpAddress = "system"
         });
-
         await _db.SaveChangesAsync(ct);
         InvalidateGridCache(listing.BairroId);
         return await BuildDtoAsync(listing.Id, sellerId, ct) ?? throw new ListingNotFoundException();
@@ -205,19 +240,35 @@ public class ListingService : IListingService
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == listingId, ct)
             ?? throw new ListingNotFoundException();
         if (listing.SellerId != sellerId) throw new ListingForbiddenException("Apenas o vendedor pode renovar.");
-        if (listing.Status == ListingStatus.Sold || listing.Status == ListingStatus.Removed)
-            throw new ListingValidationException("Anúncios vendidos ou removidos não podem ser renovados.");
 
-        // Only allow renewal when ≤7 days remain (or already expired) — prevents padding a fresh listing to 60 days.
-        if (listing.Status == ListingStatus.Active
-            && listing.ExpiresAt.HasValue
-            && listing.ExpiresAt.Value > DateTime.UtcNow.AddDays(7))
-            throw new ListingValidationException("A renovação só é permitida com 7 dias ou menos de validade.");
+        void ValidateAndApply()
+        {
+            if (listing.Status == ListingStatus.Sold || listing.Status == ListingStatus.Removed)
+                throw new ListingValidationException("Anúncios vendidos ou removidos não podem ser renovados.");
 
-        listing.ExpiresAt = DateTime.UtcNow.AddDays(30);
-        if (listing.Status == ListingStatus.Expired)
-            listing.Status = ListingStatus.Active;
-        listing.UpdatedAt = DateTime.UtcNow;
+            // Only allow renewal when ≤7 days remain (or already expired) — prevents padding a fresh listing to 60 days.
+            if (listing.Status == ListingStatus.Active
+                && listing.ExpiresAt.HasValue
+                && listing.ExpiresAt.Value > DateTime.UtcNow.AddDays(7))
+                throw new ListingValidationException("A renovação só é permitida com 7 dias ou menos de validade.");
+
+            listing.ExpiresAt = DateTime.UtcNow.AddDays(30);
+            if (listing.Status == ListingStatus.Expired)
+                listing.Status = ListingStatus.Active;
+            listing.UpdatedAt = DateTime.UtcNow;
+        }
+
+        ValidateAndApply();
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await ReloadOrThrowNotFoundAsync(listing, ct);
+            ValidateAndApply();
+            await _db.SaveChangesAsync(ct);
+        }
 
         _db.AuditLogs.Add(new AuditLog
         {
@@ -238,8 +289,30 @@ public class ListingService : IListingService
         var listing = await _db.Listings.FirstOrDefaultAsync(l => l.Id == listingId, ct)
             ?? throw new ListingNotFoundException();
         if (listing.SellerId != sellerId) throw new ListingForbiddenException("Apenas o vendedor pode remover.");
-        listing.DeletedAt = DateTime.UtcNow;
-        listing.Status = ListingStatus.Removed;
+
+        void Apply()
+        {
+            listing.DeletedAt = DateTime.UtcNow;
+            listing.Status = ListingStatus.Removed;
+        }
+
+        Apply();
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Deleting is idempotent in intent: if a concurrent write already removed it
+            // (or the row is gone), there's nothing left to do — no need to re-throw.
+            var current = await _db.Listings.AsNoTracking().FirstOrDefaultAsync(l => l.Id == listingId, ct);
+            if (current == null || current.Status == ListingStatus.Removed) return;
+
+            await ReloadOrThrowNotFoundAsync(listing, ct);
+            Apply();
+            await _db.SaveChangesAsync(ct);
+        }
+
         _db.AuditLogs.Add(new AuditLog
         {
             Action = "listing.delete",
@@ -257,47 +330,77 @@ public class ListingService : IListingService
         bool verifiedOnly, string? sort, string? cursor, int take, CancellationToken ct = default)
     {
         take = Math.Clamp(take, 1, 50);
-        // Capture now as a local variable so EF Core translates it to a SQL parameter
-        // instead of inlining the value — prevents query plan cache pollution.
-        var now = DateTime.UtcNow;
-        var graceCutoff = now.Subtract(SoldGracePeriod);
 
-        var q = _db.Listings.AsNoTracking()
-            .Include(l => l.Seller)
-            .Include(l => l.Photos)
-            .Where(l => l.BairroId == bairroId)
-            .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > now))
-                     || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
+        // Only the default view (no filters, no cursor, default sort, default page size)
+        // is cacheable under InvalidateGridCache's single key-per-bairro scheme — that's
+        // also the overwhelmingly common request (opening the marketplace tab). Filtered/
+        // paginated/sorted requests skip the cache and hit the DB directly, same as before.
+        var canUseCache = string.IsNullOrWhiteSpace(cursor)
+            && string.IsNullOrWhiteSpace(category)
+            && !minPrice.HasValue && !maxPrice.HasValue && !verifiedOnly
+            && string.IsNullOrWhiteSpace(sort) && take == 20;
 
-        if (!string.IsNullOrWhiteSpace(category)) q = q.Where(l => l.CategoryCode == category);
-        if (minPrice.HasValue) q = q.Where(l => l.Price >= minPrice.Value);
-        if (maxPrice.HasValue) q = q.Where(l => l.Price <= maxPrice.Value);
-        if (verifiedOnly) q = q.Where(l => l.Seller!.IsVerified);
+        List<Listing> items;
+        bool hasMore;
+        Dictionary<int, int> favCounts;
 
-        q = sort switch
+        var cacheKey = GridCacheKeyPrefix + bairroId;
+        if (canUseCache && _cache.TryGetValue<(List<Listing> Items, bool HasMore, Dictionary<int, int> FavCounts)>(cacheKey, out var cached))
         {
-            "price_asc"  => q.OrderBy(l => l.Price).ThenByDescending(l => l.Id),
-            "price_desc" => q.OrderByDescending(l => l.Price).ThenByDescending(l => l.Id),
-            _            => q.OrderByDescending(l => l.CreatedAt).ThenByDescending(l => l.Id),
-        };
+            (items, hasMore, favCounts) = cached;
+        }
+        else
+        {
+            // Capture now as a local variable so EF Core translates it to a SQL parameter
+            // instead of inlining the value — prevents query plan cache pollution.
+            var now = DateTime.UtcNow;
+            var graceCutoff = now.Subtract(SoldGracePeriod);
 
-        if (!string.IsNullOrWhiteSpace(cursor) && int.TryParse(cursor, out var afterId))
-            q = q.Where(l => l.Id < afterId);
+            var q = _db.Listings.AsNoTracking()
+                .Include(l => l.Seller)
+                .Include(l => l.Photos)
+                .Where(l => l.BairroId == bairroId)
+                .Where(l => (l.Status == ListingStatus.Active && (l.ExpiresAt == null || l.ExpiresAt > now))
+                         || (l.Status == ListingStatus.Sold && l.SoldAt != null && l.SoldAt > graceCutoff));
 
-        var rows = await q.Take(take + 1).ToListAsync(ct);
-        var hasMore = rows.Count > take;
-        var items = rows.Take(take).ToList();
+            if (!string.IsNullOrWhiteSpace(category)) q = q.Where(l => l.CategoryCode == category);
+            if (minPrice.HasValue) q = q.Where(l => l.Price >= minPrice.Value);
+            if (maxPrice.HasValue) q = q.Where(l => l.Price <= maxPrice.Value);
+            if (verifiedOnly) q = q.Where(l => l.Seller!.IsVerified);
 
+            q = sort switch
+            {
+                "price_asc"  => q.OrderBy(l => l.Price).ThenByDescending(l => l.Id),
+                "price_desc" => q.OrderByDescending(l => l.Price).ThenByDescending(l => l.Id),
+                _            => q.OrderByDescending(l => l.CreatedAt).ThenByDescending(l => l.Id),
+            };
+
+            if (!string.IsNullOrWhiteSpace(cursor) && int.TryParse(cursor, out var afterId))
+                q = q.Where(l => l.Id < afterId);
+
+            var rows = await q.Take(take + 1).ToListAsync(ct);
+            hasMore = rows.Count > take;
+            items = rows.Take(take).ToList();
+
+            var idsForCount = items.Select(l => l.Id).ToList();
+            favCounts = await _db.ListingFavorites.AsNoTracking()
+                .Where(f => idsForCount.Contains(f.ListingId))
+                .GroupBy(f => f.ListingId)
+                .Select(g => new { Id = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.Id, x => x.Count, ct);
+
+            if (canUseCache)
+            {
+                _cache.Set(cacheKey, (items, hasMore, favCounts), TimeSpan.FromSeconds(45));
+            }
+        }
+
+        // favIds is per-user — always computed fresh, never cached.
         var ids = items.Select(l => l.Id).ToList();
         var favIds = await _db.ListingFavorites.AsNoTracking()
             .Where(f => f.UserId == currentUserId && ids.Contains(f.ListingId))
             .Select(f => f.ListingId)
             .ToListAsync(ct);
-        var favCounts = await _db.ListingFavorites.AsNoTracking()
-            .Where(f => ids.Contains(f.ListingId))
-            .GroupBy(f => f.ListingId)
-            .Select(g => new { Id = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.Id, x => x.Count, ct);
 
         return new ListingPageResult
         {
@@ -412,6 +515,7 @@ public class ListingService : IListingService
         {
             _db.ListingFavorites.Remove(existing);
             await _db.SaveChangesAsync(ct);
+            InvalidateGridCache(listing.BairroId); // favCounts is part of the cached grid payload
             return false;
         }
         if (listing.Status == ListingStatus.Expired || listing.Status == ListingStatus.Removed)
@@ -424,6 +528,7 @@ public class ListingService : IListingService
             CreatedAt = DateTime.UtcNow
         });
         await _db.SaveChangesAsync(ct);
+        InvalidateGridCache(listing.BairroId);
         return true;
     }
 
@@ -495,4 +600,22 @@ public class ListingService : IListingService
     };
 
     private void InvalidateGridCache(int bairroId) => _cache.Remove(GridCacheKeyPrefix + bairroId);
+
+    // Listing.RowVersion is a concurrency token. Two writes racing on the same listing
+    // (e.g. double-click "Renovar", or a seller editing while an admin moderates it)
+    // would otherwise surface as an unhandled DbUpdateConcurrencyException -> 500.
+    //
+    // Deliberately NOT "client wins" (blindly re-stamping our stale in-memory values over
+    // whatever is now in the DB): that would silently undo a concurrent moderation removal
+    // or expiry. Instead, callers reload the fresh row and re-run their own validation
+    // against it before retrying — if the fresh state no longer satisfies the listing's
+    // invariants (e.g. it was removed in the meantime), the retry throws the same domain
+    // exception a fresh request would get, instead of resurrecting it.
+    private async Task ReloadOrThrowNotFoundAsync(Listing listing, CancellationToken ct)
+    {
+        var entry = _db.Entry(listing);
+        if (await entry.GetDatabaseValuesAsync(ct) == null)
+            throw new ListingNotFoundException();
+        await entry.ReloadAsync(ct);
+    }
 }

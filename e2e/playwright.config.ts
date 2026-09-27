@@ -57,8 +57,14 @@ export default defineConfig({
   reporter: [["list"]],
   use: {
     baseURL,
-    trace: "retain-on-failure",
-    screenshot: "only-on-failure",
+    // Traces/screenshots capture full request/response bodies — including the
+    // admin login POST (email+password in clear text) and the resulting JWT.
+    // e2e-smoke.yml uploads e2e/test-results/ as a public, unauthenticated
+    // GitHub Actions artifact (repo is public): a retained trace on a failed
+    // run against production is a leaked admin credential. Never capture
+    // either against production, regardless of pass/fail.
+    trace: isProduction ? "off" : "retain-on-failure",
+    screenshot: isProduction ? "off" : "only-on-failure",
   },
   projects: [
     {

@@ -46,6 +46,8 @@ public class VerificationService : IVerificationService
             Logradouro = address.Logradouro,
             Numero = numero,
             BairroId = address.BairroId,
+            ApprovedLat = address.Lat,
+            ApprovedLng = address.Lng,
             ProofFilePath = relPath,
             ProofSha256 = sha,
             Status = VerificationStatus.Pending,

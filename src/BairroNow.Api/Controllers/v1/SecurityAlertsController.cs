@@ -159,7 +159,11 @@ public class SecurityAlertsController : ControllerBase
             SecurityAlertKind.Acidente  => "Acidente",
             _                           => "Ocorrência",
         };
-        _ = _notifications.NotifySecurityAlertAsync(
+        // Awaited: this writes Notification rows via the request-scoped DbContext —
+        // fire-and-forget here would race the response and silently lose the DB writes
+        // (and the alert itself) when the scope is disposed. Only the leaf-level Expo
+        // push send inside stays fire-and-forget.
+        await _notifications.NotifySecurityAlertAsync(
             alert.BairroId, userId.Value, alert.Id, kindLabel, alert.Description, ct);
 
         return Created($"/api/v1/security-alerts/{alert.Id}",

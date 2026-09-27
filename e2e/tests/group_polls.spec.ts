@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext } from "@playwright/test";
 
 const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? "e2e-test-2026@bairronow-ci.com";
-const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? "Teste@2026!";
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? (() => { throw new Error("E2E_TEST_PASSWORD env var is required — no hardcoded fallback (this account exists in production)."); })();
 // Resolve API base from env (set by playwright.config.ts environment) —
 // never hardcode the production URL here.
 const API_BASE =
