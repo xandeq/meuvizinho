@@ -40,6 +40,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: https://api.bairronow.com.br
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_KIWIFY_CHECKOUT_URL: ${{ secrets.NEXT_PUBLIC_KIWIFY_CHECKOUT_URL }}
 
       - name: Unit tests
         run: pnpm --filter @bairronow/frontend test --passWithNoTests
@@ -49,6 +50,7 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: https://api.bairronow.com.br
           NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_KIWIFY_CHECKOUT_URL: ${{ secrets.NEXT_PUBLIC_KIWIFY_CHECKOUT_URL }}
 
       - name: Deploy via FTP to HostGator
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -63,9 +65,7 @@ jobs:
       - name: Smoke test
         run: |
           sleep 5
-          # NOTE: /premium/ intentionally excluded — only exists on the
-          # unmerged feat/kiwify-webhook branch, not master.
-          for route in / login/ register/ feed/ marketplace/ profile/ cep-lookup/; do
+          for route in / login/ register/ feed/ marketplace/ profile/ cep-lookup/ premium/; do
             code=$(curl -s -o /dev/null -w "%{http_code}" "https://meuvizinhoapp.com.br/$route")
             echo "GET /$route -> $code"
             if [ "$code" -ge 400 ]; then
