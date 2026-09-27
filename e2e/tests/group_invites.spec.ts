@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
-const TEST_EMAIL = process.env.E2E_TEST_EMAIL ?? "e2e-test-2026@bairronow-ci.com";
-const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD ?? (() => { throw new Error("E2E_TEST_PASSWORD env var is required — no hardcoded fallback (this account exists in production)."); })();
+const TEST_EMAIL = process.env.E2E_TEST_EMAIL || "e2e-test-2026@bairronow-ci.com";
+const TEST_PASSWORD = process.env.E2E_TEST_PASSWORD || (() => { throw new Error("E2E_TEST_PASSWORD env var is required — no hardcoded fallback (this account exists in production)."); })();
 const API_BASE =
   process.env.PLAYWRIGHT_API_URL ??
   process.env.BAIRRONOW_API_URL ??
