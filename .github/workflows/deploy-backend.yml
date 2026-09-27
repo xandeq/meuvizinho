@@ -52,13 +52,15 @@ jobs:
           CONN: ${{ secrets.BAIRRONOW_CONN_STRING }}
           JWT_KEY: ${{ secrets.BAIRRONOW_JWT_KEY }}
           RESEND: ${{ secrets.BAIRRONOW_RESEND_API_KEY }}
+          KIWIFY_WEBHOOK_TOKEN: ${{ secrets.BAIRRONOW_KIWIFY_WEBHOOK_TOKEN }}
         run: |
           python3 -c "
           import json, os
           data = {
             'ConnectionStrings': {'Default': os.environ['CONN']},
             'Jwt': {'Key': os.environ['JWT_KEY']},
-            'RESEND_API_KEY': os.environ['RESEND']
+            'RESEND_API_KEY': os.environ['RESEND'],
+            'Kiwify': {'WebhookToken': os.environ['KIWIFY_WEBHOOK_TOKEN']}
           }
           with open('publish/appsettings.Production.json', 'w') as f:
             json.dump(data, f, indent=2)

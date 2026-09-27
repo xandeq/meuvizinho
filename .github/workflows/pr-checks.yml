@@ -45,6 +45,19 @@ jobs:
       - run: dotnet restore src/BairroNow.Api/BairroNow.Api.csproj
       - run: dotnet build src/BairroNow.Api/BairroNow.Api.csproj -c Release --no-restore
       - run: dotnet test tests/BairroNow.Api.Tests/BairroNow.Api.Tests.csproj -c Release --no-restore
+      # Gate de drift em TODO PR (migrations são escritas à mão — WDAC bloqueia
+      # `dotnet ef` no Windows dev). Não precisa de banco vivo: compara o modelo
+      # do código com o AppDbContextModelSnapshot.cs commitado.
+      - name: Install EF tools
+        run: |
+          dotnet tool install --global dotnet-ef --version 8.0.25
+          echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: Drift check — has-pending-model-changes
+        run: |
+          dotnet ef migrations has-pending-model-changes \
+            --project src/BairroNow.Api/BairroNow.Api.csproj \
+            --configuration Release \
+            --no-build
 
   gitleaks:
     runs-on: ubuntu-latest
