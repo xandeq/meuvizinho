@@ -25,7 +25,7 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: 1
 
 jobs:
-  # ─── Job 1: Backend + SQL Server real ────────────────────────────────────
+  # ─── Job 1: Backend + SQL Server real ───────────────────────────────────
   backend-integration:
     name: Backend — SQL Server real + drift check + E2E smoke
     runs-on: ubuntu-latest
@@ -117,16 +117,34 @@ jobs:
             --no-build
           echo "✅ Migration aplicada com sucesso"
 
-      # Diagnóstico: gera migration temporária e mostra o diff do snapshot para revelar o drift exato.
-      # Não commitado — o workspace do CI é efêmero.
-      - name: Diagnóstico de drift (mostra o que mudou antes de falhar)
+      # GATE DEFINITIVO: detecta drift entre a migration hand-written e o ModelSnapshot.
+      # Se houver qualquer divergência (campo esquecido, tipo errado, índice faltando),
+      # o EF identifica e falha o build ANTES do merge. Em prod, a migration teria
+      # aplicado um schema diferente do que o EF espera — causaria runtime 500s.
+      #
+      # DEVE rodar ANTES de qualquer "dotnet ef migrations add": esse comando reescreve
+      # AppDbContextModelSnapshot.cs no workspace, o que faria este gate sempre passar
+      # (comparando o modelo com um snapshot recém-regenerado a partir dele mesmo).
+      - name: Drift check — has-pending-model-changes
+        run: |
+          dotnet ef migrations has-pending-model-changes \
+            --project src/BairroNow.Api/BairroNow.Api.csproj \
+            --configuration Release \
+            --no-build
+          echo "✅ Sem drift — migration e ModelSnapshot consistentes"
+
+      # Diagnóstico: só roda se o gate acima falhou, pra mostrar o drift exato nos logs.
+      # Gera migration temporária num workspace já reprovado — não commitado, workspace
+      # do CI é efêmero, e nenhum step depois deste faz `dotnet build`/`dotnet ef` de novo.
+      - name: Diagnóstico de drift (mostra o que mudou, só quando o gate falha)
+        if: failure()
         run: |
           dotnet ef migrations add __DiagDrift__ \
             --project src/BairroNow.Api/BairroNow.Api.csproj \
             --configuration Release \
             --no-build \
             2>&1 || true
-          echo "=== DIFF do AppDbContextModelSnapshot.cs (o que EF corrigiu) ==="
+          echo "=== DIFF do AppDbContextModelSnapshot.cs (o que EF corrigiria) ==="
           git diff src/BairroNow.Api/Migrations/AppDbContextModelSnapshot.cs || true
           echo "=== Migration diagnóstica gerada ==="
           DIAG_FILE=$(ls -t src/BairroNow.Api/Migrations/*.cs 2>/dev/null | grep -i diag | head -1)
@@ -139,18 +157,6 @@ jobs:
             cat "$NEWEST" 2>/dev/null || echo "(nenhum arquivo encontrado)"
           fi
           echo "==="
-
-      # GATE DEFINITIVO: detecta drift entre a migration hand-written e o ModelSnapshot.
-      # Se houver qualquer divergência (campo esquecido, tipo errado, índice faltando),
-      # o EF identifica e falha o build ANTES do merge. Em prod, a migration teria
-      # aplicado um schema diferente do que o EF espera — causaria runtime 500s.
-      - name: Drift check — has-pending-model-changes
-        run: |
-          dotnet ef migrations has-pending-model-changes \
-            --project src/BairroNow.Api/BairroNow.Api.csproj \
-            --configuration Release \
-            --no-build
-          echo "✅ Sem drift — migration e ModelSnapshot consistentes"
 
       - name: Subir Kestrel em background
         run: |
@@ -316,7 +322,7 @@ jobs:
             || { echo "❌ CORS preflight POST condominiums esperava 204/200, recebeu $S"; exit 1; }
           echo "✅ CORS preflight POST /api/v1/condominiums → $S"
 
-      # ── Fase E: Wave Q — Alertas de Segurança ────────────────────────────────
+      # ── Fase E: Wave Q — Alertas de Segurança ───────────────────────────────
       - name: Smoke E — security alerts (Wave Q)
         run: |
           set -e
