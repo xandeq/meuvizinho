@@ -9,7 +9,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="marketplace" options={{ title: 'Mercado' }} />
       <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
       <Tabs.Screen name="map" options={{ title: 'Mapa' }} />
-      <Tabs.Screen name="groups/index" options={{ title: 'Grupos' }} />
     </Tabs>
   );
 }
