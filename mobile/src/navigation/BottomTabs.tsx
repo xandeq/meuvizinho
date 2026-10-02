@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useChatStore } from '../lib/chat-store';
 import { useTheme } from '../theme/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TabRoute {
   key: string;
@@ -38,10 +39,17 @@ function getTabKey(routeName: string) {
 
 export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const unreadTotal = useChatStore((s) => s.unreadTotal);
 
   return (
-    <View style={[styles.tabBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+    <View
+      style={[
+        styles.tabBar,
+        // Edge-to-edge: keep the tabs above the gesture pill / 3-button nav bar.
+        { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 8) },
+      ]}
+    >
       {state.routes.map((route, index) => {
         const key = getTabKey(route.name);
         // Only whitelisted routes are tabs. Nested screens under (tabs)/ (groups/new,
@@ -83,7 +91,6 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     borderTopWidth: 1,
-    paddingBottom: 8,
     paddingTop: 6,
   },
   tab: { flex: 1, alignItems: 'center', gap: 2 },
