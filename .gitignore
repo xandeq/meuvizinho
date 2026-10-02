@@ -32,3 +32,7 @@ Thumbs.db
 # Python bytecode
 __pycache__/
 *.pyc
+
+# local store screenshots/binaries
+mobile/store-assets/real/*.apk
+mobile/store-assets/real/*.aab
