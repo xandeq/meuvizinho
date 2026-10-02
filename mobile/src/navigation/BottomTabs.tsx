@@ -43,10 +43,12 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
   return (
     <View style={[styles.tabBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
       {state.routes.map((route, index) => {
-        // Routes declared with `href: null` (nested screens like groups/new) are not tabs.
-        if (descriptors?.[route.key]?.options?.href === null) return null;
         const key = getTabKey(route.name);
-        const config = TAB_CONFIG[key] ?? { label: key, icon: '•' };
+        // Only whitelisted routes are tabs. Nested screens under (tabs)/ (groups/new,
+        // groups/[groupId]) are auto-registered by expo-router and `href: null` is not
+        // surfaced to a custom tabBar, so filter here.
+        const config = TAB_CONFIG[key];
+        if (!config || descriptors?.[route.key]?.options?.href === null) return null;
         const isFocused = state.index === index;
         const isChatTab = key === 'chat';
 
