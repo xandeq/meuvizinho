@@ -36,13 +36,15 @@ function getTabKey(routeName: string) {
   return routeName.replace('(tabs)/', '');
 }
 
-export function BottomTabs({ state, navigation }: BottomTabsProps) {
+export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) {
   const { colors } = useTheme();
   const unreadTotal = useChatStore((s) => s.unreadTotal);
 
   return (
     <View style={[styles.tabBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
       {state.routes.map((route, index) => {
+        // Routes declared with `href: null` (nested screens like groups/new) are not tabs.
+        if (descriptors?.[route.key]?.options?.href === null) return null;
         const key = getTabKey(route.name);
         const config = TAB_CONFIG[key] ?? { label: key, icon: '•' };
         const isFocused = state.index === index;
