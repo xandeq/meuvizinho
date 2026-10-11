@@ -1,6 +1,5 @@
-import { useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Button } from '../src/components/Button';
 import { useAuthStore } from '../src/lib/auth-store';
 
@@ -8,9 +7,9 @@ export default function Index() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
-  useEffect(() => {
-    if (isAuthenticated) router.replace('/feed');
-  }, [isAuthenticated]);
+  // Imperative router.replace() here ran before the Root Layout finished mounting
+  // (cold start with a persisted session) and crashed the app. <Redirect> waits.
+  if (isAuthenticated) return <Redirect href="/feed" />;
 
   return (
     <View style={styles.container}>

@@ -157,8 +157,12 @@ describe('map.tsx — static constraints', () => {
     expect(src).toContain('testID="show-on-map-switch"');
   });
 
-  it('has showsUserLocation={false} — MAP-002 no real GPS', () => {
-    expect(src).toContain('showsUserLocation={false}');
+  it('has geolocationEnabled={false} — MAP-002 no real GPS', () => {
+    expect(src).toContain('geolocationEnabled={false}');
+  });
+
+  it('does not use react-native-maps (needs a Google Maps key on Android, crashed the Map tab)', () => {
+    expect(src).not.toContain('react-native-maps');
   });
 
   it('calls getPins with filter when filter changes', () => {
