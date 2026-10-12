@@ -13,14 +13,12 @@ export default function Register() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
   const [loading, setLoading] = useState(false);
-  const [accepted, setAccepted] = useState(false);
   const { control, handleSubmit, formState: { errors } } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema) as any,
     defaultValues: { email: '', password: '', confirmPassword: '', acceptedPrivacyPolicy: false as any },
   });
 
   const onSubmit = async (data: RegisterInput) => {
-    if (!accepted) return Alert.alert('Aceite a politica de privacidade');
     setLoading(true);
     try {
       const res = await authApi.register({ ...data, acceptedPrivacyPolicy: true });
@@ -47,10 +45,15 @@ export default function Register() {
       <Controller control={control} name="confirmPassword" render={({ field: { onChange, value } }) => (
         <Input label="Confirme a senha" value={value} onChangeText={onChange} secureTextEntry placeholder="********" error={errors.confirmPassword?.message} />
       )} />
-      <Pressable style={styles.checkboxRow} onPress={() => setAccepted(!accepted)}>
-        <View style={[styles.checkbox, accepted && styles.checkboxOn]} />
-        <Text style={styles.checkboxText}>Aceito a politica de privacidade</Text>
-      </Pressable>
+      <Controller control={control} name="acceptedPrivacyPolicy" render={({ field: { onChange, value } }) => (
+        <>
+          <Pressable style={styles.checkboxRow} onPress={() => onChange(!value)}>
+            <View style={[styles.checkbox, value && styles.checkboxOn]} />
+            <Text style={styles.checkboxText}>Aceito a politica de privacidade</Text>
+          </Pressable>
+          {errors.acceptedPrivacyPolicy ? <Text style={styles.error}>{errors.acceptedPrivacyPolicy.message}</Text> : null}
+        </>
+      )} />
       <View style={{ height: 16 }} />
       <Button title="Criar conta" onPress={handleSubmit(onSubmit)} loading={loading} />
     </ScrollView>
@@ -65,4 +68,5 @@ const styles = StyleSheet.create({
   checkbox: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: '#3B82F6', marginRight: 12 },
   checkboxOn: { backgroundColor: '#3B82F6' },
   checkboxText: { fontSize: 14, color: '#111827' },
+  error: { marginTop: 6, fontSize: 13, color: '#EF4444' },
 });
