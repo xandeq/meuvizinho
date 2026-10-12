@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ActivityIndicator, Linking, ScrollView } from 'react-native';
 import Constants from 'expo-constants';
+import { Ionicons } from '@expo/vector-icons';
 import { apiClient } from '../../../lib/api';
 import { useTheme } from '../../../theme/ThemeContext';
+import { fontFamily, radius } from '../../../theme/tokens';
 import { statusTitle, statusHint, type SubscriptionStatus } from '../premium-logic';
 
 // Preencher via app.json extra quando o produto Kiwify existir
@@ -64,13 +66,13 @@ export default function PremiumScreen() {
       ) : status && (
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.cardTitle, { color: colors.fg }]}>{statusTitle(status)}</Text>
-          <Text style={[styles.cardSub, { color: colors.muted }]}>{statusHint(status)}</Text>
+          <Text style={[styles.cardSub, { color: colors.mutedFg }]}>{statusHint(status)}</Text>
         </View>
       )}
 
       {message && (
-        <View style={[styles.banner, { backgroundColor: message.kind === 'ok' ? '#ECFDF5' : '#FEF2F2' }]}>
-          <Text style={{ color: message.kind === 'ok' ? '#059669' : '#DC2626', fontWeight: '600', fontSize: 13 }}>
+        <View style={[styles.banner, { backgroundColor: message.kind === 'ok' ? colors.secondaryLight : colors.dangerLight }]}>
+          <Text style={{ color: message.kind === 'ok' ? colors.secondary : colors.danger, fontFamily: fontFamily.semibold, fontSize: 13 }}>
             {message.text}
           </Text>
         </View>
@@ -80,10 +82,10 @@ export default function PremiumScreen() {
         <Text style={[styles.cardTitle, { color: colors.fg, marginBottom: 12 }]}>O que está incluso</Text>
         {BENEFITS.map((b) => (
           <View key={b.title} style={styles.benefit}>
-            <Text style={{ color: '#059669', fontWeight: '800', marginRight: 8 }}>✓</Text>
+            <Ionicons name="checkmark-circle" size={18} color={colors.secondary} style={{ marginRight: 8 }} />
             <View style={{ flex: 1 }}>
               <Text style={[styles.benefitTitle, { color: colors.fg }]}>{b.title}</Text>
-              <Text style={[styles.benefitDesc, { color: colors.muted }]}>{b.desc}</Text>
+              <Text style={[styles.benefitDesc, { color: colors.mutedFg }]}>{b.desc}</Text>
             </View>
           </View>
         ))}
@@ -109,7 +111,7 @@ export default function PremiumScreen() {
             </Pressable>
           ) : (
             !status.isEligibleForTrial && (
-              <Text style={{ color: colors.muted, textAlign: 'center', fontSize: 13 }}>
+              <Text style={{ color: colors.mutedFg, textAlign: 'center', fontFamily: fontFamily.regular, fontSize: 13 }}>
                 Assinatura em breve — aguarde novidades.
               </Text>
             )
@@ -123,17 +125,17 @@ export default function PremiumScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { padding: 16, gap: 16, paddingBottom: 40 },
-  hero: { borderRadius: 16, padding: 24 },
-  heroTitle: { color: '#fff', fontSize: 22, fontWeight: '800', marginBottom: 6 },
-  heroSub: { color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 20 },
-  card: { borderRadius: 12, borderWidth: 1, padding: 16 },
-  cardTitle: { fontSize: 15, fontWeight: '700' },
-  cardSub: { fontSize: 13, marginTop: 4, lineHeight: 18 },
-  banner: { borderRadius: 10, padding: 12 },
+  hero: { borderRadius: radius.lg, padding: 24 },
+  heroTitle: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 22, marginBottom: 6 },
+  heroSub: { color: 'rgba(255,255,255,0.85)', fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20 },
+  card: { borderRadius: radius.md, borderWidth: 1, padding: 16 },
+  cardTitle: { fontFamily: fontFamily.bold, fontSize: 15 },
+  cardSub: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 4, lineHeight: 18 },
+  banner: { borderRadius: radius.sm, padding: 12 },
   benefit: { flexDirection: 'row', marginBottom: 10 },
-  benefitTitle: { fontSize: 14, fontWeight: '600' },
-  benefitDesc: { fontSize: 13, lineHeight: 18 },
-  btn: { borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  benefitTitle: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  benefitDesc: { fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 18 },
+  btn: { borderRadius: radius.md, paddingVertical: 14, alignItems: 'center' },
   btnOutline: { backgroundColor: 'transparent', borderWidth: 2 },
-  btnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  btnText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 15 },
 });

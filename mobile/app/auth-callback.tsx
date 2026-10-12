@@ -4,6 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuthStore } from '../src/lib/auth-store';
 import { apiClient } from '../src/lib/api';
 import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily } from '../src/theme/tokens';
 
 export default function AuthCallbackScreen() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function AuthCallbackScreen() {
   return (
     <View style={[styles.center, { backgroundColor: colors.bg }]}>
       <ActivityIndicator size="large" color={colors.primary} />
-      <Text style={[styles.text, { color: colors.muted }]}>Autenticando...</Text>
+      <Text style={[styles.text, { color: colors.mutedFg, fontFamily: fontFamily.regular }]}>Autenticando...</Text>
     </View>
   );
 }
@@ -59,6 +60,6 @@ export default function AuthCallbackScreen() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   text: { marginTop: 16, fontSize: 16 },
-  errorText: { fontSize: 16, fontWeight: '600', marginBottom: 16, textAlign: 'center' },
-  link: { fontSize: 16, fontWeight: '600' },
+  errorText: { fontFamily: fontFamily.semibold, fontSize: 16, marginBottom: 16, textAlign: 'center' },
+  link: { fontFamily: fontFamily.semibold, fontSize: 16 },
 });

@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../theme/ThemeContext';
+import { fontFamily, radius } from '../../../theme/tokens';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -44,7 +46,7 @@ export default function SettingsScreen() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Pressable style={styles.option}>
           <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>
-          <Text style={[styles.optionHint, { color: colors.muted }]}>Em breve</Text>
+          <Text style={[styles.optionHint, { color: colors.mutedFg }]}>Em breve</Text>
         </Pressable>
       </View>
 
@@ -54,7 +56,7 @@ export default function SettingsScreen() {
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
         <Text style={[styles.optionText, { color: colors.fg }]}>Meu Vizinho Premium</Text>
-        <Text style={{ color: colors.muted, fontSize: 18 }}>{'>'}</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
       </Pressable>
 
       {/* LGPD link */}
@@ -63,7 +65,7 @@ export default function SettingsScreen() {
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
         <Text style={[styles.optionText, { color: colors.fg }]}>Meus Dados (LGPD)</Text>
-        <Text style={{ color: colors.muted, fontSize: 18 }}>{'>'}</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
       </Pressable>
     </View>
   );
@@ -71,9 +73,9 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, marginBottom: 8 },
   card: {
-    borderRadius: 12,
+    borderRadius: radius.md,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -84,8 +86,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
-  optionText: { fontSize: 15, fontWeight: '500' },
-  optionHint: { fontSize: 13 },
+  optionText: { fontFamily: fontFamily.medium, fontSize: 15 },
+  optionHint: { fontFamily: fontFamily.regular, fontSize: 13 },
   checkDot: { width: 12, height: 12, borderRadius: 6 },
   lgpdLink: {
     flexDirection: 'row',

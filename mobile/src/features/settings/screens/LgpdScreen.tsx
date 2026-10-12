@@ -4,6 +4,7 @@ import { Button } from '../../../components/Button';
 import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../lib/auth-store';
 import { useTheme } from '../../../theme/ThemeContext';
+import { fontFamily, radius } from '../../../theme/tokens';
 
 export default function LgpdScreen() {
   const { colors } = useTheme();
@@ -81,7 +82,7 @@ export default function LgpdScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Text style={[styles.title, { color: colors.fg }]}>Meus Dados</Text>
-      <Text style={[styles.description, { color: colors.muted }]}>
+      <Text style={[styles.description, { color: colors.mutedFg }]}>
         De acordo com a Lei Geral de Protecao de Dados (LGPD), voce pode exportar ou solicitar a
         exclusao dos seus dados pessoais.
       </Text>
@@ -89,7 +90,7 @@ export default function LgpdScreen() {
       {/* Export section */}
       <View style={[styles.section, { borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.fg }]}>Exportar Dados</Text>
-        <Text style={[styles.sectionDesc, { color: colors.muted }]}>
+        <Text style={[styles.sectionDesc, { color: colors.mutedFg }]}>
           Baixe um arquivo JSON com todos os seus dados armazenados na plataforma.
         </Text>
         <View style={{ height: 12 }} />
@@ -103,7 +104,7 @@ export default function LgpdScreen() {
       {/* Delete section */}
       <View style={[styles.section, { borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.danger }]}>Excluir Conta</Text>
-        <Text style={[styles.sectionDesc, { color: colors.muted }]}>
+        <Text style={[styles.sectionDesc, { color: colors.mutedFg }]}>
           Ao solicitar a exclusao, seus dados serao anonimizados apos 30 dias.
           Voce pode cancelar a exclusao durante esse periodo.
         </Text>
@@ -129,14 +130,14 @@ export default function LgpdScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
-  description: { fontSize: 14, lineHeight: 20, marginBottom: 24 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 22, marginBottom: 8 },
+  description: { fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20, marginBottom: 24 },
   section: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: 16,
     marginBottom: 16,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  sectionDesc: { fontSize: 13, lineHeight: 18 },
+  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, marginBottom: 4 },
+  sectionDesc: { fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 18 },
 });

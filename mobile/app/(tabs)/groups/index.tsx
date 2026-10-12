@@ -20,7 +20,10 @@ export default function GroupsIndex() {
   const [joiningId, setJoiningId] = useState<number | null>(null);
 
   const load = useCallback(() => {
-    if (!user?.bairroId) return;
+    if (!user?.bairroId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     getGroups(user.bairroId, { search: search || undefined })
       .then(setGroups)
@@ -83,6 +86,8 @@ export default function GroupsIndex() {
       />
       {loading ? (
         <ActivityIndicator color={colors.secondary} style={{ marginTop: 40 }} />
+      ) : !user?.bairroId ? (
+        <Text style={[styles.empty, { color: colors.mutedFg }]}>Complete sua verificação para ver os grupos do bairro.</Text>
       ) : (
         <FlatList
           data={groups}
