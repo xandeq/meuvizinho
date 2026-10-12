@@ -8,6 +8,7 @@ import { useMapStore } from '../../src/features/map/useMapStore';
 import { getPins, getPois, updateMapPreference } from '../../src/features/map/mapApi';
 import { buildLeafletHtml, type LeafletPin } from '../../src/features/map/leafletHtml';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily } from '../../src/theme/tokens';
 
 // Same default center/zoom as the web map (Vila Velha / ES).
 const DEFAULT_CENTER = { lat: -20.3297, lng: -40.2927, zoom: 15 };
@@ -123,7 +124,7 @@ export default function MapScreen() {
       />
 
       {loading && (
-        <View style={styles.loadingOverlay}>
+        <View style={[styles.loadingOverlay, { backgroundColor: colors.bg + 'B3' }]}>
           <ActivityIndicator color={colors.primary} />
         </View>
       )}
@@ -136,9 +137,9 @@ const styles = StyleSheet.create({
   controls: { borderBottomWidth: 1, paddingVertical: 8 },
   filterRow: { paddingHorizontal: 16, gap: 8, flexDirection: 'row', alignItems: 'center' },
   filterBtn: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
-  filterText: { fontSize: 13 },
+  filterText: { fontFamily: fontFamily.semibold, fontSize: 13 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
-  toggleLabel: { fontSize: 13 },
+  toggleLabel: { fontFamily: fontFamily.medium, fontSize: 13 },
   map: { flex: 1, width: '100%' },
-  loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.6)' },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
 });
