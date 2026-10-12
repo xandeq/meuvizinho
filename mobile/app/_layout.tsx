@@ -2,8 +2,8 @@ import { Pressable, View } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useFonts } from 'expo-font';
 import {
-  useFonts,
   Outfit_400Regular,
   Outfit_500Medium,
   Outfit_600SemiBold,
