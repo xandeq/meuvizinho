@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { marketplaceApi } from '../../src/lib/api/marketplace';
 import { ListingCard } from '../../src/components/marketplace/ListingCard';
+import { EmptyState } from '../../src/components/EmptyState';
 import { useAuthStore } from '../../src/lib/auth-store';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { fontFamily } from '../../src/theme/tokens';
 import type { ListingDto } from '../../src/lib/api/marketplace.types';
 
 export default function MarketplaceSearchScreen() {
@@ -49,11 +49,19 @@ export default function MarketplaceSearchScreen() {
         />
       )}
       ListEmptyComponent={
-        <View style={[styles.center, { backgroundColor: colors.bg }]}>
-          <Text style={{ color: colors.mutedFg, fontFamily: fontFamily.regular }}>
-            {!bairroId ? 'Complete sua verificação para buscar no marketplace.' : `Nenhum resultado para "${q}".`}
-          </Text>
-        </View>
+        !bairroId ? (
+          <EmptyState
+            icon="shield-checkmark-outline"
+            title="Complete sua verificação"
+            subtitle="Confirme seu endereço para buscar no marketplace."
+          />
+        ) : (
+          <EmptyState
+            icon="search-outline"
+            title={`Nenhum resultado para "${q}"`}
+            subtitle="Tente outro termo ou busque em outra categoria."
+          />
+        )
       }
     />
   );

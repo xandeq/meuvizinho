@@ -12,6 +12,7 @@ import type { GroupPost, GroupEvent } from '@/features/groups/groupsApi';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 import { VerifiedBadge } from '../../../src/components/VerifiedBadge';
+import { EmptyState } from '../../../src/components/EmptyState';
 
 export default function GroupDetailScreen() {
   const { groupId: gidStr } = useLocalSearchParams<{ groupId: string }>();
@@ -172,7 +173,13 @@ export default function GroupDetailScreen() {
                 keyExtractor={(p) => String(p.id)}
                 renderItem={renderPost}
                 contentContainerStyle={{ padding: 16, gap: 12 }}
-                ListEmptyComponent={<Text style={[styles.empty, { color: colors.mutedFg }]}>Nenhuma publicação ainda.</Text>}
+                ListEmptyComponent={
+                  <EmptyState
+                    icon="chatbubbles-outline"
+                    title="Nenhuma publicação ainda"
+                    subtitle="Seja o primeiro a compartilhar algo com o grupo."
+                  />
+                }
               />
             )}
             {postError && (
@@ -202,7 +209,13 @@ export default function GroupDetailScreen() {
             keyExtractor={(e) => String(e.id)}
             renderItem={renderEvent}
             contentContainerStyle={{ padding: 16, gap: 12 }}
-            ListEmptyComponent={<Text style={[styles.empty, { color: colors.mutedFg }]}>Nenhum evento criado.</Text>}
+            ListEmptyComponent={
+              <EmptyState
+                icon="calendar-outline"
+                title="Nenhum evento criado"
+                subtitle="Organize um encontro ou atividade para o grupo."
+              />
+            }
           />
         )}
       </View>
@@ -234,5 +247,4 @@ const styles = StyleSheet.create({
   postErrorText: { fontFamily: fontFamily.regular, fontSize: 13, paddingHorizontal: 16, paddingTop: 8 },
   sendBtn: { paddingHorizontal: 14, paddingVertical: 9 },
   sendBtnText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 14 },
-  empty: { textAlign: 'center', marginTop: 40 },
 });

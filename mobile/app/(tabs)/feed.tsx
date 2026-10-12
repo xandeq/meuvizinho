@@ -6,6 +6,7 @@ import { useAuthStore } from '../../src/lib/auth-store';
 import { useFeedStore } from '../../src/lib/feed-store';
 import { PostCard } from '../../src/components/feed/PostCard';
 import { FeedComposer } from '../../src/components/feed/FeedComposer';
+import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
@@ -35,10 +36,12 @@ export default function FeedScreen() {
 
   if (!bairroId) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
-          Complete sua verificação para ver o feed do bairro.
-        </Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <EmptyState
+          icon="shield-checkmark-outline"
+          title="Complete sua verificação"
+          subtitle="Confirme seu endereço para ver o feed do seu bairro."
+        />
       </View>
     );
   }
@@ -72,21 +75,14 @@ export default function FeedScreen() {
         }
         ListEmptyComponent={
           loading ? null : (
-            <View style={styles.center}>
-              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
-                Nenhum post no seu bairro ainda.
-              </Text>
-              {isVerified && (
-                <Pressable
-                  style={[styles.emptyAction, { borderColor: colors.primary }]}
-                  onPress={() => setComposerOpen(true)}
-                >
-                  <Text style={[styles.emptyActionText, { color: colors.primary }]}>
-                    Criar o primeiro post
-                  </Text>
-                </Pressable>
-              )}
-            </View>
+            <EmptyState
+              icon="chatbubbles-outline"
+              title="Nenhum post no seu bairro ainda"
+              subtitle="Compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos."
+              {...(isVerified
+                ? { actionLabel: 'Criar o primeiro post', actionIcon: 'add', onAction: () => setComposerOpen(true) }
+                : {})}
+            />
           )
         }
         ListFooterComponent={
@@ -129,15 +125,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   headerTitle: { fontFamily: fontFamily.extrabold, fontSize: 28 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyText: { fontSize: 15, textAlign: 'center', marginBottom: 16 },
-  emptyAction: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  emptyActionText: { fontFamily: fontFamily.bold, fontSize: 14 },
   fab: {
     position: 'absolute',
     right: 16,

@@ -16,6 +16,7 @@ import { marketplaceApi } from '../../src/lib/api/marketplace';
 import type { CategoryDto } from '../../src/lib/api/marketplace.types';
 import { ListingCard } from '../../src/components/marketplace/ListingCard';
 import { FilterChips } from '../../src/components/marketplace/FilterChips';
+import { EmptyState } from '../../src/components/EmptyState';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
@@ -52,8 +53,12 @@ export default function MarketplaceScreen() {
 
   if (!bairroId) {
     return (
-      <View style={[styles.empty, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.emptyText, { color: colors.mutedFg }]}>Complete sua verificação para ver o marketplace.</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <EmptyState
+          icon="shield-checkmark-outline"
+          title="Complete sua verificação"
+          subtitle="Confirme seu endereço para ver o marketplace do seu bairro."
+        />
       </View>
     );
   }
@@ -96,9 +101,15 @@ export default function MarketplaceScreen() {
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
           loading ? null : (
-            <View style={styles.empty}>
-              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>Nenhum anúncio no seu bairro ainda.</Text>
-            </View>
+            <EmptyState
+              icon="storefront-outline"
+              title="Nenhum anúncio no seu bairro ainda"
+              subtitle={
+                isVerified
+                  ? 'Toque em "Novo anúncio" e seja o primeiro vizinho a anunciar algo por aqui.'
+                  : 'Seja o primeiro vizinho a anunciar algo por aqui.'
+              }
+            />
           )
         }
         ListFooterComponent={
@@ -130,8 +141,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   grid: { padding: 6, paddingBottom: 100 },
-  empty: { flex: 1, padding: 32, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { fontFamily: fontFamily.regular, fontSize: 14, textAlign: 'center' },
   fab: {
     flexDirection: 'row',
     alignItems: 'center',

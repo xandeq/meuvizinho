@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/lib/auth-store';
 import { useGroupStore } from '@/features/groups/useGroupStore';
@@ -9,6 +10,7 @@ import { getGroups, joinGroup } from '@/features/groups/groupsApi';
 import type { Group } from '@/features/groups/groupsApi';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
+import { EmptyState } from '../../../src/components/EmptyState';
 
 export default function GroupsIndex() {
   const router = useRouter();
@@ -72,8 +74,9 @@ export default function GroupsIndex() {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.fg }]}>Grupos do Bairro</Text>
-        <TouchableOpacity onPress={() => router.push('/groups/new')} style={[styles.createBtn, { backgroundColor: colors.secondary, borderRadius: radius.sm }]}>
-          <Text style={styles.createBtnText}>+ Criar</Text>
+        <TouchableOpacity onPress={() => router.push('/groups/new')} style={[styles.createBtn, shadow.emerald, { backgroundColor: colors.secondary, borderRadius: radius.sm }]}>
+          <Ionicons name="add" size={16} color="#fff" style={{ marginRight: 4 }} />
+          <Text style={styles.createBtnText}>Criar</Text>
         </TouchableOpacity>
       </View>
       <TextInput
@@ -87,14 +90,27 @@ export default function GroupsIndex() {
       {loading ? (
         <ActivityIndicator color={colors.secondary} style={{ marginTop: 40 }} />
       ) : !user?.bairroId ? (
-        <Text style={[styles.empty, { color: colors.mutedFg }]}>Complete sua verificação para ver os grupos do bairro.</Text>
+        <EmptyState
+          icon="shield-checkmark-outline"
+          title="Complete sua verificação"
+          subtitle="Confirme seu endereço para ver os grupos do seu bairro."
+        />
       ) : (
         <FlatList
           data={groups}
           keyExtractor={(g) => String(g.id)}
           renderItem={renderGroup}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
-          ListEmptyComponent={<Text style={[styles.empty, { color: colors.mutedFg }]}>Nenhum grupo encontrado.</Text>}
+          contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
+          ListEmptyComponent={
+            <EmptyState
+              icon="people-outline"
+              title="Nenhum grupo encontrado"
+              subtitle="Crie o primeiro grupo do seu bairro ou tente outra busca."
+              actionLabel="Criar grupo"
+              actionIcon="add"
+              onAction={() => router.push('/groups/new')}
+            />
+          }
         />
       )}
     </View>
@@ -105,7 +121,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, paddingBottom: 8 },
   title: { fontFamily: fontFamily.extrabold, fontSize: 22 },
-  createBtn: { paddingHorizontal: 12, paddingVertical: 6 },
+  createBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   createBtnText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 14 },
   search: { marginHorizontal: 16, marginBottom: 8, paddingHorizontal: 12, paddingVertical: 8, fontFamily: fontFamily.regular, fontSize: 14 },
   card: { padding: 14 },
@@ -117,5 +133,4 @@ const styles = StyleSheet.create({
   memberCount: { fontFamily: fontFamily.regular, fontSize: 12 },
   joinBtn: { paddingHorizontal: 14, paddingVertical: 5 },
   joinBtnText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 13 },
-  empty: { textAlign: 'center', marginTop: 40 },
 });
