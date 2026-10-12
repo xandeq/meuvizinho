@@ -21,6 +21,7 @@ export default function GroupDetailScreen() {
   const [activeTab, setActiveTab] = useState<'feed' | 'events'>('feed');
   const [composerText, setComposerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<GroupEvent[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
@@ -77,10 +78,16 @@ export default function GroupDetailScreen() {
   const handlePost = async () => {
     if (!composerText.trim()) return;
     setSubmitting(true);
+    setPostError(null);
     try {
-      await createGroupPost(groupId, { body: composerText, category: 'Outros' });
+      // 'Geral' matches the backend's PostCategory enum (Dica/Alerta/Pergunta/Evento/Geral).
+      // 'Outros' isn't a member — sending it made every group post fail with HTTP 400.
+      await createGroupPost(groupId, { body: composerText, category: 'Geral' });
       setComposerText('');
       // SignalR will push new post via NewGroupPost — no manual prepend needed
+    } catch (err) {
+      setPostError('Não foi possível publicar. Tente novamente.');
+      console.error('createGroupPost failed', err);
     } finally {
       setSubmitting(false);
     }
@@ -168,6 +175,9 @@ export default function GroupDetailScreen() {
                 ListEmptyComponent={<Text style={[styles.empty, { color: colors.mutedFg }]}>Nenhuma publicação ainda.</Text>}
               />
             )}
+            {postError && (
+              <Text style={[styles.postErrorText, { color: colors.danger }]}>{postError}</Text>
+            )}
             <View style={[styles.composer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
               <TextInput
                 style={[styles.composerInput, { borderColor: colors.border, color: colors.fg, borderRadius: radius.sm }]}
@@ -221,6 +231,7 @@ const styles = StyleSheet.create({
   rsvpText: { fontFamily: fontFamily.regular, fontSize: 13 },
   composer: { flexDirection: 'row', padding: 12, borderTopWidth: 1, gap: 8, alignItems: 'flex-end' },
   composerInput: { flex: 1, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, fontFamily: fontFamily.regular, fontSize: 14, maxHeight: 100 },
+  postErrorText: { fontFamily: fontFamily.regular, fontSize: 13, paddingHorizontal: 16, paddingTop: 8 },
   sendBtn: { paddingHorizontal: 14, paddingVertical: 9 },
   sendBtnText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 14 },
   empty: { textAlign: 'center', marginTop: 40 },
