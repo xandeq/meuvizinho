@@ -1,5 +1,5 @@
 import { Pressable, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
@@ -20,6 +20,21 @@ function ThemeToggleButton() {
     <Pressable onPress={toggleTheme} style={{ marginRight: 16 }}>
       <Ionicons name={isDark ? 'sunny' : 'moon'} size={22} color={colors.fg} />
     </Pressable>
+  );
+}
+
+// 'settings' was only reachable by typing the URL — there was no in-app entry point,
+// so it added a settings icon here alongside the existing theme toggle.
+function ProfileHeaderRight() {
+  const router = useRouter();
+  const { colors } = useTheme();
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Pressable onPress={() => router.push('/settings')} style={{ marginRight: 16 }}>
+        <Ionicons name="settings-outline" size={22} color={colors.fg} />
+      </Pressable>
+      <ThemeToggleButton />
+    </View>
   );
 }
 
@@ -51,7 +66,7 @@ function RootNavigator() {
         {/* Authenticated -- tabs with persistent bottom nav */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         {/* Profile (outside tabs) */}
-        <Stack.Screen name="profile" options={{ title: 'Meu perfil' }} />
+        <Stack.Screen name="profile" options={{ title: 'Meu perfil', headerRight: () => <ProfileHeaderRight /> }} />
         {/* Settings */}
         <Stack.Screen name="settings" options={{ title: 'Configurações' }} />
         <Stack.Screen name="lgpd" options={{ title: 'Meus Dados (LGPD)' }} />

@@ -19,7 +19,7 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Appearance section */}
-      <Text style={[styles.sectionTitle, { color: colors.fg }]}>Aparencia</Text>
+      <Text style={[styles.sectionTitle, { color: colors.fg }]}>Aparência</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         {THEME_OPTIONS.map((opt) => {
           const isActive = mode === opt.value;
@@ -42,7 +42,7 @@ export default function SettingsScreen() {
       </View>
 
       {/* Notifications section */}
-      <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificacoes</Text>
+      <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificações</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Pressable style={styles.option}>
           <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>

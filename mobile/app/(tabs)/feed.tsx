@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, FlatList, RefreshControl, ActivityIndicator, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/lib/auth-store';
 import { useFeedStore } from '../../src/lib/feed-store';
 import { PostCard } from '../../src/components/feed/PostCard';
@@ -11,6 +12,7 @@ import type { PostCategory } from '../../src/lib/api/feed';
 
 export default function FeedScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const bairroId = user?.bairroId ?? 0;
   const isVerified = !!user?.isVerified;
@@ -62,6 +64,10 @@ export default function FeedScreen() {
         ListHeaderComponent={
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <Text style={[styles.headerTitle, { color: colors.fg }]}>Bairro</Text>
+            {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
+            <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
+              <Ionicons name="person-circle-outline" size={30} color={colors.fg} />
+            </Pressable>
           </View>
         }
         ListEmptyComponent={
@@ -113,6 +119,9 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingBottom: 100 },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
