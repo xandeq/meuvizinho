@@ -1,6 +1,8 @@
 // Reusable group post list (extracted for testability)
 import React from 'react';
 import { FlatList, View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 import type { GroupPost } from './groupsApi';
 
 interface Props {
@@ -9,6 +11,7 @@ interface Props {
 }
 
 export function GroupFeed({ posts, onEndReached }: Props) {
+  const { colors } = useTheme();
   return (
     <FlatList
       data={posts}
@@ -17,19 +20,19 @@ export function GroupFeed({ posts, onEndReached }: Props) {
       onEndReachedThreshold={0.3}
       contentContainerStyle={{ padding: 16, gap: 12 }}
       renderItem={({ item }) => (
-        <View style={styles.card}>
-          <Text style={styles.author}>{item.author.displayName}</Text>
-          <Text style={styles.body}>{item.body}</Text>
+        <View style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.md }]}>
+          <Text style={[styles.author, { color: colors.fg }]}>{item.author.displayName}</Text>
+          <Text style={[styles.body, { color: colors.fg }]}>{item.body}</Text>
         </View>
       )}
-      ListEmptyComponent={<Text style={styles.empty}>Nenhuma publicação.</Text>}
+      ListEmptyComponent={<Text style={[styles.empty, { color: colors.mutedFg }]}>Nenhuma publicação.</Text>}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E5E7EB' },
-  author: { fontWeight: '600', fontSize: 14, color: '#111827', marginBottom: 4 },
-  body: { fontSize: 14, color: '#374151' },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
+  card: { padding: 14 },
+  author: { fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: 4 },
+  body: { fontFamily: fontFamily.regular, fontSize: 14 },
+  empty: { textAlign: 'center', marginTop: 40 },
 });

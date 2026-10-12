@@ -12,6 +12,7 @@ import { useRouter } from 'expo-router';
 import { useChatStore } from '../../src/lib/chat-store';
 import { VerifiedBadge } from '../../src/components/VerifiedBadge';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily, radius } from '../../src/theme/tokens';
 
 export default function ConversationListScreen() {
   const { colors } = useTheme();
@@ -84,19 +85,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     alignItems: 'center',
   },
-  thumb: { width: 52, height: 52, borderRadius: 8, marginRight: 12 },
+  thumb: { width: 52, height: 52, borderRadius: radius.sm, marginRight: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 15, fontWeight: '700', marginRight: 6, flexShrink: 1 },
-  listing: { fontSize: 13, marginTop: 2 },
+  name: { fontFamily: fontFamily.bold, fontSize: 15, marginRight: 6, flexShrink: 1 },
+  listing: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 2 },
   badge: {
     minWidth: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
     marginLeft: 8,
   },
-  badgeText: { color: '#fff', fontWeight: '800', fontSize: 12 },
+  badgeText: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 12 },
   empty: { padding: 32, alignItems: 'center' },
 });

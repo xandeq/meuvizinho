@@ -1,4 +1,6 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius } from '../../theme/tokens';
 import type { MessageDto } from '../../lib/api/chat';
 
 interface Props {
@@ -16,16 +18,17 @@ function formatTime(iso: string) {
 }
 
 export function MessageBubble({ message, isOwn }: Props) {
+  const { colors } = useTheme();
   return (
     <View style={[styles.row, isOwn ? styles.rowOwn : styles.rowOther]}>
-      <View style={[styles.bubble, isOwn ? styles.bubbleOwn : styles.bubbleOther]}>
+      <View style={[styles.bubble, { backgroundColor: isOwn ? colors.secondary : colors.muted, borderRadius: radius.md }]}>
         {message.imageUrl && (
           <Image source={{ uri: message.imageUrl }} style={styles.image} />
         )}
         {!!message.text && (
-          <Text style={isOwn ? styles.textOwn : styles.textOther}>{message.text}</Text>
+          <Text style={[styles.text, { color: isOwn ? '#fff' : colors.fg }]}>{message.text}</Text>
         )}
-        <Text style={[styles.time, isOwn ? styles.timeOwn : styles.timeOther]}>
+        <Text style={[styles.time, { color: isOwn ? 'rgba(255,255,255,0.7)' : colors.mutedFg }]}>
           {formatTime(message.sentAt)}
         </Text>
       </View>
@@ -41,14 +44,8 @@ const styles = StyleSheet.create({
     maxWidth: '80%',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 14,
   },
-  bubbleOwn: { backgroundColor: '#15803D' }, // green-700
-  bubbleOther: { backgroundColor: '#E5E7EB' },
-  textOwn: { color: '#fff', fontSize: 15 },
-  textOther: { color: '#111827', fontSize: 15 },
-  image: { width: 220, height: 220, borderRadius: 8, marginBottom: 6 },
-  time: { fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
-  timeOwn: { color: 'rgba(255,255,255,0.7)' },
-  timeOther: { color: '#6B7280' },
+  text: { fontFamily: fontFamily.regular, fontSize: 15 },
+  image: { width: 220, height: 220, borderRadius: radius.sm, marginBottom: 6 },
+  time: { fontFamily: fontFamily.regular, fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
 });
