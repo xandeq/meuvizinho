@@ -8,10 +8,13 @@ import { Input } from '../src/components/Input';
 import { Button } from '../src/components/Button';
 import { authApi } from '../src/lib/api';
 import { useAuthStore } from '../src/lib/auth-store';
+import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily, radius } from '../src/theme/tokens';
 
 export default function Register() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const { control, handleSubmit, formState: { errors } } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema) as any,
@@ -32,9 +35,9 @@ export default function Register() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Criar conta</Text>
-      <Text style={styles.subtitle}>Junte-se ao seu bairro</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
+      <Text style={[styles.title, { color: colors.fg }]}>Criar conta</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Junte-se ao seu bairro</Text>
       <View style={{ height: 24 }} />
       <Controller control={control} name="email" render={({ field: { onChange, value } }) => (
         <Input label="E-mail" value={value} onChangeText={onChange} keyboardType="email-address" placeholder="voce@exemplo.com" error={errors.email?.message} />
@@ -48,25 +51,28 @@ export default function Register() {
       <Controller control={control} name="acceptedPrivacyPolicy" render={({ field: { onChange, value } }) => (
         <>
           <Pressable style={styles.checkboxRow} onPress={() => onChange(!value)}>
-            <View style={[styles.checkbox, value && styles.checkboxOn]} />
-            <Text style={styles.checkboxText}>Aceito a politica de privacidade</Text>
+            <View style={[
+              styles.checkbox,
+              { borderRadius: radius.xs, borderColor: colors.primary },
+              value && { backgroundColor: colors.primary },
+            ]} />
+            <Text style={[styles.checkboxText, { color: colors.fg }]}>Aceito a política de privacidade</Text>
           </Pressable>
-          {errors.acceptedPrivacyPolicy ? <Text style={styles.error}>{errors.acceptedPrivacyPolicy.message}</Text> : null}
+          {errors.acceptedPrivacyPolicy ? <Text style={[styles.error, { color: colors.danger }]}>{errors.acceptedPrivacyPolicy.message}</Text> : null}
         </>
       )} />
       <View style={{ height: 16 }} />
-      <Button title="Criar conta" onPress={handleSubmit(onSubmit)} loading={loading} />
+      <Button title="Criar conta" icon="person-add" onPress={handleSubmit(onSubmit)} loading={loading} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#fff', flexGrow: 1 },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
+  container: { padding: 24, flexGrow: 1 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
+  subtitle: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 },
   checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
-  checkbox: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: '#3B82F6', marginRight: 12 },
-  checkboxOn: { backgroundColor: '#3B82F6' },
-  checkboxText: { fontSize: 14, color: '#111827' },
-  error: { marginTop: 6, fontSize: 13, color: '#EF4444' },
+  checkbox: { width: 22, height: 22, borderWidth: 2, marginRight: 12 },
+  checkboxText: { fontFamily: fontFamily.regular, fontSize: 14 },
+  error: { marginTop: 6, fontFamily: fontFamily.semibold, fontSize: 13 },
 });
