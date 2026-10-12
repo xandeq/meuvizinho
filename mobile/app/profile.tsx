@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Input } from '../src/components/Input';
 import { Button } from '../src/components/Button';
 import { VerifiedBadge } from '../src/components/VerifiedBadge';
 import { profileApi } from '../src/lib/api';
+import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily } from '../src/theme/tokens';
 import type { ProfileDto } from '@bairronow/shared-types';
 
 export default function Profile() {
+  const { colors } = useTheme();
   const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
@@ -43,19 +47,22 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#3B82F6" />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Meu perfil</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
+      <Text style={[styles.title, { color: colors.fg }]}>Meu perfil</Text>
       <View style={{ height: 8 }} />
       <VerifiedBadge verified={!!profile?.isVerified} />
       {profile?.bairroNome && (
-        <Text style={styles.bairro}>📍 {profile.bairroNome}</Text>
+        <View style={styles.bairroRow}>
+          <Ionicons name="location" size={14} color={colors.mutedFg} />
+          <Text style={[styles.bairro, { color: colors.mutedFg }]}>{profile.bairroNome}</Text>
+        </View>
       )}
       <View style={{ height: 24 }} />
       <Input
@@ -71,14 +78,15 @@ export default function Profile() {
         placeholder="Conte algo sobre você"
         multiline
       />
-      <Button title="Salvar" onPress={save} loading={saving} />
+      <Button title="Salvar" icon="checkmark" onPress={save} loading={saving} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#fff', flexGrow: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827' },
-  bairro: { fontSize: 14, color: '#6B7280', marginTop: 12 },
+  container: { padding: 24, flexGrow: 1 },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
+  bairroRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 12 },
+  bairro: { fontFamily: fontFamily.regular, fontSize: 14 },
 });
