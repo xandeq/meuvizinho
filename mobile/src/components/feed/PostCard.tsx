@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 import type { PostDto, PostCategory } from '../../lib/api/feed';
 
 const CATEGORY_LABELS: Record<PostCategory, string> = {
@@ -49,7 +50,7 @@ function Avatar({ name, photoUrl, size = 36 }: { name: string | null; photoUrl: 
         justifyContent: 'center',
       }}
     >
-      <Text style={{ color: '#fff', fontWeight: '700', fontSize: size * 0.38 }}>{initials}</Text>
+      <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: size * 0.38 }}>{initials}</Text>
     </View>
   );
 }
@@ -148,31 +149,30 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
   StyleSheet.create({
     card: {
       backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: colors.border,
+      borderRadius: radius.lg,
       marginHorizontal: 12,
       marginVertical: 5,
       padding: 14,
+      ...shadow.ambientLow,
     },
     header: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
     headerText: { flex: 1 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
-    authorName: { fontWeight: '700', fontSize: 14, color: colors.fg, flex: 1 },
-    timestamp: { fontSize: 11, color: colors.mutedFg, marginTop: 2 },
+    authorName: { fontFamily: fontFamily.bold, fontSize: 14, color: colors.fg, flex: 1 },
+    timestamp: { fontFamily: fontFamily.regular, fontSize: 11, color: colors.mutedFg, marginTop: 2 },
     categoryBadge: {
       paddingHorizontal: 8,
       paddingVertical: 3,
-      borderRadius: 999,
+      borderRadius: radius.xl,
       borderWidth: 1,
       alignSelf: 'flex-start',
     },
-    categoryLabel: { fontSize: 11, fontWeight: '700' },
-    body: { fontSize: 14, color: colors.fg, lineHeight: 20, marginBottom: 10 },
-    readMore: { color: colors.primary, fontWeight: '600' },
+    categoryLabel: { fontFamily: fontFamily.bold, fontSize: 11 },
+    body: { fontFamily: fontFamily.regular, fontSize: 14, color: colors.fg, lineHeight: 20, marginBottom: 10 },
+    readMore: { color: colors.primary, fontFamily: fontFamily.semibold },
     imageScroll: { marginBottom: 10, marginHorizontal: -14 },
-    image: { width: 200, height: 150, borderRadius: 8, marginHorizontal: 6 },
+    image: { width: 200, height: 150, borderRadius: radius.sm, marginHorizontal: 6 },
     actions: { flexDirection: 'row', gap: 20, marginTop: 4 },
     actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    actionCount: { fontSize: 13, color: colors.mutedFg, fontWeight: '600' },
+    actionCount: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.mutedFg },
   });
