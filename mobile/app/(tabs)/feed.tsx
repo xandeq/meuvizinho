@@ -6,6 +6,7 @@ import { useFeedStore } from '../../src/lib/feed-store';
 import { PostCard } from '../../src/components/feed/PostCard';
 import { FeedComposer } from '../../src/components/feed/FeedComposer';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
 
 export default function FeedScreen() {
@@ -118,7 +119,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     marginBottom: 4,
   },
-  headerTitle: { fontSize: 28, fontWeight: '800' },
+  headerTitle: { fontFamily: fontFamily.extrabold, fontSize: 28 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
   emptyText: { fontSize: 15, textAlign: 'center', marginBottom: 16 },
   emptyAction: {
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
-  emptyActionText: { fontWeight: '700', fontSize: 14 },
+  emptyActionText: { fontFamily: fontFamily.bold, fontSize: 14 },
   fab: {
     position: 'absolute',
     right: 16,

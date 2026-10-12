@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, Modal, Pressable, TextInput, Alert } from 'reac
 import { Button } from '../Button';
 import { marketplaceApi } from '../../lib/api/marketplace';
 import { ReportListingReason, REPORT_REASON_LABELS } from '../../lib/api/marketplace.types';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius } from '../../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -14,6 +16,7 @@ interface Props {
  * D-20: Fixed list of 4 report reasons + optional details.
  */
 export function ReportListingSheet({ visible, listingId, onClose }: Props) {
+  const { colors } = useTheme();
   const [reason, setReason] = useState<ReportListingReason | null>(null);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,27 +47,32 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.sheet}>
-        <Text style={styles.title}>Denunciar anúncio</Text>
+      <View style={[styles.sheet, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
+        <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>
         {reasons.map((r) => (
           <Pressable
             key={r}
-            style={[styles.option, reason === r && styles.optionActive]}
+            style={[
+              styles.option,
+              { borderColor: colors.border, borderRadius: radius.sm },
+              reason === r && { borderColor: colors.secondary, backgroundColor: colors.secondaryLight },
+            ]}
             onPress={() => setReason(r)}
           >
-            <Text style={[styles.optionText, reason === r && styles.optionTextActive]}>
+            <Text style={[styles.optionText, { color: colors.fg }, reason === r && { color: colors.secondary }]}>
               {REPORT_REASON_LABELS[r]}
             </Text>
           </Pressable>
         ))}
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: colors.border, borderRadius: radius.sm, color: colors.fg }]}
           placeholder="Detalhes (opcional)"
+          placeholderTextColor={colors.mutedFg}
           multiline
           value={note}
           onChangeText={setNote}
         />
-        <Button title="Enviar denúncia" onPress={handleSubmit} loading={submitting} />
+        <Button title="Enviar denúncia" icon="flag" onPress={handleSubmit} loading={submitting} />
         <View style={{ height: 8 }} />
         <Button title="Cancelar" variant="outline" onPress={onClose} />
       </View>
@@ -79,31 +87,22 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
     padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 12 },
+  title: { fontFamily: fontFamily.bold, fontSize: 18, marginBottom: 12 },
   option: {
     paddingVertical: 12,
     paddingHorizontal: 14,
-    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     marginBottom: 8,
   },
-  optionActive: { borderColor: '#16A34A', backgroundColor: '#F0FDF4' },
-  optionText: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  optionTextActive: { color: '#16A34A' },
+  optionText: { fontFamily: fontFamily.semibold, fontSize: 14 },
   input: {
     minHeight: 80,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
     padding: 10,
     marginVertical: 12,
     textAlignVertical: 'top',
-    color: '#111827',
+    fontFamily: fontFamily.regular,
   },
 });

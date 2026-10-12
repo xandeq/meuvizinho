@@ -12,6 +12,7 @@ import {
   FlatList,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../../src/components/Button';
 import { VerifiedBadge } from '../../src/components/VerifiedBadge';
 import { ReportListingSheet } from '../../src/components/marketplace/ReportListingSheet';
@@ -20,6 +21,8 @@ import { marketplaceApi } from '../../src/lib/api/marketplace';
 import { chatApi } from '../../src/lib/api/chat';
 import type { ListingDto } from '../../src/lib/api/marketplace.types';
 import { useAuthStore } from '../../src/lib/auth-store';
+import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily, radius } from '../../src/theme/tokens';
 import WhatsAppShareButton from '../../src/features/share/components/WhatsAppShareButton';
 import { getListingShareUrl } from '../../src/features/share/utils/share';
 
@@ -35,6 +38,7 @@ export default function ListingDetailScreen() {
   const listingId = Number(id);
   const router = useRouter();
   const currentUserId = useAuthStore((s) => s.user?.id);
+  const { colors } = useTheme();
 
   const [listing, setListing] = useState<ListingDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -59,8 +63,8 @@ export default function ListingDetailScreen() {
 
   if (loading || !listing) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color="#16A34A" />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.secondary} />
       </View>
     );
   }
@@ -120,7 +124,7 @@ export default function ListingDetailScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ paddingBottom: 32 }}>
       <FlatList
         data={listing.photos}
         keyExtractor={(p) => String(p.id)}
@@ -130,24 +134,28 @@ export default function ListingDetailScreen() {
         renderItem={({ item }) => (
           <Image source={{ uri: item.url }} style={{ width, height: width }} />
         )}
-        ListEmptyComponent={<View style={{ width, height: width, backgroundColor: '#E5E7EB' }} />}
+        ListEmptyComponent={<View style={{ width, height: width, backgroundColor: colors.muted }} />}
       />
       <View style={styles.body}>
-        <Text style={styles.title}>{listing.title}</Text>
-        <Text style={styles.price}>{priceFormatter.format(listing.price)}</Text>
-        {isSold && <Text style={styles.soldTag}>VENDIDO</Text>}
+        <Text style={[styles.title, { color: colors.fg }]}>{listing.title}</Text>
+        <Text style={[styles.price, { color: colors.secondary }]}>{priceFormatter.format(listing.price)}</Text>
+        {isSold && <Text style={[styles.soldTag, { backgroundColor: colors.fg }]}>VENDIDO</Text>}
         <View style={styles.sellerRow}>
-          <Text style={styles.sellerName}>{listing.sellerDisplayName}</Text>
+          <Text style={[styles.sellerName, { color: colors.mutedFg }]}>{listing.sellerDisplayName}</Text>
           <VerifiedBadge verified={listing.sellerIsVerified} />
         </View>
         {!listing.sellerIsVerified && (
-          <Text style={styles.warn}>⚠️ Vendedor não verificado</Text>
+          <View style={styles.warnRow}>
+            <Ionicons name="alert-circle" size={14} color={colors.accent} />
+            <Text style={[styles.warn, { color: colors.accent }]}>Vendedor não verificado</Text>
+          </View>
         )}
-        <Text style={styles.description}>{listing.description}</Text>
+        <Text style={[styles.description, { color: colors.mutedFg }]}>{listing.description}</Text>
 
         {!isOwner && !isSold && (
           <Button
             title="Chat com vendedor"
+            icon="chatbubble"
             onPress={handleChatSeller}
             loading={busy}
           />
@@ -160,7 +168,8 @@ export default function ListingDetailScreen() {
         <View style={{ height: 8 }} />
         {!isOwner && (
           <Button
-            title={listing.isFavoritedByCurrentUser ? '\u2665 Favoritado' : '\u2661 Favoritar'}
+            title={listing.isFavoritedByCurrentUser ? 'Favoritado' : 'Favoritar'}
+            icon={listing.isFavoritedByCurrentUser ? 'heart' : 'heart-outline'}
             variant="outline"
             onPress={handleToggleFavorite}
           />
@@ -171,13 +180,14 @@ export default function ListingDetailScreen() {
             <View style={{ height: 8 }} />
             <Button
               title="Editar"
+              icon="create"
               variant="outline"
               onPress={() => router.push({ pathname: '/marketplace/edit/[id]', params: { id: listing.id } })}
             />
             <View style={{ height: 8 }} />
-            <Button title="Marcar como vendido" onPress={handleMarkSold} loading={busy} />
+            <Button title="Marcar como vendido" icon="checkmark-done" onPress={handleMarkSold} loading={busy} />
             <View style={{ height: 8 }} />
-            <Button title="Remover anúncio" variant="outline" onPress={handleDelete} />
+            <Button title="Remover anúncio" icon="trash" variant="outline" onPress={handleDelete} />
           </>
         )}
 
@@ -193,7 +203,7 @@ export default function ListingDetailScreen() {
           <>
             <View style={{ height: 16 }} />
             <Pressable onPress={() => setReportOpen(true)}>
-              <Text style={styles.reportLink}>Denunciar anúncio</Text>
+              <Text style={[styles.reportLink, { color: colors.danger }]}>Denunciar anúncio</Text>
             </Pressable>
           </>
         )}
@@ -208,29 +218,29 @@ export default function ListingDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   body: { padding: 16 },
-  title: { fontSize: 20, fontWeight: '800', color: '#111827', marginBottom: 8 },
-  price: { fontSize: 22, fontWeight: '900', color: '#16A34A', marginBottom: 8 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 20, marginBottom: 8 },
+  price: { fontFamily: fontFamily.extrabold, fontSize: 22, marginBottom: 8 },
   soldTag: {
     alignSelf: 'flex-start',
-    backgroundColor: '#111827',
     color: '#fff',
-    fontWeight: '800',
+    fontFamily: fontFamily.extrabold,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 4,
+    borderRadius: radius.xs,
     marginBottom: 12,
   },
   sellerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
-  sellerName: { fontSize: 14, color: '#374151', fontWeight: '600', marginRight: 8 },
-  warn: { color: '#B45309', fontSize: 12, marginBottom: 12 },
-  description: { fontSize: 14, color: '#374151', lineHeight: 20, marginBottom: 20 },
+  sellerName: { fontFamily: fontFamily.semibold, fontSize: 14, marginRight: 8 },
+  warnRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 },
+  warn: { fontFamily: fontFamily.medium, fontSize: 12 },
+  description: { fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20, marginBottom: 20 },
   reportLink: {
-    color: '#DC2626',
     textDecorationLine: 'underline',
     textAlign: 'center',
+    fontFamily: fontFamily.regular,
     fontSize: 13,
   },
 });
