@@ -24,12 +24,16 @@ function relativeTime(iso: string): string {
 
 function Avatar({ name, photoUrl, size = 36 }: { name: string | null; photoUrl: string | null; size?: number }) {
   const { colors } = useTheme();
+  // Filtra palavras que começam com letra antes de pegar as iniciais — nomes
+  // como "Alexandre (Admin) Queiroz" geravam "A(" porque "(Admin)" virava a
+  // 2ª palavra e seu 1º caractere é "(" (achado ao vivo testando o feed real).
   const initials = (name ?? '?')
     .split(' ')
+    .filter((w) => /^[\p{L}]/u.test(w))
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
-    .toUpperCase();
+    .toUpperCase() || '?';
 
   if (photoUrl) {
     return (
@@ -93,11 +97,18 @@ export function PostCard({ post, onLike }: PostCardProps) {
           </View>
           <Text style={s.timestamp}>{relativeTime(post.createdAt)}</Text>
         </View>
-        <View style={[s.categoryBadge, { backgroundColor: categoryColor[post.category] + '20', borderColor: categoryColor[post.category] + '40' }]}>
-          <Text style={[s.categoryLabel, { color: categoryColor[post.category] }]}>
-            {CATEGORY_LABELS[post.category]}
-          </Text>
-        </View>
+        {(() => {
+          // post.category pode vir fora do range 0-4 em dados de teste/legados —
+          // sem fallback, categoryColor[post.category] é undefined e o badge
+          // renderiza como pílula preta vazia (visto ao vivo testando o feed real).
+          const badgeColor = categoryColor[post.category] ?? colors.mutedFg;
+          const badgeLabel = CATEGORY_LABELS[post.category] ?? CATEGORY_LABELS[4];
+          return (
+            <View style={[s.categoryBadge, { backgroundColor: badgeColor + '20', borderColor: badgeColor + '40' }]}>
+              <Text style={[s.categoryLabel, { color: badgeColor }]}>{badgeLabel}</Text>
+            </View>
+          );
+        })()}
       </View>
 
       {/* Body */}
