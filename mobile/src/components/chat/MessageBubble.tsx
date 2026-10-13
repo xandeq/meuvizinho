@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Image } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
-import { fontFamily, radius } from '../../theme/tokens';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 import type { MessageDto } from '../../lib/api/chat';
 
 interface Props {
@@ -21,7 +21,14 @@ export function MessageBubble({ message, isOwn }: Props) {
   const { colors } = useTheme();
   return (
     <View style={[styles.row, isOwn ? styles.rowOwn : styles.rowOther]}>
-      <View style={[styles.bubble, { backgroundColor: isOwn ? colors.secondary : colors.muted, borderRadius: radius.md }]}>
+      <View
+        style={[
+          styles.bubble,
+          shadow.ambientLow,
+          { backgroundColor: isOwn ? colors.secondary : colors.card },
+          isOwn ? styles.bubbleOwn : styles.bubbleOther,
+        ]}
+      >
         {message.imageUrl && (
           <Image source={{ uri: message.imageUrl }} style={styles.image} />
         )}
@@ -37,15 +44,18 @@ export function MessageBubble({ message, isOwn }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', marginVertical: 4, paddingHorizontal: 12 },
+  row: { flexDirection: 'row', marginVertical: 3, paddingHorizontal: 12 },
   rowOwn: { justifyContent: 'flex-end' },
   rowOther: { justifyContent: 'flex-start' },
   bubble: {
     maxWidth: '80%',
     paddingHorizontal: 12,
     paddingVertical: 8,
+    borderRadius: radius.lg,
   },
-  text: { fontFamily: fontFamily.regular, fontSize: 15 },
+  bubbleOwn: { borderBottomRightRadius: 4 },
+  bubbleOther: { borderBottomLeftRadius: 4 },
+  text: { fontFamily: fontFamily.regular, fontSize: 15, lineHeight: 20 },
   image: { width: 220, height: 220, borderRadius: radius.sm, marginBottom: 6 },
   time: { fontFamily: fontFamily.regular, fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
 });

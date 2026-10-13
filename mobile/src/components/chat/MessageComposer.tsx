@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { View, TextInput, Pressable, Text, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Ionicons } from '@expo/vector-icons';
 import { useChatStore } from '../../lib/chat-store';
 import { useTheme } from '../../theme/ThemeContext';
-import { fontFamily, radius } from '../../theme/tokens';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   conversationId: number;
@@ -75,15 +75,18 @@ export function MessageComposer({ conversationId }: Props) {
         multiline
       />
       <Pressable
-        style={[
+        style={({ pressed }) => [
           styles.sendBtn,
-          { backgroundColor: colors.secondary, borderRadius: radius.xl },
-          (!text.trim() || sending) && { backgroundColor: colors.mutedFg },
+          shadow.emerald,
+          { backgroundColor: colors.secondary },
+          (!text.trim() || sending) && { backgroundColor: colors.mutedFg, shadowOpacity: 0, elevation: 0 },
+          pressed && !!text.trim() && !sending && { transform: [{ scale: 0.93 }] },
         ]}
         onPress={handleSend}
         disabled={!text.trim() || sending}
+        hitSlop={4}
       >
-        <Text style={styles.sendText}>Enviar</Text>
+        <Ionicons name="send" size={18} color="#fff" style={{ marginLeft: -2 }} />
       </Pressable>
     </View>
   );
@@ -112,8 +115,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
   },
   sendBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sendText: { color: '#fff', fontFamily: fontFamily.extrabold },
 });
