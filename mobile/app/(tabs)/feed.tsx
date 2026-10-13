@@ -8,7 +8,7 @@ import { PostCard } from '../../src/components/feed/PostCard';
 import { FeedComposer } from '../../src/components/feed/FeedComposer';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { fontFamily } from '../../src/theme/tokens';
+import { fontFamily, shadow } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
 
 export default function FeedScreen() {
@@ -78,10 +78,11 @@ export default function FeedScreen() {
             <EmptyState
               icon="chatbubbles-outline"
               title="Nenhum post no seu bairro ainda"
-              subtitle="Compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos."
-              {...(isVerified
-                ? { actionLabel: 'Criar o primeiro post', actionIcon: 'add', onAction: () => setComposerOpen(true) }
-                : {})}
+              subtitle={
+                isVerified
+                  ? 'Toque no botão + e compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
+                  : 'Compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
+              }
             />
           )
         }
@@ -95,7 +96,7 @@ export default function FeedScreen() {
       {/* FAB — only for verified users */}
       {isVerified && (
         <Pressable
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={[styles.fab, shadow.blue, { backgroundColor: colors.primary }]}
           onPress={() => setComposerOpen(true)}
         >
           <Ionicons name="add" size={26} color="#fff" />
@@ -134,6 +135,5 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
   },
 });

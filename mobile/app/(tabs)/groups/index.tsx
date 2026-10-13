@@ -105,10 +105,7 @@ export default function GroupsIndex() {
             <EmptyState
               icon="people-outline"
               title="Nenhum grupo encontrado"
-              subtitle="Crie o primeiro grupo do seu bairro ou tente outra busca."
-              actionLabel="Criar grupo"
-              actionIcon="add"
-              onAction={() => router.push('/groups/new')}
+              subtitle='Toque em "Criar" para começar o primeiro grupo do seu bairro, ou tente outra busca.'
             />
           }
         />
