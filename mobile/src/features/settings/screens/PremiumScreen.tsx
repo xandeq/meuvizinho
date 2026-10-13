@@ -124,7 +124,7 @@ export default function PremiumScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
+  content: { padding: 16, gap: 16, paddingBottom: 80 },
   hero: { borderRadius: radius.lg, padding: 24 },
   heroTitle: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 22, marginBottom: 6 },
   heroSub: { color: 'rgba(255,255,255,0.85)', fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20 },

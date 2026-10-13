@@ -70,12 +70,20 @@ function RootNavigator() {
         {/* Settings */}
         <Stack.Screen name="settings" options={{ title: 'Configurações' }} />
         <Stack.Screen name="lgpd" options={{ title: 'Meus Dados (LGPD)' }} />
+        <Stack.Screen name="premium" options={{ title: 'Meu Vizinho Premium' }} />
         {/* Deep routes rendered above tab bar */}
         <Stack.Screen name="marketplace/new" options={{ title: 'Novo anúncio' }} />
         <Stack.Screen name="marketplace/[id]" options={{ title: 'Anúncio' }} />
         <Stack.Screen name="marketplace/edit/[id]" options={{ title: 'Editar anúncio' }} />
         <Stack.Screen name="marketplace/search" options={{ title: 'Buscar' }} />
         <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
+        {/* Comunidade: grupos WhatsApp, condomínios/síndico, alertas de segurança */}
+        <Stack.Screen name="whatsapp/index" options={{ title: 'Grupos de WhatsApp' }} />
+        <Stack.Screen name="whatsapp/new" options={{ title: 'Indicar grupo' }} />
+        <Stack.Screen name="condominios/index" options={{ title: 'Condomínios' }} />
+        <Stack.Screen name="condominios/[id]" options={{ title: 'Condomínio' }} />
+        <Stack.Screen name="alertas/index" options={{ title: 'Alertas de Segurança' }} />
+        <Stack.Screen name="alertas/new" options={{ title: 'Reportar ocorrência' }} />
       </Stack>
     </>
   );
