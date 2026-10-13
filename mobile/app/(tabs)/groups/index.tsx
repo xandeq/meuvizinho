@@ -87,6 +87,22 @@ export default function GroupsIndex() {
         onChangeText={setSearch}
         returnKeyType="search"
       />
+      <View style={styles.shortcutRow}>
+        <TouchableOpacity
+          onPress={() => router.push('/whatsapp')}
+          style={[styles.shortcut, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <Ionicons name="logo-whatsapp" size={16} color={colors.secondary} />
+          <Text style={[styles.shortcutText, { color: colors.fg }]}>Grupos de WhatsApp</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => router.push('/condominios')}
+          style={[styles.shortcut, { backgroundColor: colors.card, borderColor: colors.border }]}
+        >
+          <Ionicons name="business-outline" size={16} color={colors.primary} />
+          <Text style={[styles.shortcutText, { color: colors.fg }]}>Condomínios</Text>
+        </TouchableOpacity>
+      </View>
       {loading ? (
         <ActivityIndicator color={colors.secondary} style={{ marginTop: 40 }} />
       ) : !user?.bairroId ? (
@@ -121,6 +137,9 @@ const styles = StyleSheet.create({
   createBtn: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 8 },
   createBtnText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 14 },
   search: { marginHorizontal: 16, marginBottom: 8, paddingHorizontal: 12, paddingVertical: 8, fontFamily: fontFamily.regular, fontSize: 14 },
+  shortcutRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 12 },
+  shortcut: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: radius.xl, borderWidth: 1 },
+  shortcutText: { fontFamily: fontFamily.semibold, fontSize: 12 },
   card: { padding: 14 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   groupName: { fontFamily: fontFamily.semibold, fontSize: 16, flex: 1, marginRight: 8 },

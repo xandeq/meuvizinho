@@ -67,10 +67,15 @@ export default function FeedScreen() {
         ListHeaderComponent={
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <Text style={[styles.headerTitle, { color: colors.fg }]}>Bairro</Text>
-            {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
-            <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
-              <Ionicons name="person-circle-outline" size={30} color={colors.fg} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable onPress={() => router.push('/alertas')} hitSlop={8} style={styles.headerIconBtn}>
+                <Ionicons name="shield-outline" size={24} color={colors.fg} />
+              </Pressable>
+              {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
+              <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
+                <Ionicons name="person-circle-outline" size={30} color={colors.fg} />
+              </Pressable>
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -115,6 +120,8 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingBottom: 100 },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  headerIconBtn: {},
   header: {
     flexDirection: 'row',
     alignItems: 'center',
