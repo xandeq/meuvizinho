@@ -58,6 +58,48 @@ function IconBadgeCheck() {
     </svg>
   );
 }
+function IconShield() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+  );
+}
+function IconBuilding() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>
+    </svg>
+  );
+}
+function IconMegaphone() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11v2a1 1 0 001 1h3l5 4V6L7 10H4a1 1 0 00-1 1z"/><path d="M16 8a5 5 0 010 8"/><path d="M19 5a9 9 0 010 14"/>
+    </svg>
+  );
+}
+function IconCalendar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  );
+}
+function IconUserCheck() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>
+    </svg>
+  );
+}
+function IconPin() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6h1a2 2 0 000-4H8a2 2 0 000 4h1v4.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24z"/>
+    </svg>
+  );
+}
 function IconArrowRight() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -158,6 +200,12 @@ export default function LandingPage() {
             Meu Vizinho
           </Link>
           <nav className="flex items-center gap-4 text-sm font-semibold">
+            <a
+              href="#sindicos"
+              className="hidden sm:inline text-white/70 hover:text-white transition-colors"
+            >
+              Para síndicos
+            </a>
             <Link
               href="/login/"
               className="text-white/70 hover:text-white transition-colors"
@@ -180,7 +228,7 @@ export default function LandingPage() {
           <p className="inline-flex items-center gap-2 bg-white/10 text-white/80 rounded-full px-4 py-1.5
                         text-xs font-semibold uppercase tracking-widest mb-8">
             <span className="w-1.5 h-1.5 rounded-full bg-secondary inline-block" />
-            Rede social de bairro · Vila Velha, ES
+            Bairros e condomínios · Vila Velha, ES
           </p>
 
           {/* Headline */}
@@ -193,8 +241,8 @@ export default function LandingPage() {
 
           {/* Sub */}
           <p className="mt-8 text-lg md:text-xl text-white/60 max-w-xl leading-relaxed font-medium">
-            Diretório de grupos WhatsApp verificados, marketplace entre vizinhos
-            e feed local — tudo com identidade comprovada. Sem algoritmo, sem anúncio.
+            Feed do bairro, marketplace entre vizinhos, alertas de segurança e
+            ferramentas para síndicos. Tudo com identidade comprovada, sem algoritmo e sem anúncio.
           </p>
 
           {/* CTAs */}
@@ -248,7 +296,7 @@ export default function LandingPage() {
             Tudo que seu bairro precisa, num só lugar.
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Feed */}
             <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
               <FeatureIcon bg="bg-primary/10 text-primary">
@@ -290,6 +338,28 @@ export default function LandingPage() {
               <h3 className="mt-5 text-xl font-extrabold text-fg">Grupos WhatsApp</h3>
               <p className="mt-2 text-sm text-muted-fg leading-relaxed">
                 Diretório verificado de grupos do bairro — link ativo, admin identificado e moderação real. Zero grupos fantasma.
+              </p>
+            </div>
+
+            {/* Alertas de Segurança */}
+            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
+              <FeatureIcon bg="bg-danger-light text-danger">
+                <IconShield />
+              </FeatureIcon>
+              <h3 className="mt-5 text-xl font-extrabold text-fg">Alertas de Segurança</h3>
+              <p className="mt-2 text-sm text-muted-fg leading-relaxed">
+                Furto, pessoa suspeita, incêndio ou acidente: avise o bairro na hora. Vizinhos confirmam o alerta e todo mundo fica sabendo.
+              </p>
+            </div>
+
+            {/* Condomínios */}
+            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
+              <FeatureIcon bg="bg-primary/10 text-primary">
+                <IconBuilding />
+              </FeatureIcon>
+              <h3 className="mt-5 text-xl font-extrabold text-fg">Condomínios</h3>
+              <p className="mt-2 text-sm text-muted-fg leading-relaxed">
+                Cada prédio com sua página: comunicados do síndico, reserva de áreas comuns e moradores vinculados.
               </p>
             </div>
           </div>
@@ -371,6 +441,100 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════
+          SÍNDICOS — slate-100, condo management showcase
+      ══════════════════════════════════════════════════════ */}
+      <section id="sindicos" className="bg-muted py-20 px-6 scroll-mt-4">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Visual — condo page mockup */}
+          <div className="order-2 lg:order-1 bg-card rounded-2xl border border-border p-6 flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shrink-0">
+                <IconBuilding />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-extrabold text-fg truncate">Cond. Marina Beach</p>
+                <p className="text-xs text-muted-fg">Praia da Costa · 48 unidades</p>
+              </div>
+              <span className="text-xs font-semibold bg-secondary-light text-secondary rounded-full px-2.5 py-1 shrink-0">
+                Com síndico
+              </span>
+            </div>
+
+            <div className="rounded-xl border-2 border-primary/30 bg-primary-light p-4">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-primary mb-1.5">
+                <IconPin /> Comunicado fixado
+              </p>
+              <p className="font-bold text-fg text-sm">Manutenção do elevador social</p>
+              <p className="text-sm text-muted-fg mt-0.5">Quinta-feira, das 9h às 12h. Use o elevador de serviço.</p>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-fg mb-2">Reservas da semana</p>
+              <ul className="flex flex-col gap-2">
+                {[
+                  { area: "Salão de festas", when: "Sáb 18/10 · 19h", status: "Aprovada", cls: "bg-secondary-light text-secondary" },
+                  { area: "Churrasqueira", when: "Dom 19/10 · 12h", status: "Aguardando", cls: "bg-accent-light text-accent" },
+                ].map(({ area, when, status, cls }) => (
+                  <li key={area} className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2.5">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-fg text-sm truncate">{area}</p>
+                      <p className="text-xs text-muted-fg">{when}</p>
+                    </div>
+                    <span className={["text-xs font-semibold rounded-full px-2.5 py-1 shrink-0", cls].join(" ")}>{status}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
+              <p className="text-sm text-fg"><span className="font-semibold">Apto 302</span> pediu vínculo de morador</p>
+              <span className="text-xs font-semibold text-primary shrink-0">Aprovar</span>
+            </div>
+          </div>
+
+          {/* Copy */}
+          <div className="order-1 lg:order-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+              Para síndicos
+            </p>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-fg tracking-tight mb-6">
+              O condomínio inteiro num só lugar.
+            </h2>
+            <p className="text-lg text-muted-fg leading-relaxed mb-10 max-w-lg">
+              Chega de aviso perdido no grupo do WhatsApp e reserva anotada no caderno da portaria.
+              O síndico assume a página do prédio e organiza a rotina com moradores verificados.
+            </p>
+            <ul className="space-y-5">
+              {[
+                { icon: <IconMegaphone />, title: "Comunicados oficiais", text: "Avisos do síndico com destaque fixo no topo. Ninguém diz que não viu." },
+                { icon: <IconCalendar />, title: "Reserva de áreas comuns", text: "Salão, churrasqueira e quadra com agenda de horários e aprovação do síndico." },
+                { icon: <IconUserCheck />, title: "Moradores vinculados", text: "Cada morador pede vínculo com a unidade e o síndico aprova, recusa ou revoga." },
+                { icon: <IconBadgeCheck />, title: "Síndico verificado", text: "A reivindicação da página passa pela nossa equipe antes de ser liberada." },
+              ].map(({ icon, title, text }) => (
+                <li key={title} className="flex items-start gap-4">
+                  <span className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    {icon}
+                  </span>
+                  <div>
+                    <p className="font-bold text-fg">{title}</p>
+                    <p className="text-muted-fg leading-relaxed">{text}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/register/"
+              className="mt-10 h-12 px-6 rounded-lg bg-primary text-white font-semibold text-sm w-fit
+                         flex items-center gap-2 transition-all duration-200 hover:bg-primary-hover hover:scale-[1.03]"
+            >
+              Cadastrar meu condomínio
+              <IconArrowRight />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════
           VERIFICATION — white, trust-focused
       ══════════════════════════════════════════════════════ */}
       <section className="bg-bg py-20 px-6">
@@ -394,7 +558,7 @@ export default function LandingPage() {
                 { step: 1, text: "Informe seu CEP — identificamos seu bairro automaticamente" },
                 { step: 2, text: "Envie uma foto do seu comprovante de residência" },
                 { step: 3, text: "Nosso time valida em até 24h — você recebe e-mail de confirmação" },
-                { step: 4, text: "Acesso completo ao feed, marketplace e grupos do seu bairro" },
+                { step: 4, text: "Acesso completo ao feed, marketplace, grupos e ao seu condomínio" },
               ].map(({ step, text }) => (
                 <li key={step} className="flex items-start gap-4">
                   <StepBadge n={step} />
@@ -568,6 +732,9 @@ export default function LandingPage() {
           </div>
 
           <nav className="flex flex-wrap items-center gap-6 text-sm font-medium text-white/60">
+            <a href="#sindicos" className="hover:text-white transition-colors">
+              Para síndicos
+            </a>
             <Link href="/privacy-policy/" className="hover:text-white transition-colors">
               Política de Privacidade
             </Link>
