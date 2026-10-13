@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../Button';
 import { marketplaceApi } from '../../lib/api/marketplace';
 import { useTheme } from '../../theme/ThemeContext';
-import { fontFamily, radius } from '../../theme/tokens';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   sellerId: string;
@@ -36,7 +36,7 @@ export function RatingForm({ sellerId, listingId, onSubmitted }: Props) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.muted, borderRadius: radius.sm }]}>
+    <View style={[styles.container, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md }]}>
       <Text style={[styles.label, { color: colors.fg }]}>Avalie o vendedor</Text>
       <View style={styles.starsRow}>
         {[1, 2, 3, 4, 5].map((n) => (
@@ -63,7 +63,7 @@ export function RatingForm({ sellerId, listingId, onSubmitted }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 12, marginVertical: 12 },
+  container: { padding: 16, marginVertical: 12, borderWidth: 1 },
   label: { fontFamily: fontFamily.bold, fontSize: 14, marginBottom: 8 },
   starsRow: { flexDirection: 'row', marginBottom: 10, gap: 4 },
   star: { paddingHorizontal: 4 },

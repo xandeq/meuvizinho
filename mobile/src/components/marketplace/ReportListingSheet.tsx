@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, TextInput, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../Button';
 import { marketplaceApi } from '../../lib/api/marketplace';
 import { ReportListingReason, REPORT_REASON_LABELS } from '../../lib/api/marketplace.types';
 import { useTheme } from '../../theme/ThemeContext';
-import { fontFamily, radius } from '../../theme/tokens';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -47,8 +48,14 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={[styles.sheet, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
-        <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>
+      <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
+        <View style={[styles.handle, { backgroundColor: colors.border }]} />
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>
+          <Pressable onPress={onClose} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
+            <Ionicons name="close" size={18} color={colors.mutedFg} />
+          </Pressable>
+        </View>
         {reasons.map((r) => (
           <Pressable
             key={r}
@@ -59,9 +66,14 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
             ]}
             onPress={() => setReason(r)}
           >
-            <Text style={[styles.optionText, { color: colors.fg }, reason === r && { color: colors.secondary }]}>
+            <Text style={[styles.optionText, { color: colors.fg }, reason === r && { color: colors.secondary, fontFamily: fontFamily.bold }]}>
               {REPORT_REASON_LABELS[r]}
             </Text>
+            <Ionicons
+              name={reason === r ? 'radio-button-on' : 'radio-button-off'}
+              size={20}
+              color={reason === r ? colors.secondary : colors.mutedFg}
+            />
           </Pressable>
         ))}
         <TextInput
@@ -88,15 +100,22 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 16,
+    paddingTop: 10,
   },
-  title: { fontFamily: fontFamily.bold, fontSize: 18, marginBottom: 12 },
+  handle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  closeBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  title: { fontFamily: fontFamily.bold, fontSize: 18 },
   option: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
     paddingHorizontal: 14,
     borderWidth: 1,
     marginBottom: 8,
   },
-  optionText: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  optionText: { fontFamily: fontFamily.semibold, fontSize: 14, flex: 1 },
   input: {
     minHeight: 80,
     borderWidth: 1,
