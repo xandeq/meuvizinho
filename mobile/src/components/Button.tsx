@@ -8,7 +8,7 @@ interface Props {
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   icon?: keyof typeof Ionicons.glyphMap;
 }
 
@@ -16,10 +16,11 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary',
   const { colors } = useTheme();
   const isOutline = variant === 'outline';
   const isSecondary = variant === 'secondary';
+  const isDanger = variant === 'danger';
 
-  const bg = isOutline ? 'transparent' : isSecondary ? colors.secondary : colors.primary;
+  const bg = isOutline ? 'transparent' : isDanger ? colors.danger : isSecondary ? colors.secondary : colors.primary;
   const textColor = isOutline ? colors.primary : '#FFFFFF';
-  const elevationShadow = isOutline ? {} : isSecondary ? shadow.emerald : shadow.blue;
+  const elevationShadow = isOutline || isDanger ? {} : isSecondary ? shadow.emerald : shadow.blue;
 
   return (
     <Pressable
