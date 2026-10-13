@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/lib/auth-store';
 import { createGroup } from '@/features/groups/groupsApi';
+import { useTheme } from '../../../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 
-const CATEGORIES = ['Esportes', 'Animais', 'Pais', 'Seguranca', 'Jardinagem', 'Negocios', 'Cultura', 'Outros'] as const;
+const CATEGORIES = ['Esportes', 'Animais', 'Pais', 'Segurança', 'Jardinagem', 'Negócios', 'Cultura', 'Outros'] as const;
 
 export default function NewGroupScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -44,50 +48,94 @@ export default function NewGroupScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 20, gap: 16 }}>
-      <Text style={styles.title}>Criar Grupo</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 20, gap: 16 }}>
+      <Text style={[styles.title, { color: colors.fg }]}>Criar Grupo</Text>
 
       <View>
-        <Text style={styles.label}>Nome do grupo</Text>
-        <TextInput style={styles.input} value={name} onChangeText={setName} maxLength={100} placeholder="Ex: Futebol da Vila" />
+        <Text style={[styles.label, { color: colors.mutedFg }]}>Nome do grupo</Text>
+        <TextInput
+          style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.fg, borderRadius: radius.sm }]}
+          value={name}
+          onChangeText={setName}
+          maxLength={100}
+          placeholder="Ex: Futebol da Vila"
+          placeholderTextColor={colors.mutedFg}
+        />
       </View>
 
       <View>
-        <Text style={styles.label}>Descrição</Text>
-        <TextInput style={[styles.input, { height: 80 }]} value={description} onChangeText={setDescription} maxLength={500} placeholder="Sobre o grupo..." multiline textAlignVertical="top" />
+        <Text style={[styles.label, { color: colors.mutedFg }]}>Descrição</Text>
+        <TextInput
+          style={[styles.input, { height: 80, borderColor: colors.border, backgroundColor: colors.card, color: colors.fg, borderRadius: radius.sm }]}
+          value={description}
+          onChangeText={setDescription}
+          maxLength={500}
+          placeholder="Sobre o grupo..."
+          placeholderTextColor={colors.mutedFg}
+          multiline
+          textAlignVertical="top"
+        />
       </View>
 
       <View>
-        <Text style={styles.label}>Categoria</Text>
+        <Text style={[styles.label, { color: colors.mutedFg }]}>Categoria</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            {CATEGORIES.map((c) => (
-              <TouchableOpacity
-                key={c}
-                onPress={() => setCategory(c)}
-                style={[styles.chip, category === c && styles.chipActive]}
-              >
-                <Text style={[styles.chipText, category === c && styles.chipTextActive]}>{c}</Text>
-              </TouchableOpacity>
-            ))}
+            {CATEGORIES.map((c) => {
+              const isActive = category === c;
+              return (
+                <TouchableOpacity
+                  key={c}
+                  onPress={() => setCategory(c)}
+                  style={[
+                    styles.chip,
+                    { borderColor: colors.border, backgroundColor: colors.card },
+                    isActive && { backgroundColor: colors.secondary, borderColor: colors.secondary },
+                  ]}
+                >
+                  <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>{c}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </ScrollView>
       </View>
 
       <View>
-        <Text style={styles.label}>Tipo de entrada</Text>
+        <Text style={[styles.label, { color: colors.mutedFg }]}>Tipo de entrada</Text>
         <View style={{ flexDirection: 'row', gap: 12 }}>
-          {(['Open', 'Closed'] as const).map((p) => (
-            <TouchableOpacity key={p} onPress={() => setJoinPolicy(p)} style={[styles.chip, joinPolicy === p && styles.chipActive]}>
-              <Text style={[styles.chipText, joinPolicy === p && styles.chipTextActive]}>
-                {p === 'Open' ? 'Aberto' : 'Fechado'}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {(['Open', 'Closed'] as const).map((p) => {
+            const isActive = joinPolicy === p;
+            return (
+              <TouchableOpacity
+                key={p}
+                onPress={() => setJoinPolicy(p)}
+                style={[
+                  styles.chip,
+                  { borderColor: colors.border, backgroundColor: colors.card },
+                  isActive && { backgroundColor: colors.secondary, borderColor: colors.secondary },
+                ]}
+              >
+                <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>
+                  {p === 'Open' ? 'Aberto' : 'Fechado'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
-      <TouchableOpacity onPress={handleCreate} disabled={submitting} style={[styles.createBtn, submitting && { opacity: 0.6 }]}>
+      <TouchableOpacity
+        onPress={handleCreate}
+        disabled={submitting}
+        style={[
+          styles.createBtn,
+          shadow.emerald,
+          { backgroundColor: colors.secondary, borderRadius: radius.md },
+          submitting && { opacity: 0.6, shadowOpacity: 0, elevation: 0 },
+        ]}
+      >
+        {!submitting && <Ionicons name="people" size={18} color="#fff" style={{ marginRight: 8 }} />}
         <Text style={styles.createBtnText}>{submitting ? 'Criando...' : 'Criar Grupo'}</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -95,14 +143,12 @@ export default function NewGroupScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  title: { fontSize: 24, fontWeight: '600', color: '#111827' },
-  label: { fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, backgroundColor: '#fff' },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#D1D5DB', backgroundColor: '#fff' },
-  chipActive: { backgroundColor: '#15803D', borderColor: '#15803D' },
-  chipText: { fontSize: 13, color: '#374151' },
-  chipTextActive: { color: '#fff' },
-  createBtn: { backgroundColor: '#15803D', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  createBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  container: { flex: 1 },
+  title: { fontFamily: fontFamily.semibold, fontSize: 24 },
+  label: { fontFamily: fontFamily.medium, fontSize: 14, marginBottom: 6 },
+  input: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontFamily: fontFamily.regular, fontSize: 14 },
+  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
+  chipText: { fontFamily: fontFamily.regular, fontSize: 13 },
+  createBtn: { flexDirection: 'row', paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
+  createBtnText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 16 },
 });

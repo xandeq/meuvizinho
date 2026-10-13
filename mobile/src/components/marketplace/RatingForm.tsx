@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, TextInput, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../Button';
 import { marketplaceApi } from '../../lib/api/marketplace';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   sellerId: string;
@@ -10,6 +13,7 @@ interface Props {
 }
 
 export function RatingForm({ sellerId, listingId, onSubmitted }: Props) {
+  const { colors } = useTheme();
   const [stars, setStars] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -32,42 +36,43 @@ export function RatingForm({ sellerId, listingId, onSubmitted }: Props) {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>Avalie o vendedor</Text>
+    <View style={[styles.container, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md }]}>
+      <Text style={[styles.label, { color: colors.fg }]}>Avalie o vendedor</Text>
       <View style={styles.starsRow}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Pressable key={n} onPress={() => setStars(n)} style={styles.star}>
-            <Text style={[styles.starText, n <= stars && styles.starActive]}>★</Text>
+            <Ionicons
+              name={n <= stars ? 'star' : 'star-outline'}
+              size={32}
+              color={n <= stars ? colors.accent : colors.border}
+            />
           </Pressable>
         ))}
       </View>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: colors.border, borderRadius: radius.sm, color: colors.fg }]}
         placeholder="Comentário (opcional)"
+        placeholderTextColor={colors.mutedFg}
         multiline
         value={comment}
         onChangeText={setComment}
       />
-      <Button title="Enviar avaliação" onPress={handleSubmit} loading={submitting} />
+      <Button title="Enviar avaliação" icon="checkmark-circle" onPress={handleSubmit} loading={submitting} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 12, backgroundColor: '#F9FAFB', borderRadius: 10, marginVertical: 12 },
-  label: { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 8 },
-  starsRow: { flexDirection: 'row', marginBottom: 10 },
+  container: { padding: 16, marginVertical: 12, borderWidth: 1 },
+  label: { fontFamily: fontFamily.bold, fontSize: 14, marginBottom: 8 },
+  starsRow: { flexDirection: 'row', marginBottom: 10, gap: 4 },
   star: { paddingHorizontal: 4 },
-  starText: { fontSize: 36, color: '#D1D5DB' },
-  starActive: { color: '#F59E0B' },
   input: {
     minHeight: 60,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
     padding: 10,
     marginBottom: 10,
     textAlignVertical: 'top',
-    color: '#111827',
+    fontFamily: fontFamily.regular,
   },
 });

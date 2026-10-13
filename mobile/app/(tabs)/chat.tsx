@@ -11,7 +11,9 @@ import {
 import { useRouter } from 'expo-router';
 import { useChatStore } from '../../src/lib/chat-store';
 import { VerifiedBadge } from '../../src/components/VerifiedBadge';
+import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily, radius } from '../../src/theme/tokens';
 
 export default function ConversationListScreen() {
   const { colors } = useTheme();
@@ -67,9 +69,23 @@ export default function ConversationListScreen() {
           )}
         </Pressable>
       )}
+      ListHeaderComponent={
+        sorted.length > 0 ? (
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.fg }]}>Chat</Text>
+          </View>
+        ) : null
+      }
       ListEmptyComponent={
-        <View style={styles.empty}>
-          <Text style={{ color: colors.mutedFg }}>Nenhuma conversa ainda.</Text>
+        <View style={{ flex: 1 }}>
+          <View style={[styles.header, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.headerTitle, { color: colors.fg }]}>Chat</Text>
+          </View>
+          <EmptyState
+            icon="chatbubble-ellipses-outline"
+            title="Nenhuma conversa ainda"
+            subtitle="Converse com um vizinho a partir de um anúncio no marketplace."
+          />
         </View>
       }
     />
@@ -78,25 +94,32 @@ export default function ConversationListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    marginBottom: 4,
+  },
+  headerTitle: { fontFamily: fontFamily.extrabold, fontSize: 28 },
   row: {
     flexDirection: 'row',
     padding: 12,
     borderBottomWidth: 1,
     alignItems: 'center',
   },
-  thumb: { width: 52, height: 52, borderRadius: 8, marginRight: 12 },
+  thumb: { width: 52, height: 52, borderRadius: radius.sm, marginRight: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  name: { fontSize: 15, fontWeight: '700', marginRight: 6, flexShrink: 1 },
-  listing: { fontSize: 13, marginTop: 2 },
+  name: { fontFamily: fontFamily.bold, fontSize: 15, marginRight: 6, flexShrink: 1 },
+  listing: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 2 },
   badge: {
     minWidth: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 6,
     marginLeft: 8,
   },
-  badgeText: { color: '#fff', fontWeight: '800', fontSize: 12 },
-  empty: { padding: 32, alignItems: 'center' },
+  badgeText: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 12 },
 });

@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import type { CategoryDto } from '../../lib/api/marketplace.types';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius } from '../../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -13,6 +16,7 @@ interface Props {
  * D-03: Two-step chip grid (category → subcategory), not dropdowns.
  */
 export function CategoryPicker({ visible, categories, onSelect, onClose }: Props) {
+  const { colors } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<CategoryDto | null>(null);
 
   const handleClose = () => {
@@ -22,13 +26,13 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={handleClose}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.title, { color: colors.fg }]}>
             {selectedCategory ? selectedCategory.displayName : 'Escolha a categoria'}
           </Text>
-          <Pressable onPress={handleClose}>
-            <Text style={styles.close}>✕</Text>
+          <Pressable onPress={handleClose} hitSlop={12}>
+            <Ionicons name="close" size={24} color={colors.mutedFg} />
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={styles.grid}>
@@ -38,28 +42,32 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
                 .map((cat) => (
                   <Pressable
                     key={cat.code}
-                    style={styles.chip}
+                    style={[styles.chip, { backgroundColor: colors.muted, borderColor: colors.border, borderRadius: radius.md }]}
                     onPress={() => setSelectedCategory(cat)}
                   >
-                    <Text style={styles.chipText}>{cat.displayName}</Text>
+                    <Text style={[styles.chipText, { color: colors.fg }]}>{cat.displayName}</Text>
                   </Pressable>
                 ))
             : selectedCategory.subcategories.map((sub) => (
                 <Pressable
                   key={sub.code}
-                  style={styles.chip}
+                  style={[styles.chip, { backgroundColor: colors.muted, borderColor: colors.border, borderRadius: radius.md }]}
                   onPress={() => {
                     onSelect(selectedCategory.code, sub.code);
                     setSelectedCategory(null);
                   }}
                 >
-                  <Text style={styles.chipText}>{sub.displayName}</Text>
+                  <Text style={[styles.chipText, { color: colors.fg }]}>{sub.displayName}</Text>
                 </Pressable>
               ))}
         </ScrollView>
         {selectedCategory && (
-          <Pressable style={styles.backBtn} onPress={() => setSelectedCategory(null)}>
-            <Text style={styles.backText}>← Voltar para categorias</Text>
+          <Pressable
+            style={[styles.backBtn, { borderTopColor: colors.border }]}
+            onPress={() => setSelectedCategory(null)}
+          >
+            <Ionicons name="arrow-back" size={16} color={colors.secondary} />
+            <Text style={[styles.backText, { color: colors.secondary }]}>Voltar para categorias</Text>
           </Pressable>
         )}
       </View>
@@ -68,7 +76,7 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -77,10 +85,8 @@ const styles = StyleSheet.create({
     paddingTop: 48,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  close: { fontSize: 22, color: '#6B7280', fontWeight: '700' },
+  title: { fontFamily: fontFamily.bold, fontSize: 18 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -90,13 +96,10 @@ const styles = StyleSheet.create({
   chip: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     margin: 4,
   },
-  chipText: { color: '#111827', fontWeight: '600', fontSize: 14 },
-  backBtn: { padding: 16, borderTopWidth: 1, borderTopColor: '#E5E7EB' },
-  backText: { color: '#16A34A', fontWeight: '700' },
+  chipText: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  backBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, padding: 16, borderTopWidth: 1 },
+  backText: { fontFamily: fontFamily.bold },
 });

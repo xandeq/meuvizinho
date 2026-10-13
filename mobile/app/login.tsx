@@ -11,7 +11,9 @@ import { Input } from '../src/components/Input';
 import { Button } from '../src/components/Button';
 import { authApi, apiClient } from '../src/lib/api';
 import { useAuthStore } from '../src/lib/auth-store';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../src/theme/tokens';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -93,7 +95,7 @@ export default function Login() {
       login(data.accessToken, data.user);
       router.replace('/feed');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Codigo invalido');
+      Alert.alert('Erro', e?.response?.data?.error || 'Código inválido');
     } finally {
       setTotpLoading(false);
     }
@@ -102,9 +104,9 @@ export default function Login() {
   if (totpGate) {
     return (
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.title, { color: colors.fg }]}>Verificacao em duas etapas</Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>
-          Digite o codigo do seu aplicativo autenticador
+        <Text style={[styles.title, { color: colors.fg }]}>Verificação em duas etapas</Text>
+        <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
+          Digite o código do seu aplicativo autenticador
         </Text>
         <View style={{ height: 24 }} />
         <TextInput
@@ -112,13 +114,13 @@ export default function Login() {
           value={totpCode}
           onChangeText={setTotpCode}
           placeholder="000000"
-          placeholderTextColor={colors.muted}
+          placeholderTextColor={colors.mutedFg}
           keyboardType="number-pad"
           maxLength={6}
           autoFocus
         />
         <View style={{ height: 16 }} />
-        <Button title="Verificar" onPress={handleTotpVerify} loading={totpLoading} />
+        <Button title="Verificar" icon="shield-checkmark" onPress={handleTotpVerify} loading={totpLoading} />
         <View style={{ height: 12 }} />
         <Pressable onPress={() => { setTotpGate(false); setTotpCode(''); }}>
           <Text style={[styles.link, { color: colors.primary }]}>Voltar</Text>
@@ -130,15 +132,21 @@ export default function Login() {
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
       <Text style={[styles.title, { color: colors.fg }]}>Entrar</Text>
-      <Text style={[styles.subtitle, { color: colors.muted }]}>Acesse seu bairro</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Acesse seu bairro</Text>
       <View style={{ height: 24 }} />
 
       {/* Google Sign-In */}
       <Pressable
         onPress={() => promptAsync()}
         disabled={!request || googleLoading}
-        style={[styles.googleButton, (googleLoading || !request) && { opacity: 0.6 }]}
+        style={({ pressed }) => [
+          styles.googleButton,
+          { borderRadius: radius.md },
+          (googleLoading || !request) && { opacity: 0.6 },
+          pressed && !googleLoading && { transform: [{ scale: 0.97 }] },
+        ]}
       >
+        <Ionicons name="logo-google" size={18} color="#fff" style={{ marginRight: 8 }} />
         <Text style={styles.googleText}>
           {googleLoading ? 'Entrando...' : 'Entrar com Google'}
         </Text>
@@ -146,7 +154,7 @@ export default function Login() {
 
       <View style={styles.divider}>
         <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-        <Text style={[styles.dividerText, { color: colors.muted }]}>ou</Text>
+        <Text style={[styles.dividerText, { color: colors.mutedFg }]}>ou</Text>
         <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
       </View>
 
@@ -178,7 +186,7 @@ export default function Login() {
           />
         )}
       />
-      <Button title="Entrar" onPress={handleSubmit(onSubmit)} loading={loading} />
+      <Button title="Entrar" icon="log-in" onPress={handleSubmit(onSubmit)} loading={loading} />
       <View style={{ height: 12 }} />
       <Link href="/magic-link" style={[styles.link, { color: colors.primary }]}>
         Entrar sem senha (link magico)
@@ -193,31 +201,32 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   container: { padding: 24, flexGrow: 1 },
-  title: { fontSize: 28, fontWeight: '800' },
-  subtitle: { fontSize: 14, marginTop: 4 },
-  link: { textAlign: 'center', fontWeight: '600' },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
+  subtitle: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 },
+  link: { textAlign: 'center', fontFamily: fontFamily.semibold },
   googleButton: {
+    flexDirection: 'row',
     height: 52,
-    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#4285F4',
+    ...shadow.ambientMid,
   },
-  googleText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  googleText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 16 },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
     marginVertical: 20,
   },
   dividerLine: { flex: 1, height: 1 },
-  dividerText: { marginHorizontal: 12, fontSize: 13 },
+  dividerText: { marginHorizontal: 12, fontFamily: fontFamily.regular, fontSize: 13 },
   totpInput: {
     height: 56,
     borderWidth: 2,
-    borderRadius: 8,
+    borderRadius: radius.sm,
+    fontFamily: fontFamily.bold,
     fontSize: 24,
     textAlign: 'center',
     letterSpacing: 8,
-    fontWeight: '700',
   },
 });

@@ -1,29 +1,47 @@
 import { Pressable, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../theme/tokens';
 
 interface Props {
   title: string;
   onPress: () => void;
   loading?: boolean;
   disabled?: boolean;
-  variant?: 'primary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger';
+  icon?: keyof typeof Ionicons.glyphMap;
 }
 
-export function Button({ title, onPress, loading, disabled, variant = 'primary' }: Props) {
+export function Button({ title, onPress, loading, disabled, variant = 'primary', icon }: Props) {
+  const { colors } = useTheme();
   const isOutline = variant === 'outline';
+  const isSecondary = variant === 'secondary';
+  const isDanger = variant === 'danger';
+
+  const bg = isOutline ? 'transparent' : isDanger ? colors.danger : isSecondary ? colors.secondary : colors.primary;
+  const textColor = isOutline ? colors.primary : '#FFFFFF';
+  const elevationShadow = isOutline || isDanger ? {} : isSecondary ? shadow.emerald : shadow.blue;
+
   return (
     <Pressable
       onPress={onPress}
       disabled={loading || disabled}
       style={({ pressed }) => [
         styles.base,
-        isOutline ? styles.outline : styles.primary,
-        (pressed || loading || disabled) && { opacity: 0.7 },
+        { backgroundColor: bg, borderRadius: radius.md },
+        isOutline && { borderWidth: 2, borderColor: colors.primary },
+        !isOutline && elevationShadow,
+        (loading || disabled) && { opacity: 0.6 },
+        pressed && !loading && !disabled && { transform: [{ scale: 0.97 }], opacity: 0.92 },
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={isOutline ? '#3B82F6' : '#fff'} />
+        <ActivityIndicator color={textColor} />
       ) : (
-        <Text style={[styles.text, isOutline && styles.outlineText]}>{title}</Text>
+        <>
+          {icon ? <Ionicons name={icon} size={19} color={textColor} style={styles.icon} /> : null}
+          <Text style={[styles.text, { color: textColor }]}>{title}</Text>
+        </>
       )}
     </Pressable>
   );
@@ -31,14 +49,12 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary' 
 
 const styles = StyleSheet.create({
   base: {
+    flexDirection: 'row',
     height: 52,
-    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
-  primary: { backgroundColor: '#3B82F6' },
-  outline: { borderWidth: 2, borderColor: '#3B82F6', backgroundColor: 'transparent' },
-  text: { color: '#fff', fontWeight: '700', fontSize: 16 },
-  outlineText: { color: '#3B82F6' },
+  icon: { marginRight: 8 },
+  text: { fontFamily: fontFamily.semibold, fontSize: 16 },
 });

@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { marketplaceApi } from '../../src/lib/api/marketplace';
 import { ListingCard } from '../../src/components/marketplace/ListingCard';
+import { EmptyState } from '../../src/components/EmptyState';
 import { useAuthStore } from '../../src/lib/auth-store';
+import { useTheme } from '../../src/theme/ThemeContext';
 import type { ListingDto } from '../../src/lib/api/marketplace.types';
 
 export default function MarketplaceSearchScreen() {
   const { q } = useLocalSearchParams<{ q: string }>();
   const router = useRouter();
+  const { colors } = useTheme();
   const bairroId = useAuthStore((s) => s.user?.bairroId ?? 0);
   const [items, setItems] = useState<ListingDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!bairroId || !q) return;
+    if (!bairroId || !q) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     marketplaceApi
       .search(bairroId, q)
@@ -24,8 +30,8 @@ export default function MarketplaceSearchScreen() {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color="#16A34A" />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.secondary} />
       </View>
     );
   }
@@ -35,7 +41,7 @@ export default function MarketplaceSearchScreen() {
       data={items}
       keyExtractor={(l) => String(l.id)}
       numColumns={2}
-      contentContainerStyle={{ padding: 6 }}
+      contentContainerStyle={{ padding: 6, flexGrow: 1, backgroundColor: colors.bg }}
       renderItem={({ item }) => (
         <ListingCard
           listing={item}
@@ -43,9 +49,19 @@ export default function MarketplaceSearchScreen() {
         />
       )}
       ListEmptyComponent={
-        <View style={styles.center}>
-          <Text style={{ color: '#6B7280' }}>Nenhum resultado para "{q}".</Text>
-        </View>
+        !bairroId ? (
+          <EmptyState
+            icon="shield-checkmark-outline"
+            title="Complete sua verificação"
+            subtitle="Confirme seu endereço para buscar no marketplace."
+          />
+        ) : (
+          <EmptyState
+            icon="search-outline"
+            title={`Nenhum resultado para "${q}"`}
+            subtitle="Tente outro termo ou busque em outra categoria."
+          />
+        )
       }
     />
   );

@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import { View, FlatList, RefreshControl, ActivityIndicator, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/lib/auth-store';
 import { useFeedStore } from '../../src/lib/feed-store';
 import { PostCard } from '../../src/components/feed/PostCard';
 import { FeedComposer } from '../../src/components/feed/FeedComposer';
+import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily, shadow } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
 
 export default function FeedScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const bairroId = user?.bairroId ?? 0;
   const isVerified = !!user?.isVerified;
@@ -32,10 +36,12 @@ export default function FeedScreen() {
 
   if (!bairroId) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
-          Complete sua verificação para ver o feed do bairro.
-        </Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <EmptyState
+          icon="shield-checkmark-outline"
+          title="Complete sua verificação"
+          subtitle="Confirme seu endereço para ver o feed do seu bairro."
+        />
       </View>
     );
   }
@@ -61,25 +67,23 @@ export default function FeedScreen() {
         ListHeaderComponent={
           <View style={[styles.header, { borderBottomColor: colors.border }]}>
             <Text style={[styles.headerTitle, { color: colors.fg }]}>Bairro</Text>
+            {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
+            <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
+              <Ionicons name="person-circle-outline" size={30} color={colors.fg} />
+            </Pressable>
           </View>
         }
         ListEmptyComponent={
           loading ? null : (
-            <View style={styles.center}>
-              <Text style={[styles.emptyText, { color: colors.mutedFg }]}>
-                Nenhum post no seu bairro ainda.
-              </Text>
-              {isVerified && (
-                <Pressable
-                  style={[styles.emptyAction, { borderColor: colors.primary }]}
-                  onPress={() => setComposerOpen(true)}
-                >
-                  <Text style={[styles.emptyActionText, { color: colors.primary }]}>
-                    Criar o primeiro post
-                  </Text>
-                </Pressable>
-              )}
-            </View>
+            <EmptyState
+              icon="chatbubbles-outline"
+              title="Nenhum post no seu bairro ainda"
+              subtitle={
+                isVerified
+                  ? 'Toque no botão + e compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
+                  : 'Compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
+              }
+            />
           )
         }
         ListFooterComponent={
@@ -92,7 +96,7 @@ export default function FeedScreen() {
       {/* FAB — only for verified users */}
       {isVerified && (
         <Pressable
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={[styles.fab, shadow.blue, { backgroundColor: colors.primary }]}
           onPress={() => setComposerOpen(true)}
         >
           <Ionicons name="add" size={26} color="#fff" />
@@ -112,22 +116,16 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingBottom: 100 },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
     marginBottom: 4,
   },
-  headerTitle: { fontSize: 28, fontWeight: '800' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyText: { fontSize: 15, textAlign: 'center', marginBottom: 16 },
-  emptyAction: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  emptyActionText: { fontWeight: '700', fontSize: 14 },
+  headerTitle: { fontFamily: fontFamily.extrabold, fontSize: 28 },
   fab: {
     position: 'absolute',
     right: 16,
@@ -137,6 +135,5 @@ const styles = StyleSheet.create({
     borderRadius: 27,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 3,
   },
 });

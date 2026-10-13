@@ -5,6 +5,7 @@ import { Input } from '../src/components/Input';
 import { Button } from '../src/components/Button';
 import { apiClient } from '../src/lib/api';
 import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily } from '../src/theme/tokens';
 
 export default function MagicLinkScreen() {
   const router = useRouter();
@@ -33,11 +34,11 @@ export default function MagicLinkScreen() {
     return (
       <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
         <Text style={[styles.title, { color: colors.fg }]}>Link enviado!</Text>
-        <Text style={[styles.subtitle, { color: colors.muted }]}>
+        <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
           Verifique seu e-mail para o link de acesso. O link expira em 15 minutos.
         </Text>
         <View style={{ height: 24 }} />
-        <Button title="Voltar para login" onPress={() => router.back()} />
+        <Button title="Voltar para login" icon="arrow-back" onPress={() => router.back()} />
       </ScrollView>
     );
   }
@@ -45,7 +46,7 @@ export default function MagicLinkScreen() {
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
       <Text style={[styles.title, { color: colors.fg }]}>Entrar sem senha</Text>
-      <Text style={[styles.subtitle, { color: colors.muted }]}>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
         Enviaremos um link de acesso para seu e-mail
       </Text>
       <View style={{ height: 24 }} />
@@ -58,15 +59,15 @@ export default function MagicLinkScreen() {
         autoCapitalize="none"
       />
       <View style={{ height: 8 }} />
-      <Button title="Enviar link" onPress={handleSend} loading={loading} />
+      <Button title="Enviar link" icon="mail" onPress={handleSend} loading={loading} />
       <View style={{ height: 16 }} />
-      <Button title="Voltar" variant="outline" onPress={() => router.back()} />
+      <Button title="Voltar" icon="arrow-back" variant="outline" onPress={() => router.back()} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 24, flexGrow: 1 },
-  title: { fontSize: 28, fontWeight: '800' },
-  subtitle: { fontSize: 14, marginTop: 4, lineHeight: 20 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
+  subtitle: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4, lineHeight: 20 },
 });

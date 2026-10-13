@@ -1,14 +1,18 @@
 import { useState } from 'react';
-import { View, TextInput, Pressable, Text, StyleSheet, Alert } from 'react-native';
+import { View, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Ionicons } from '@expo/vector-icons';
 import { useChatStore } from '../../lib/chat-store';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   conversationId: number;
 }
 
 export function MessageComposer({ conversationId }: Props) {
+  const { colors } = useTheme();
   const sendMessage = useChatStore((s) => s.sendMessage);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -58,23 +62,31 @@ export function MessageComposer({ conversationId }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { borderTopColor: colors.border, backgroundColor: colors.card }]}>
       <Pressable style={styles.attachBtn} onPress={handleAttach} disabled={sending}>
-        <Text style={styles.attachIcon}>📎</Text>
+        <Ionicons name="attach" size={22} color={colors.mutedFg} />
       </Pressable>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.muted, borderRadius: radius.xl }]}
         value={text}
         onChangeText={setText}
         placeholder="Digite uma mensagem"
+        placeholderTextColor={colors.mutedFg}
         multiline
       />
       <Pressable
-        style={[styles.sendBtn, (!text.trim() || sending) && styles.sendBtnDisabled]}
+        style={({ pressed }) => [
+          styles.sendBtn,
+          shadow.emerald,
+          { backgroundColor: colors.secondary },
+          (!text.trim() || sending) && { backgroundColor: colors.mutedFg, shadowOpacity: 0, elevation: 0 },
+          pressed && !!text.trim() && !sending && { transform: [{ scale: 0.93 }] },
+        ]}
         onPress={handleSend}
         disabled={!text.trim() || sending}
+        hitSlop={4}
       >
-        <Text style={styles.sendText}>Enviar</Text>
+        <Ionicons name="send" size={18} color="#fff" style={{ marginLeft: -2 }} />
       </Pressable>
     </View>
   );
@@ -86,8 +98,6 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     padding: 8,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    backgroundColor: '#fff',
   },
   attachBtn: {
     width: 40,
@@ -95,24 +105,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  attachIcon: { fontSize: 22 },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 20,
     paddingHorizontal: 14,
     paddingVertical: 8,
     maxHeight: 120,
-    color: '#111827',
     marginHorizontal: 6,
+    fontFamily: fontFamily.regular,
   },
   sendBtn: {
-    backgroundColor: '#15803D',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: 40,
+    height: 40,
     borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: '#9CA3AF' },
-  sendText: { color: '#fff', fontWeight: '800' },
 });

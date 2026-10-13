@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-12T09:45:00Z",
+  "title": "Design System: Meu Vizinho",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Azul Confiança", "canonical": "oklch(52% 0.19 258)" },
+      "secondary": { "role": "secondary", "displayName": "Verde Verificação", "canonical": "oklch(55% 0.13 162)" },
+      "accent": { "role": "tertiary", "displayName": "Âmbar Local", "canonical": "oklch(58% 0.15 55)" },
+      "danger": { "role": "danger", "displayName": "Vermelho Erro", "canonical": "oklch(51% 0.19 25)" },
+      "verified": { "role": "signature", "displayName": "Verde Verificação (selo)", "canonical": "oklch(55% 0.13 162)" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos de tela (Criar conta, Seu bairro)." },
+      "headline": { "displayName": "Headline", "purpose": "Títulos de seção dentro de tela." },
+      "title": { "displayName": "Title", "purpose": "Título de card, label de botão." },
+      "body": { "displayName": "Body", "purpose": "Texto de post, formulário, descrição." },
+      "label": { "displayName": "Label", "purpose": "Metadados, timestamps, selo de verificação." }
+    },
+    "shadows": [
+      { "name": "ambient-low", "value": "0 1px 2px rgba(15,23,42,0.06)", "purpose": "Cards em repouso, inputs." },
+      { "name": "ambient-mid", "value": "0 4px 12px rgba(15,23,42,0.08)", "purpose": "Cards elevados, modais, bottom sheets." },
+      { "name": "ambient-high", "value": "0 12px 32px rgba(15,23,42,0.12)", "purpose": "FAB, tooltip, elementos flutuantes." },
+      { "name": "shadow-blue", "value": "0 4px 14px rgba(37,99,235,0.25)", "purpose": "Hover/press de botão primário." },
+      { "name": "shadow-emerald", "value": "0 4px 14px rgba(5,150,105,0.25)", "purpose": "Hover/press de elemento de verificação." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "cubic-bezier(0.4, 0, 0.2, 1)", "purpose": "Transição padrão de estado (hover, focus)." },
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Entradas de tela, abertura de modal/sheet." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Ação principal — fundo azul confiança, ícone + label, sombra azul no hover.",
+      "html": "<button class=\"ds-btn-primary\"><svg class=\"ds-icon\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 10.5 12 3l9 7.5\"/><path d=\"M5 9.5V21h14V9.5\"/></svg>Criar conta</button>",
+      "css": ".ds-btn-primary { display:flex; align-items:center; justify-content:center; gap:8px; background:#2563EB; color:#fff; border:none; border-radius:12px; padding:14px 24px; font-family:Outfit,system-ui,sans-serif; font-weight:600; font-size:1.125rem; transition:background .2s, box-shadow .2s, transform .2s; } .ds-btn-primary:hover { background:#1D4ED8; box-shadow:0 4px 14px rgba(37,99,235,0.25); transform:translateY(-1px); } .ds-btn-primary:active { transform:scale(0.97); } .ds-btn-primary:focus-visible { outline:2px solid #2563EB; outline-offset:2px; }"
+    },
+    {
+      "name": "Verified Badge",
+      "kind": "chip",
+      "refersTo": "verified-badge",
+      "description": "Selo de verificação — componente assinatura do produto, cor reservada.",
+      "html": "<span class=\"ds-verified-badge\"><svg class=\"ds-icon\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"currentColor\"><path d=\"M9 12l2 2 4-4\" stroke=\"#fff\" stroke-width=\"3\" fill=\"none\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>Verificado</span>",
+      "css": ".ds-verified-badge { display:inline-flex; align-items:center; gap:4px; background:#ECFDF5; color:#059669; border-radius:24px; padding:4px 10px; font-family:Outfit,system-ui,sans-serif; font-weight:600; font-size:0.8125rem; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "Campo de texto padrão — fundo neutro em repouso, borda azul no foco.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\">E-mail</label><input class=\"ds-input\" placeholder=\"voce@exemplo.com\"/></div>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:6px;} .ds-label{font-family:Outfit,system-ui,sans-serif;font-weight:600;font-size:0.875rem;color:#0F172A;} .ds-input{height:52px;border-radius:8px;background:#F1F5F9;border:2px solid transparent;padding:0 16px;font-family:Outfit,system-ui,sans-serif;font-size:1rem;color:#0F172A;transition:border-color .2s,background .2s;} .ds-input:focus{outline:none;border-color:#2563EB;background:#fff;}"
+    },
+    {
+      "name": "Feed Card",
+      "kind": "card",
+      "refersTo": "feed-card",
+      "description": "Card de post do feed — elevação ambiente baixa em repouso, média no hover.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-head\"><div class=\"ds-avatar\"></div><div><strong class=\"ds-card-name\">Mariana Alves <span class=\"ds-verified-dot\"></span></strong><span class=\"ds-card-time\">2h atrás</span></div></div><p class=\"ds-card-body\">Festa junina do bairro dia 20, na quadra da associação de moradores.</p></article>",
+      "css": ".ds-card{background:#fff;border-radius:18px;padding:16px;box-shadow:0 1px 2px rgba(15,23,42,0.06);transition:box-shadow .2s;font-family:Outfit,system-ui,sans-serif;} .ds-card:hover{box-shadow:0 4px 12px rgba(15,23,42,0.08);} .ds-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;} .ds-avatar{width:40px;height:40px;border-radius:999px;background:#BFDBFE;border:2px solid #059669;} .ds-card-name{font-weight:600;font-size:1rem;color:#0F172A;display:flex;align-items:center;gap:6px;} .ds-verified-dot{width:8px;height:8px;border-radius:999px;background:#059669;display:inline-block;} .ds-card-time{display:block;font-size:0.8125rem;color:#64748B;} .ds-card-body{font-size:1rem;line-height:1.5;color:#0F172A;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Varanda Verificada",
+    "overview": "A varanda é o limiar entre o privado e o coletivo: você reconhece quem está ali, mas não é qualquer um que sobe a escada. Todo elemento do Meu Vizinho vive nesse limiar — calor humano de vizinhança real, com um sinal de confiança sempre visível e nunca pedante. A pesquisa de concorrentes confirmou: nenhum (Nextdoor, WeUp, SOSAFE) comunica confiança/verificação de forma visualmente forte — essa é a maior oportunidade de diferenciação do produto.",
+    "keyCharacteristics": [
+      "Confiança visível em cada superfície relevante, nunca só declarada em texto",
+      "Fotografia e avatares reais como protagonistas",
+      "Sombra suave e ambiente, nunca flat-institucional",
+      "Outfit como única família tipográfica, web e mobile",
+      "Paleta Full Palette com 4 papéis nomeados e funcionais"
+    ],
+    "rules": [
+      { "name": "A Regra do Verde Reservado", "body": "Verde Verificação só aparece em contexto de confiança/identidade, nunca como verde de sucesso genérico.", "section": "colors" },
+      { "name": "A Regra do Peso, Não da Cor", "body": "Hierarquia tipográfica por peso e tamanho, nunca só por cor — crítico pro público 40+/60+ da base.", "section": "typography" },
+      { "name": "A Regra da Elevação Unificada", "body": "Web e mobile usam a mesma escala de sombra; nenhuma plataforma fica mais achatada que a outra por omissão.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do usar fotografia e avatares reais como protagonistas visuais",
+      "Do manter o selo de verificação 100% consistente em cor/forma",
+      "Do levar a escala de sombra do web pro mobile",
+      "Do usar Outfit em toda interface, web e mobile",
+      "Do dar touch target mínimo de 44-52px em todo elemento tocável",
+      "Do usar ícone + label em botões de ação primária no mobile"
+    ],
+    "donts": [
+      "Don't fazer visual Facebook Groups/Marketplace — denso, sem hierarquia, datado",
+      "Don't parecer app institucional de prefeitura — frio, burocrático",
+      "Don't usar border-left/border-right colorido como faixa decorativa",
+      "Don't usar gradiente em texto",
+      "Don't usar glassmorphism decorativo sem propósito funcional",
+      "Don't usar o Verde Verificação fora de contexto de confiança/identidade",
+      "Don't depender só de cor pra indicar erro/estado",
+      "Don't empilhar múltiplos CTAs de mesmo peso visual na mesma tela"
+    ]
+  }
+}

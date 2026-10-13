@@ -9,14 +9,20 @@ import {
   getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent,
 } from '@/features/groups/groupsApi';
 import type { GroupPost, GroupEvent } from '@/features/groups/groupsApi';
+import { useTheme } from '../../../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
+import { VerifiedBadge } from '../../../src/components/VerifiedBadge';
+import { EmptyState } from '../../../src/components/EmptyState';
 
 export default function GroupDetailScreen() {
   const { groupId: gidStr } = useLocalSearchParams<{ groupId: string }>();
   const groupId = parseInt(gidStr ?? '0', 10);
+  const { colors } = useTheme();
   const { posts, appendPosts, prependPost, resetFeed, currentGroup, setCurrentGroup } = useGroupStore();
   const [activeTab, setActiveTab] = useState<'feed' | 'events'>('feed');
   const [composerText, setComposerText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [postError, setPostError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<GroupEvent[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
@@ -73,10 +79,16 @@ export default function GroupDetailScreen() {
   const handlePost = async () => {
     if (!composerText.trim()) return;
     setSubmitting(true);
+    setPostError(null);
     try {
-      await createGroupPost(groupId, { body: composerText, category: 'Outros' });
+      // 'Geral' matches the backend's PostCategory enum (Dica/Alerta/Pergunta/Evento/Geral).
+      // 'Outros' isn't a member — sending it made every group post fail with HTTP 400.
+      await createGroupPost(groupId, { body: composerText, category: 'Geral' });
       setComposerText('');
       // SignalR will push new post via NewGroupPost — no manual prepend needed
+    } catch (err) {
+      setPostError('Não foi possível publicar. Tente novamente.');
+      console.error('createGroupPost failed', err);
     } finally {
       setSubmitting(false);
     }
@@ -89,79 +101,104 @@ export default function GroupDetailScreen() {
   };
 
   const renderPost = useCallback(({ item }: { item: GroupPost }) => (
-    <View style={styles.postCard}>
+    <View style={[styles.postCard, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.md }]}>
       <View style={styles.postHeader}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{item.author.displayName?.[0] ?? '?'}</Text>
+        <View style={[styles.avatar, { backgroundColor: colors.muted }]}>
+          <Text style={[styles.avatarText, { color: colors.mutedFg }]}>{item.author.displayName?.[0] ?? '?'}</Text>
         </View>
         <View>
-          <Text style={styles.authorName}>{item.author.displayName}</Text>
-          {item.author.isVerified && <Text style={styles.verified}>Verificado</Text>}
+          <Text style={[styles.authorName, { color: colors.fg }]}>{item.author.displayName}</Text>
+          {item.author.isVerified && <VerifiedBadge verified compact />}
         </View>
       </View>
-      <Text style={styles.postBody}>{item.body}</Text>
-      <Text style={styles.postMeta}>{item.likeCount} curtidas · {item.commentCount} comentários</Text>
+      <Text style={[styles.postBody, { color: colors.fg }]}>{item.body}</Text>
+      <Text style={[styles.postMeta, { color: colors.mutedFg }]}>{item.likeCount} curtidas · {item.commentCount} comentários</Text>
     </View>
-  ), []);
+  ), [colors]);
 
   const renderEvent = useCallback(({ item }: { item: GroupEvent }) => (
-    <View style={styles.eventCard}>
-      <Text style={styles.eventTitle}>{item.title}</Text>
-      {item.location && <Text style={styles.eventMeta}>{item.location}</Text>}
-      <Text style={styles.eventMeta}>{new Date(item.startsAt).toLocaleString('pt-BR')}</Text>
-      <Text style={styles.eventMeta}>{item.rsvpCount} confirmados</Text>
+    <View style={[styles.eventCard, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.md }]}>
+      <Text style={[styles.eventTitle, { color: colors.fg }]}>{item.title}</Text>
+      {item.location && <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.location}</Text>}
+      <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{new Date(item.startsAt).toLocaleString('pt-BR')}</Text>
+      <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.rsvpCount} confirmados</Text>
       <TouchableOpacity
-        style={[styles.rsvpBtn, item.myRsvp && styles.rsvpBtnActive]}
+        style={[
+          styles.rsvpBtn,
+          { borderColor: colors.border, borderRadius: radius.sm },
+          item.myRsvp && { backgroundColor: colors.secondaryLight, borderColor: colors.secondary },
+        ]}
         onPress={() => handleRsvp(item)}
       >
-        <Text style={[styles.rsvpText, item.myRsvp && styles.rsvpTextActive]}>
+        <Text style={[styles.rsvpText, { color: colors.mutedFg }, item.myRsvp && { color: colors.secondary, fontFamily: fontFamily.semibold }]}>
           {item.myRsvp ? 'Confirmado' : 'Confirmar presença'}
         </Text>
       </TouchableOpacity>
     </View>
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  ), [events]);
+  ), [events, colors]);
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
         {currentGroup && (
-          <View style={styles.groupHeader}>
-            <Text style={styles.groupName}>{currentGroup.name}</Text>
+          <View style={[styles.groupHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+            <Text style={[styles.groupName, { color: colors.fg }]}>{currentGroup.name}</Text>
           </View>
         )}
 
         {/* Tab nav */}
-        <View style={styles.tabBar}>
-          {(['feed', 'events'] as const).map((tab) => (
-            <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} style={[styles.tab, activeTab === tab && styles.tabActive]}>
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'feed' ? 'Feed' : 'Eventos'}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <View style={[styles.tabBar, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          {(['feed', 'events'] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActiveTab(tab)}
+                style={[styles.tab, isActive && { borderBottomWidth: 2, borderBottomColor: colors.secondary }]}
+              >
+                <Text style={[styles.tabText, { color: colors.mutedFg }, isActive && { color: colors.secondary, fontFamily: fontFamily.semibold }]}>
+                  {tab === 'feed' ? 'Feed' : 'Eventos'}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {activeTab === 'feed' ? (
           <>
-            {loading ? <ActivityIndicator color="#15803D" style={{ marginTop: 40 }} /> : (
+            {loading ? <ActivityIndicator color={colors.secondary} style={{ marginTop: 40 }} /> : (
               <FlatList
                 data={posts}
                 keyExtractor={(p) => String(p.id)}
                 renderItem={renderPost}
                 contentContainerStyle={{ padding: 16, gap: 12 }}
-                ListEmptyComponent={<Text style={styles.empty}>Nenhuma publicação ainda.</Text>}
+                ListEmptyComponent={
+                  <EmptyState
+                    icon="chatbubbles-outline"
+                    title="Nenhuma publicação ainda"
+                    subtitle="Seja o primeiro a compartilhar algo com o grupo."
+                  />
+                }
               />
             )}
-            <View style={styles.composer}>
+            {postError && (
+              <Text style={[styles.postErrorText, { color: colors.danger }]}>{postError}</Text>
+            )}
+            <View style={[styles.composer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
               <TextInput
-                style={styles.composerInput}
+                style={[styles.composerInput, { borderColor: colors.border, color: colors.fg, borderRadius: radius.sm }]}
                 placeholder="Compartilhe algo..."
+                placeholderTextColor={colors.mutedFg}
                 value={composerText}
                 onChangeText={setComposerText}
                 multiline
               />
-              <TouchableOpacity onPress={handlePost} disabled={submitting || !composerText.trim()} style={styles.sendBtn}>
+              <TouchableOpacity
+                onPress={handlePost}
+                disabled={submitting || !composerText.trim()}
+                style={[styles.sendBtn, { backgroundColor: colors.secondary, borderRadius: radius.sm }]}
+              >
                 <Text style={styles.sendBtnText}>{submitting ? '...' : 'Enviar'}</Text>
               </TouchableOpacity>
             </View>
@@ -172,7 +209,13 @@ export default function GroupDetailScreen() {
             keyExtractor={(e) => String(e.id)}
             renderItem={renderEvent}
             contentContainerStyle={{ padding: 16, gap: 12 }}
-            ListEmptyComponent={<Text style={styles.empty}>Nenhum evento criado.</Text>}
+            ListEmptyComponent={
+              <EmptyState
+                icon="calendar-outline"
+                title="Nenhum evento criado"
+                subtitle="Organize um encontro ou atividade para o grupo."
+              />
+            }
           />
         )}
       </View>
@@ -181,32 +224,27 @@ export default function GroupDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  groupHeader: { padding: 16, paddingBottom: 8, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
-  groupName: { fontSize: 20, fontWeight: '600', color: '#111827' },
-  tabBar: { flexDirection: 'row', backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  container: { flex: 1 },
+  groupHeader: { padding: 16, paddingBottom: 8, borderBottomWidth: 1 },
+  groupName: { fontFamily: fontFamily.semibold, fontSize: 20 },
+  tabBar: { flexDirection: 'row', borderBottomWidth: 1 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
-  tabActive: { borderBottomWidth: 2, borderBottomColor: '#15803D' },
-  tabText: { fontSize: 14, color: '#6B7280' },
-  tabTextActive: { color: '#15803D', fontWeight: '600' },
-  postCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E5E7EB' },
+  tabText: { fontFamily: fontFamily.regular, fontSize: 14 },
+  postCard: { padding: 14 },
   postHeader: { flexDirection: 'row', gap: 10, alignItems: 'center', marginBottom: 8 },
-  avatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' },
-  avatarText: { fontSize: 14, color: '#6B7280', fontWeight: '600' },
-  authorName: { fontSize: 14, fontWeight: '600', color: '#111827' },
-  verified: { fontSize: 11, color: '#15803D' },
-  postBody: { fontSize: 14, color: '#374151', lineHeight: 20 },
-  postMeta: { fontSize: 12, color: '#9CA3AF', marginTop: 8 },
-  eventCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E5E7EB', gap: 4 },
-  eventTitle: { fontSize: 16, fontWeight: '600', color: '#111827' },
-  eventMeta: { fontSize: 13, color: '#6B7280' },
-  rsvpBtn: { marginTop: 8, borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#D1D5DB', alignSelf: 'flex-start' },
-  rsvpBtnActive: { backgroundColor: '#DCFCE7', borderColor: '#15803D' },
-  rsvpText: { fontSize: 13, color: '#374151' },
-  rsvpTextActive: { color: '#15803D', fontWeight: '600' },
-  composer: { flexDirection: 'row', padding: 12, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E5E7EB', gap: 8, alignItems: 'flex-end' },
-  composerInput: { flex: 1, borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, maxHeight: 100 },
-  sendBtn: { backgroundColor: '#15803D', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 9 },
-  sendBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
-  empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 40 },
+  avatar: { width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
+  avatarText: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  authorName: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  postBody: { fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20 },
+  postMeta: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 8 },
+  eventCard: { padding: 14, gap: 4 },
+  eventTitle: { fontFamily: fontFamily.semibold, fontSize: 16 },
+  eventMeta: { fontFamily: fontFamily.regular, fontSize: 13 },
+  rsvpBtn: { marginTop: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, alignSelf: 'flex-start' },
+  rsvpText: { fontFamily: fontFamily.regular, fontSize: 13 },
+  composer: { flexDirection: 'row', padding: 12, borderTopWidth: 1, gap: 8, alignItems: 'flex-end' },
+  composerInput: { flex: 1, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, fontFamily: fontFamily.regular, fontSize: 14, maxHeight: 100 },
+  postErrorText: { fontFamily: fontFamily.regular, fontSize: 13, paddingHorizontal: 16, paddingTop: 8 },
+  sendBtn: { paddingHorizontal: 14, paddingVertical: 9 },
+  sendBtnText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 14 },
 });

@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius } from '../../theme/tokens';
 import type { PostCategory } from '../../lib/api/feed';
 
 const CATEGORIES: { value: PostCategory; label: string }[] = [
@@ -135,8 +136,8 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
     sheetWrapper: { position: 'absolute', bottom: 0, left: 0, right: 0 },
     sheet: {
       backgroundColor: colors.card,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: radius.xl,
+      borderTopRightRadius: radius.xl,
       padding: 20,
       paddingBottom: Platform.OS === 'ios' ? 36 : 20,
     },
@@ -149,39 +150,40 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
       marginBottom: 16,
     },
     titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-    title: { fontSize: 17, fontWeight: '800', color: colors.fg },
+    title: { fontFamily: fontFamily.extrabold, fontSize: 17, color: colors.fg },
     chipScroll: { marginBottom: 14 },
     chip: {
       paddingHorizontal: 14,
       paddingVertical: 7,
-      borderRadius: 999,
+      borderRadius: radius.xl,
       borderWidth: 1.5,
       borderColor: colors.border,
       marginRight: 8,
       backgroundColor: colors.muted,
     },
     chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-    chipLabel: { fontSize: 13, fontWeight: '700', color: colors.mutedFg },
+    chipLabel: { fontFamily: fontFamily.bold, fontSize: 13, color: colors.mutedFg },
     chipLabelActive: { color: '#fff' },
     input: {
       backgroundColor: colors.muted,
-      borderRadius: 10,
+      borderRadius: radius.sm,
       borderWidth: 1.5,
       borderColor: colors.border,
       padding: 12,
+      fontFamily: fontFamily.regular,
       fontSize: 15,
       color: colors.fg,
       minHeight: 100,
       textAlignVertical: 'top',
     },
-    charCount: { fontSize: 11, color: colors.mutedFg, textAlign: 'right', marginTop: 4, marginBottom: 12 },
-    error: { fontSize: 13, color: colors.danger, fontWeight: '600', marginBottom: 10 },
+    charCount: { fontFamily: fontFamily.regular, fontSize: 11, color: colors.mutedFg, textAlign: 'right', marginTop: 4, marginBottom: 12 },
+    error: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.danger, marginBottom: 10 },
     submitBtn: {
       backgroundColor: colors.primary,
-      borderRadius: 10,
+      borderRadius: radius.sm,
       paddingVertical: 14,
       alignItems: 'center',
     },
     submitBtnDisabled: { opacity: 0.4 },
-    submitLabel: { color: '#fff', fontWeight: '800', fontSize: 15 },
+    submitLabel: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 15 },
   });

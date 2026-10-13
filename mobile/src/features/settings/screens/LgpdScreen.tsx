@@ -4,6 +4,7 @@ import { Button } from '../../../components/Button';
 import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../lib/auth-store';
 import { useTheme } from '../../../theme/ThemeContext';
+import { fontFamily, radius } from '../../../theme/tokens';
 
 export default function LgpdScreen() {
   const { colors } = useTheme();
@@ -27,7 +28,7 @@ export default function LgpdScreen() {
       Alert.alert('Sucesso', 'Dados exportados com sucesso.');
     } catch (e: any) {
       if (e?.response?.status === 429) {
-        Alert.alert('Aguarde', 'Aguarde 24 horas entre exportacoes.');
+        Alert.alert('Aguarde', 'Aguarde 24 horas entre exportações.');
       } else {
         Alert.alert('Erro', e?.response?.data?.error || 'Falha ao exportar dados');
       }
@@ -39,7 +40,7 @@ export default function LgpdScreen() {
   const handleDeleteRequest = () => {
     Alert.alert(
       'Excluir conta',
-      'Seus dados serao anonimizados apos 30 dias. Deseja continuar?',
+      'Seus dados serão anonimizados após 30 dias. Deseja continuar?',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -51,11 +52,11 @@ export default function LgpdScreen() {
               await apiClient.post('/api/v1/account/delete');
               setDeleteRequested(true);
               Alert.alert(
-                'Conta marcada para exclusao',
-                'Seus dados serao anonimizados em 30 dias. Voce pode cancelar a exclusao ate la.',
+                'Conta marcada para exclusão',
+                'Seus dados serão anonimizados em 30 dias. Você pode cancelar a exclusão até lá.',
               );
             } catch (e: any) {
-              Alert.alert('Erro', e?.response?.data?.error || 'Falha ao solicitar exclusao');
+              Alert.alert('Erro', e?.response?.data?.error || 'Falha ao solicitar exclusão');
             } finally {
               setDeleting(false);
             }
@@ -70,9 +71,9 @@ export default function LgpdScreen() {
     try {
       await apiClient.post('/api/v1/account/delete/cancel');
       setDeleteRequested(false);
-      Alert.alert('Exclusao cancelada', 'Sua conta foi restaurada.');
+      Alert.alert('Exclusão cancelada', 'Sua conta foi restaurada.');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao cancelar exclusao');
+      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao cancelar exclusão');
     } finally {
       setCanceling(false);
     }
@@ -81,43 +82,45 @@ export default function LgpdScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Text style={[styles.title, { color: colors.fg }]}>Meus Dados</Text>
-      <Text style={[styles.description, { color: colors.muted }]}>
-        De acordo com a Lei Geral de Protecao de Dados (LGPD), voce pode exportar ou solicitar a
-        exclusao dos seus dados pessoais.
+      <Text style={[styles.description, { color: colors.mutedFg }]}>
+        De acordo com a Lei Geral de Proteção de Dados (LGPD), você pode exportar ou solicitar a
+        exclusão dos seus dados pessoais.
       </Text>
 
       {/* Export section */}
       <View style={[styles.section, { borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.fg }]}>Exportar Dados</Text>
-        <Text style={[styles.sectionDesc, { color: colors.muted }]}>
+        <Text style={[styles.sectionDesc, { color: colors.mutedFg }]}>
           Baixe um arquivo JSON com todos os seus dados armazenados na plataforma.
         </Text>
         <View style={{ height: 12 }} />
         {exporting ? (
           <ActivityIndicator color={colors.primary} />
         ) : (
-          <Button title="Exportar meus dados" onPress={handleExport} />
+          <Button title="Exportar meus dados" icon="download" onPress={handleExport} />
         )}
       </View>
 
       {/* Delete section */}
       <View style={[styles.section, { borderColor: colors.border }]}>
         <Text style={[styles.sectionTitle, { color: colors.danger }]}>Excluir Conta</Text>
-        <Text style={[styles.sectionDesc, { color: colors.muted }]}>
-          Ao solicitar a exclusao, seus dados serao anonimizados apos 30 dias.
-          Voce pode cancelar a exclusao durante esse periodo.
+        <Text style={[styles.sectionDesc, { color: colors.mutedFg }]}>
+          Ao solicitar a exclusão, seus dados serão anonimizados após 30 dias.
+          Você pode cancelar a exclusão durante esse período.
         </Text>
         <View style={{ height: 12 }} />
         {deleteRequested ? (
           <Button
-            title="Cancelar exclusao"
+            title="Cancelar exclusão"
             variant="outline"
             onPress={handleCancelDeletion}
             loading={canceling}
           />
         ) : (
           <Button
-            title="Solicitar exclusao da conta"
+            title="Solicitar exclusão da conta"
+            icon="trash"
+            variant="danger"
             onPress={handleDeleteRequest}
             loading={deleting}
           />
@@ -129,14 +132,14 @@ export default function LgpdScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  title: { fontSize: 22, fontWeight: '800', marginBottom: 8 },
-  description: { fontSize: 14, lineHeight: 20, marginBottom: 24 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 22, marginBottom: 8 },
+  description: { fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20, marginBottom: 24 },
   section: {
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: radius.md,
     padding: 16,
     marginBottom: 16,
   },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  sectionDesc: { fontSize: 13, lineHeight: 18 },
+  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, marginBottom: 4 },
+  sectionDesc: { fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 18 },
 });

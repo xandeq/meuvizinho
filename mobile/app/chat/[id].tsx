@@ -14,8 +14,10 @@ import { getHubConnection } from '../../src/lib/signalr';
 import { useAuthStore } from '../../src/lib/auth-store';
 import { MessageBubble } from '../../src/components/chat/MessageBubble';
 import { MessageComposer } from '../../src/components/chat/MessageComposer';
+import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function ChatScreen() {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const conversationId = Number(id);
   const currentUserId = useAuthStore((s) => s.user?.id);
@@ -67,15 +69,15 @@ export default function ChatScreen() {
 
   if (!conversationId) {
     return (
-      <View style={styles.center}>
-        <Text>Conversa inválida.</Text>
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <Text style={{ color: colors.fg }}>Conversa inválida.</Text>
       </View>
     );
   }
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: colors.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
     >
@@ -91,7 +93,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ paddingVertical: 8 }}
         ListEmptyComponent={
           <View style={styles.center}>
-            <ActivityIndicator color="#16A34A" />
+            <ActivityIndicator color={colors.secondary} />
           </View>
         }
       />
@@ -101,6 +103,6 @@ export default function ChatScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
 });

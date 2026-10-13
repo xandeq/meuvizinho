@@ -5,11 +5,14 @@ import { Input } from '../src/components/Input';
 import { Button } from '../src/components/Button';
 import { cepApi } from '../src/lib/api';
 import { useOnboardingStore } from '../src/lib/onboarding-store';
+import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../src/theme/tokens';
 import type { CepLookupResult } from '@bairronow/shared-types';
 
 export default function CepLookup() {
   const router = useRouter();
   const setAddress = useOnboardingStore((s) => s.setAddress);
+  const { colors } = useTheme();
   const [cep, setCep] = useState('');
   const [loading, setLoading] = useState(false);
   const [address, setLocalAddress] = useState<CepLookupResult | null>(null);
@@ -28,9 +31,9 @@ export default function CepLookup() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Seu endereço</Text>
-      <Text style={styles.subtitle}>Para conectar você ao seu bairro</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
+      <Text style={[styles.title, { color: colors.fg }]}>Seu endereço</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Para conectar você ao seu bairro</Text>
       <View style={{ height: 24 }} />
       <Input
         label="CEP"
@@ -39,19 +42,20 @@ export default function CepLookup() {
         placeholder="00000-000"
         keyboardType="numeric"
       />
-      <Button title="Buscar" onPress={lookup} loading={loading} />
+      <Button title="Buscar" icon="search" onPress={lookup} loading={loading} />
       {address && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{address.logradouro}</Text>
-          <Text style={styles.cardLine}>
+        <View style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.md }]}>
+          <Text style={[styles.cardTitle, { color: colors.fg }]}>{address.logradouro}</Text>
+          <Text style={[styles.cardLine, { color: colors.mutedFg }]}>
             {address.bairro} • {address.localidade}/{address.uf}
           </Text>
           {address.bairroId == null && (
-            <Text style={styles.warning}>Ainda não atendemos este bairro.</Text>
+            <Text style={[styles.warning, { color: colors.accent }]}>Ainda não atendemos este bairro.</Text>
           )}
           <View style={{ height: 16 }} />
           <Button
             title="Confirmar e continuar"
+            icon="arrow-forward"
             onPress={() => router.push('/proof-upload')}
           />
         </View>
@@ -61,11 +65,11 @@ export default function CepLookup() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#fff', flexGrow: 1 },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
-  card: { marginTop: 24, padding: 20, backgroundColor: '#F3F4F6', borderRadius: 8 },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  cardLine: { fontSize: 14, color: '#6B7280', marginTop: 4 },
-  warning: { marginTop: 12, fontSize: 13, color: '#B45309', fontWeight: '600' },
+  container: { padding: 24, flexGrow: 1 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
+  subtitle: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 },
+  card: { marginTop: 24, padding: 20 },
+  cardTitle: { fontFamily: fontFamily.bold, fontSize: 18 },
+  cardLine: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 },
+  warning: { marginTop: 12, fontFamily: fontFamily.semibold, fontSize: 13 },
 });

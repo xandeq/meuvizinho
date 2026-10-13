@@ -1,6 +1,8 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useChatStore } from '../lib/chat-store';
 import { useTheme } from '../theme/ThemeContext';
+import { fontFamily, shadow } from '../theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface TabRoute {
@@ -25,12 +27,12 @@ export interface BottomTabsProps {
   descriptors?: any;
 }
 
-const TAB_CONFIG: Record<string, { label: string; icon: string }> = {
-  feed: { label: 'Bairro', icon: '🏘️' },
-  marketplace: { label: 'Mercado', icon: '🛒' },
-  chat: { label: 'Chat', icon: '💬' },
-  map: { label: 'Mapa', icon: '🗺️' },
-  'groups/index': { label: 'Grupos', icon: '👥' },
+const TAB_CONFIG: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; iconFocused: keyof typeof Ionicons.glyphMap }> = {
+  feed: { label: 'Bairro', icon: 'home-outline', iconFocused: 'home' },
+  marketplace: { label: 'Mercado', icon: 'storefront-outline', iconFocused: 'storefront' },
+  chat: { label: 'Chat', icon: 'chatbubble-outline', iconFocused: 'chatbubble' },
+  map: { label: 'Mapa', icon: 'map-outline', iconFocused: 'map' },
+  'groups/index': { label: 'Grupos', icon: 'people-outline', iconFocused: 'people' },
 };
 
 function getTabKey(routeName: string) {
@@ -46,6 +48,7 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
     <View
       style={[
         styles.tabBar,
+        shadow.ambientMid,
         // Edge-to-edge: keep the tabs above the gesture pill / 3-button nav bar.
         { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 8) },
       ]}
@@ -70,14 +73,18 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
         return (
           <Pressable key={route.key} onPress={onPress} style={styles.tab}>
             <View>
-              <Text style={[styles.icon, isFocused && styles.iconFocused]}>{config.icon}</Text>
+              <Ionicons
+                name={isFocused ? config.iconFocused : config.icon}
+                size={23}
+                color={isFocused ? colors.primary : colors.mutedFg}
+              />
               {isChatTab && unreadTotal > 0 && (
                 <View style={[styles.badge, { backgroundColor: colors.danger }]}>
                   <Text style={styles.badgeText}>{unreadTotal > 99 ? '99+' : unreadTotal}</Text>
                 </View>
               )}
             </View>
-            <Text style={[styles.label, { color: colors.mutedFg }, isFocused && { color: colors.primary, fontWeight: '700' }]}>
+            <Text style={[styles.label, { color: colors.mutedFg }, isFocused && { color: colors.primary, fontFamily: fontFamily.bold }]}>
               {config.label}
             </Text>
           </Pressable>
@@ -94,9 +101,7 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   tab: { flex: 1, alignItems: 'center', gap: 2 },
-  icon: { fontSize: 22, opacity: 0.5 },
-  iconFocused: { opacity: 1 },
-  label: { fontSize: 11, fontWeight: '500' },
+  label: { fontSize: 11, fontFamily: fontFamily.medium },
   badge: {
     position: 'absolute',
     top: -4,

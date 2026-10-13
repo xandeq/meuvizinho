@@ -11,12 +11,15 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Button } from '../../../src/components/Button';
 import { marketplaceApi } from '../../../src/lib/api/marketplace';
+import { useTheme } from '../../../src/theme/ThemeContext';
+import { fontFamily, radius } from '../../../src/theme/tokens';
 import type { ListingDto } from '../../../src/lib/api/marketplace.types';
 
 export default function EditListingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const listingId = Number(id);
   const router = useRouter();
+  const { colors } = useTheme();
 
   const [listing, setListing] = useState<ListingDto | null>(null);
   const [title, setTitle] = useState('');
@@ -35,8 +38,8 @@ export default function EditListingScreen() {
 
   if (!listing) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color="#16A34A" />
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator color={colors.secondary} />
       </View>
     );
   }
@@ -59,41 +62,43 @@ export default function EditListingScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ padding: 16 }}>
-      <Text style={styles.label}>Título</Text>
-      <TextInput style={styles.input} value={title} onChangeText={setTitle} />
-      <Text style={styles.label}>Descrição</Text>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16 }}>
+      <Text style={[styles.label, { color: colors.fg }]}>Título</Text>
       <TextInput
-        style={[styles.input, styles.textarea]}
+        style={[styles.input, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.card }]}
+        value={title}
+        onChangeText={setTitle}
+      />
+      <Text style={[styles.label, { color: colors.fg }]}>Descrição</Text>
+      <TextInput
+        style={[styles.input, styles.textarea, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.card }]}
         value={description}
         onChangeText={setDescription}
         multiline
         maxLength={500}
       />
-      <Text style={styles.label}>Preço (R$)</Text>
+      <Text style={[styles.label, { color: colors.fg }]}>Preço (R$)</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.card }]}
         value={price}
         onChangeText={(t) => setPrice(t.replace(/[^0-9.]/g, ''))}
         keyboardType="numeric"
       />
       <View style={{ height: 16 }} />
-      <Button title="Salvar alterações" onPress={handleSave} loading={saving} />
+      <Button title="Salvar alterações" icon="save" onPress={handleSave} loading={saving} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  label: { fontSize: 14, fontWeight: '700', color: '#111827', marginTop: 12, marginBottom: 6 },
+  label: { fontFamily: fontFamily.bold, fontSize: 14, marginTop: 12, marginBottom: 6 },
   input: {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
+    borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    color: '#111827',
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },
 });

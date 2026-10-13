@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, Modal, Pressable, TextInput, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../Button';
 import { marketplaceApi } from '../../lib/api/marketplace';
 import { ReportListingReason, REPORT_REASON_LABELS } from '../../lib/api/marketplace.types';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   visible: boolean;
@@ -14,6 +17,7 @@ interface Props {
  * D-20: Fixed list of 4 report reasons + optional details.
  */
 export function ReportListingSheet({ visible, listingId, onClose }: Props) {
+  const { colors } = useTheme();
   const [reason, setReason] = useState<ReportListingReason | null>(null);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -44,27 +48,43 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.sheet}>
-        <Text style={styles.title}>Denunciar anúncio</Text>
+      <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
+        <View style={[styles.handle, { backgroundColor: colors.border }]} />
+        <View style={styles.header}>
+          <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>
+          <Pressable onPress={onClose} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
+            <Ionicons name="close" size={18} color={colors.mutedFg} />
+          </Pressable>
+        </View>
         {reasons.map((r) => (
           <Pressable
             key={r}
-            style={[styles.option, reason === r && styles.optionActive]}
+            style={[
+              styles.option,
+              { borderColor: colors.border, borderRadius: radius.sm },
+              reason === r && { borderColor: colors.secondary, backgroundColor: colors.secondaryLight },
+            ]}
             onPress={() => setReason(r)}
           >
-            <Text style={[styles.optionText, reason === r && styles.optionTextActive]}>
+            <Text style={[styles.optionText, { color: colors.fg }, reason === r && { color: colors.secondary, fontFamily: fontFamily.bold }]}>
               {REPORT_REASON_LABELS[r]}
             </Text>
+            <Ionicons
+              name={reason === r ? 'radio-button-on' : 'radio-button-off'}
+              size={20}
+              color={reason === r ? colors.secondary : colors.mutedFg}
+            />
           </Pressable>
         ))}
         <TextInput
-          style={styles.input}
+          style={[styles.input, { borderColor: colors.border, borderRadius: radius.sm, color: colors.fg }]}
           placeholder="Detalhes (opcional)"
+          placeholderTextColor={colors.mutedFg}
           multiline
           value={note}
           onChangeText={setNote}
         />
-        <Button title="Enviar denúncia" onPress={handleSubmit} loading={submitting} />
+        <Button title="Enviar denúncia" icon="flag" onPress={handleSubmit} loading={submitting} />
         <View style={{ height: 8 }} />
         <Button title="Cancelar" variant="outline" onPress={onClose} />
       </View>
@@ -79,31 +99,29 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#fff',
     padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    paddingTop: 10,
   },
-  title: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 12 },
+  handle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 12 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  closeBtn: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
+  title: { fontFamily: fontFamily.bold, fontSize: 18 },
   option: {
-    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
     paddingHorizontal: 14,
-    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
     marginBottom: 8,
   },
-  optionActive: { borderColor: '#16A34A', backgroundColor: '#F0FDF4' },
-  optionText: { color: '#374151', fontSize: 14, fontWeight: '600' },
-  optionTextActive: { color: '#16A34A' },
+  optionText: { fontFamily: fontFamily.semibold, fontSize: 14, flex: 1 },
   input: {
     minHeight: 80,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    borderRadius: 8,
     padding: 10,
     marginVertical: 12,
     textAlignVertical: 'top',
-    color: '#111827',
+    fontFamily: fontFamily.regular,
   },
 });

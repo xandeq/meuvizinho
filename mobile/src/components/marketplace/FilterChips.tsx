@@ -1,5 +1,7 @@
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useMarketplaceStore } from '../../lib/marketplace-store';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily } from '../../theme/tokens';
 
 interface Props {
   categories: { code: string; displayName: string }[];
@@ -49,12 +51,18 @@ function Chip({
   active: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.chip, active ? styles.chipActive : styles.chipInactive]}
+      style={[
+        styles.chip,
+        active
+          ? { backgroundColor: colors.secondary, borderColor: colors.secondary }
+          : { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
     >
-      <Text style={active ? styles.chipTextActive : styles.chipTextInactive}>{label}</Text>
+      <Text style={active ? styles.chipTextActive : [styles.chipTextInactive, { color: colors.fg }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -69,8 +77,6 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderWidth: 1,
   },
-  chipActive: { backgroundColor: '#16A34A', borderColor: '#16A34A' },
-  chipInactive: { backgroundColor: '#fff', borderColor: '#D1D5DB' },
-  chipTextActive: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  chipTextInactive: { color: '#374151', fontWeight: '600', fontSize: 13 },
+  chipTextActive: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 13 },
+  chipTextInactive: { fontFamily: fontFamily.semibold, fontSize: 13 },
 });

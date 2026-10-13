@@ -4,6 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import { Button } from './Button';
+import { useTheme } from '../theme/ThemeContext';
+import { fontFamily, radius } from '../theme/tokens';
 
 export interface PickedFile {
   uri: string;
@@ -33,6 +35,7 @@ function guessNameFromUri(uri: string, fallback: string): string {
 }
 
 export function ProofPicker({ onFile }: Props) {
+  const { colors } = useTheme();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
 
   const handleAsset = async (
@@ -108,20 +111,20 @@ export function ProofPicker({ onFile }: Props) {
 
   return (
     <View>
-      <Button title="Escolher foto" variant="outline" onPress={pickFromLibrary} />
+      <Button title="Escolher foto" icon="images" variant="outline" onPress={pickFromLibrary} />
       <View style={{ height: 12 }} />
-      <Button title="Tirar foto" variant="outline" onPress={takePhoto} />
+      <Button title="Tirar foto" icon="camera" variant="outline" onPress={takePhoto} />
       <View style={{ height: 12 }} />
-      <Button title="Enviar PDF" variant="outline" onPress={pickPdf} />
+      <Button title="Enviar PDF" icon="document-text" variant="outline" onPress={pickPdf} />
       {previewUri && (
-        <Image source={{ uri: previewUri }} style={styles.preview} />
+        <Image source={{ uri: previewUri }} style={[styles.preview, { backgroundColor: colors.muted, borderRadius: radius.sm }]} />
       )}
-      <Text style={styles.hint}>Tamanho máximo: 5 MB</Text>
+      <Text style={[styles.hint, { color: colors.mutedFg }]}>Tamanho máximo: 5 MB</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  preview: { width: '100%', height: 240, borderRadius: 8, marginTop: 16, backgroundColor: '#F3F4F6' },
-  hint: { fontSize: 12, color: '#6B7280', marginTop: 8 },
+  preview: { width: '100%', height: 240, marginTop: 16 },
+  hint: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 8 },
 });

@@ -6,11 +6,14 @@ import { Button } from '../src/components/Button';
 import { ProofPicker, type PickedFile } from '../src/components/ProofPicker';
 import { verificationApi } from '../src/lib/api';
 import { useOnboardingStore } from '../src/lib/onboarding-store';
+import { useTheme } from '../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../src/theme/tokens';
 
 export default function ProofUpload() {
   const router = useRouter();
   const address = useOnboardingStore((s) => s.address);
   const setStatus = useOnboardingStore((s) => s.setStatus);
+  const { colors } = useTheme();
   const [file, setFile] = useState<PickedFile | null>(null);
   const [numero, setNumero] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -47,9 +50,9 @@ export default function ProofUpload() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Comprovante de residência</Text>
-      <Text style={styles.subtitle}>Conta de luz, água, internet ou similar</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
+      <Text style={[styles.title, { color: colors.fg }]}>Comprovante de residência</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Conta de luz, água, internet ou similar</Text>
       <View style={{ height: 24 }} />
       <Input
         label="Número (opcional)"
@@ -59,29 +62,24 @@ export default function ProofUpload() {
       />
       <ProofPicker onFile={setFile} />
       {file && (
-        <View style={styles.fileCard}>
-          <Text style={styles.fileName}>{file.name}</Text>
-          <Text style={styles.fileMeta}>
+        <View style={[styles.fileCard, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.sm }]}>
+          <Text style={[styles.fileName, { color: colors.fg }]}>{file.name}</Text>
+          <Text style={[styles.fileMeta, { color: colors.mutedFg }]}>
             {(file.size / 1024).toFixed(0)} KB • {file.type}
           </Text>
         </View>
       )}
       <View style={{ height: 16 }} />
-      <Button title="Enviar" onPress={submit} disabled={!file} loading={submitting} />
+      <Button title="Enviar" icon="cloud-upload" onPress={submit} disabled={!file} loading={submitting} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, backgroundColor: '#fff', flexGrow: 1 },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#6B7280', marginTop: 4 },
-  fileCard: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-  },
-  fileName: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  fileMeta: { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  container: { padding: 24, flexGrow: 1 },
+  title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
+  subtitle: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 },
+  fileCard: { marginTop: 16, padding: 12 },
+  fileName: { fontFamily: fontFamily.bold, fontSize: 14 },
+  fileMeta: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 2 },
 });

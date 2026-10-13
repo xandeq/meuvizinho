@@ -1,13 +1,15 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../theme/ThemeContext';
+import { fontFamily, radius } from '../../../theme/tokens';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
-const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
-  { value: 'light', label: 'Claro' },
-  { value: 'dark', label: 'Escuro' },
-  { value: 'system', label: 'Sistema' },
+const THEME_OPTIONS: { value: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'light', label: 'Claro', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Escuro', icon: 'moon-outline' },
+  { value: 'system', label: 'Sistema', icon: 'phone-portrait-outline' },
 ];
 
 export default function SettingsScreen() {
@@ -17,9 +19,9 @@ export default function SettingsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Appearance section */}
-      <Text style={[styles.sectionTitle, { color: colors.fg }]}>Aparencia</Text>
+      <Text style={[styles.sectionTitle, { color: colors.fg }]}>Aparência</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        {THEME_OPTIONS.map((opt) => {
+        {THEME_OPTIONS.map((opt, i) => {
           const isActive = mode === opt.value;
           return (
             <Pressable
@@ -27,24 +29,29 @@ export default function SettingsScreen() {
               onPress={() => setMode(opt.value)}
               style={[
                 styles.option,
-                isActive && { backgroundColor: colors.primary + '20' },
+                i > 0 && { borderTopWidth: 1, borderTopColor: colors.border },
+                isActive && { backgroundColor: colors.primary + '14' },
               ]}
             >
-              <Text style={[styles.optionText, { color: colors.fg }]}>{opt.label}</Text>
-              {isActive && (
-                <View style={[styles.checkDot, { backgroundColor: colors.primary }]} />
-              )}
+              <View style={styles.optionLeft}>
+                <Ionicons name={opt.icon} size={19} color={isActive ? colors.primary : colors.mutedFg} />
+                <Text style={[styles.optionText, { color: colors.fg }]}>{opt.label}</Text>
+              </View>
+              {isActive && <Ionicons name="checkmark-circle" size={20} color={colors.primary} />}
             </Pressable>
           );
         })}
       </View>
 
       {/* Notifications section */}
-      <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificacoes</Text>
+      <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificações</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Pressable style={styles.option}>
-          <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>
-          <Text style={[styles.optionHint, { color: colors.muted }]}>Em breve</Text>
+          <View style={styles.optionLeft}>
+            <Ionicons name="mail-outline" size={19} color={colors.mutedFg} />
+            <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>
+          </View>
+          <Text style={[styles.optionHint, { color: colors.mutedFg }]}>Em breve</Text>
         </Pressable>
       </View>
 
@@ -53,8 +60,11 @@ export default function SettingsScreen() {
         onPress={() => router.push('/premium')}
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
-        <Text style={[styles.optionText, { color: colors.fg }]}>Meu Vizinho Premium</Text>
-        <Text style={{ color: colors.muted, fontSize: 18 }}>{'>'}</Text>
+        <View style={styles.optionLeft}>
+          <Ionicons name="star-outline" size={19} color={colors.accent} />
+          <Text style={[styles.optionText, { color: colors.fg }]}>Meu Vizinho Premium</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
       </Pressable>
 
       {/* LGPD link */}
@@ -62,8 +72,11 @@ export default function SettingsScreen() {
         onPress={() => router.push('/lgpd')}
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
-        <Text style={[styles.optionText, { color: colors.fg }]}>Meus Dados (LGPD)</Text>
-        <Text style={{ color: colors.muted, fontSize: 18 }}>{'>'}</Text>
+        <View style={styles.optionLeft}>
+          <Ionicons name="document-text-outline" size={19} color={colors.mutedFg} />
+          <Text style={[styles.optionText, { color: colors.fg }]}>Meus Dados (LGPD)</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
       </Pressable>
     </View>
   );
@@ -71,9 +84,9 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+  sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, marginBottom: 8 },
   card: {
-    borderRadius: 12,
+    borderRadius: radius.md,
     borderWidth: 1,
     overflow: 'hidden',
   },
@@ -84,9 +97,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
   },
-  optionText: { fontSize: 15, fontWeight: '500' },
-  optionHint: { fontSize: 13 },
-  checkDot: { width: 12, height: 12, borderRadius: 6 },
+  optionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  optionText: { fontFamily: fontFamily.medium, fontSize: 15 },
+  optionHint: { fontFamily: fontFamily.regular, fontSize: 13 },
   lgpdLink: {
     flexDirection: 'row',
     alignItems: 'center',

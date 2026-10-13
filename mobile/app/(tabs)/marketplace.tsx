@@ -16,7 +16,10 @@ import { marketplaceApi } from '../../src/lib/api/marketplace';
 import type { CategoryDto } from '../../src/lib/api/marketplace.types';
 import { ListingCard } from '../../src/components/marketplace/ListingCard';
 import { FilterChips } from '../../src/components/marketplace/FilterChips';
+import { EmptyState } from '../../src/components/EmptyState';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 
 export default function MarketplaceScreen() {
   const { colors } = useTheme();
@@ -50,8 +53,12 @@ export default function MarketplaceScreen() {
 
   if (!bairroId) {
     return (
-      <View style={[styles.empty, { backgroundColor: colors.bg }]}>
-        <Text style={[styles.emptyText, { color: colors.mutedFg }]}>Complete sua verificação para ver o marketplace.</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <EmptyState
+          icon="shield-checkmark-outline"
+          title="Complete sua verificação"
+          subtitle="Confirme seu endereço para ver o marketplace do seu bairro."
+        />
       </View>
     );
   }
@@ -94,9 +101,15 @@ export default function MarketplaceScreen() {
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
           loading ? null : (
-            <View style={styles.empty}>
-              <Text style={styles.emptyText}>Nenhum anúncio no seu bairro ainda.</Text>
-            </View>
+            <EmptyState
+              icon="storefront-outline"
+              title="Nenhum anúncio no seu bairro ainda"
+              subtitle={
+                isVerified
+                  ? 'Toque em "Novo anúncio" e seja o primeiro vizinho a anunciar algo por aqui.'
+                  : 'Seja o primeiro vizinho a anunciar algo por aqui.'
+              }
+            />
           )
         }
         ListFooterComponent={
@@ -105,10 +118,11 @@ export default function MarketplaceScreen() {
       />
       {isVerified && (
         <Pressable
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={[styles.fab, shadow.blue, { backgroundColor: colors.primary }]}
           onPress={() => router.push('/marketplace/new')}
         >
-          <Text style={styles.fabText}>+ Novo anúncio</Text>
+          <Ionicons name="add" size={18} color="#fff" style={{ marginRight: 4 }} />
+          <Text style={styles.fabText}>Novo anúncio</Text>
         </Pressable>
       )}
     </View>
@@ -119,23 +133,23 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   searchBar: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 4 },
   searchInput: {
-    borderRadius: 10,
+    borderRadius: radius.sm,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderWidth: 1.5,
+    fontFamily: fontFamily.regular,
     fontSize: 14,
   },
   grid: { padding: 6, paddingBottom: 100 },
-  empty: { flex: 1, padding: 32, alignItems: 'center', justifyContent: 'center' },
-  emptyText: { fontSize: 14, textAlign: 'center' },
   fab: {
+    flexDirection: 'row',
+    alignItems: 'center',
     position: 'absolute',
     right: 16,
     bottom: 24,
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderRadius: 999,
-    elevation: 3,
+    borderRadius: radius.xl,
   },
-  fabText: { color: '#fff', fontWeight: '800', fontSize: 14 },
+  fabText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 14 },
 });

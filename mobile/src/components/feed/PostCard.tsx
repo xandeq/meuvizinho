@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../theme/tokens';
 import type { PostDto, PostCategory } from '../../lib/api/feed';
 
 const CATEGORY_LABELS: Record<PostCategory, string> = {
@@ -23,12 +24,16 @@ function relativeTime(iso: string): string {
 
 function Avatar({ name, photoUrl, size = 36 }: { name: string | null; photoUrl: string | null; size?: number }) {
   const { colors } = useTheme();
+  // Filtra palavras que começam com letra antes de pegar as iniciais — nomes
+  // como "Alexandre (Admin) Queiroz" geravam "A(" porque "(Admin)" virava a
+  // 2ª palavra e seu 1º caractere é "(" (achado ao vivo testando o feed real).
   const initials = (name ?? '?')
     .split(' ')
+    .filter((w) => /^[\p{L}]/u.test(w))
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
-    .toUpperCase();
+    .toUpperCase() || '?';
 
   if (photoUrl) {
     return (
@@ -49,7 +54,7 @@ function Avatar({ name, photoUrl, size = 36 }: { name: string | null; photoUrl: 
         justifyContent: 'center',
       }}
     >
-      <Text style={{ color: '#fff', fontWeight: '700', fontSize: size * 0.38 }}>{initials}</Text>
+      <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: size * 0.38 }}>{initials}</Text>
     </View>
   );
 }
@@ -92,11 +97,18 @@ export function PostCard({ post, onLike }: PostCardProps) {
           </View>
           <Text style={s.timestamp}>{relativeTime(post.createdAt)}</Text>
         </View>
-        <View style={[s.categoryBadge, { backgroundColor: categoryColor[post.category] + '20', borderColor: categoryColor[post.category] + '40' }]}>
-          <Text style={[s.categoryLabel, { color: categoryColor[post.category] }]}>
-            {CATEGORY_LABELS[post.category]}
-          </Text>
-        </View>
+        {(() => {
+          // post.category pode vir fora do range 0-4 em dados de teste/legados —
+          // sem fallback, categoryColor[post.category] é undefined e o badge
+          // renderiza como pílula preta vazia (visto ao vivo testando o feed real).
+          const badgeColor = categoryColor[post.category] ?? colors.mutedFg;
+          const badgeLabel = CATEGORY_LABELS[post.category] ?? CATEGORY_LABELS[4];
+          return (
+            <View style={[s.categoryBadge, { backgroundColor: badgeColor + '20', borderColor: badgeColor + '40' }]}>
+              <Text style={[s.categoryLabel, { color: badgeColor }]}>{badgeLabel}</Text>
+            </View>
+          );
+        })()}
       </View>
 
       {/* Body */}
@@ -148,31 +160,30 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
   StyleSheet.create({
     card: {
       backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: colors.border,
+      borderRadius: radius.lg,
       marginHorizontal: 12,
       marginVertical: 5,
       padding: 14,
+      ...shadow.ambientLow,
     },
     header: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
     headerText: { flex: 1 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
-    authorName: { fontWeight: '700', fontSize: 14, color: colors.fg, flex: 1 },
-    timestamp: { fontSize: 11, color: colors.mutedFg, marginTop: 2 },
+    authorName: { fontFamily: fontFamily.bold, fontSize: 14, color: colors.fg, flex: 1 },
+    timestamp: { fontFamily: fontFamily.regular, fontSize: 11, color: colors.mutedFg, marginTop: 2 },
     categoryBadge: {
       paddingHorizontal: 8,
       paddingVertical: 3,
-      borderRadius: 999,
+      borderRadius: radius.xl,
       borderWidth: 1,
       alignSelf: 'flex-start',
     },
-    categoryLabel: { fontSize: 11, fontWeight: '700' },
-    body: { fontSize: 14, color: colors.fg, lineHeight: 20, marginBottom: 10 },
-    readMore: { color: colors.primary, fontWeight: '600' },
+    categoryLabel: { fontFamily: fontFamily.bold, fontSize: 11 },
+    body: { fontFamily: fontFamily.regular, fontSize: 14, color: colors.fg, lineHeight: 20, marginBottom: 10 },
+    readMore: { color: colors.primary, fontFamily: fontFamily.semibold },
     imageScroll: { marginBottom: 10, marginHorizontal: -14 },
-    image: { width: 200, height: 150, borderRadius: 8, marginHorizontal: 6 },
+    image: { width: 200, height: 150, borderRadius: radius.sm, marginHorizontal: 6 },
     actions: { flexDirection: 'row', gap: 20, marginTop: 4 },
     actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    actionCount: { fontSize: 13, color: colors.mutedFg, fontWeight: '600' },
+    actionCount: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.mutedFg },
   });

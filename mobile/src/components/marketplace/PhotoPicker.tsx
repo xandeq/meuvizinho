@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, Alert, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../Button';
 import type { ListingPhotoAsset } from '../../lib/api/marketplace.types';
+import { useTheme } from '../../theme/ThemeContext';
+import { fontFamily, radius } from '../../theme/tokens';
 
 interface Props {
   photos: ListingPhotoAsset[];
@@ -16,6 +19,7 @@ interface Props {
  * D-01: min 1, max 6 photos; first photo is marked "Capa" automatically.
  */
 export function PhotoPicker({ photos, onChange, max = 6 }: Props) {
+  const { colors } = useTheme();
   const [busy, setBusy] = useState(false);
   const remaining = max - photos.length;
 
@@ -69,24 +73,24 @@ export function PhotoPicker({ photos, onChange, max = 6 }: Props) {
 
   return (
     <View>
-      <Text style={styles.label}>Fotos ({photos.length}/{max})</Text>
+      <Text style={[styles.label, { color: colors.fg }]}>Fotos ({photos.length}/{max})</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.row}>
         {photos.map((p, idx) => (
-          <View key={p.uri} style={styles.thumbWrap}>
+          <View key={p.uri} style={[styles.thumbWrap, { borderRadius: radius.sm, backgroundColor: colors.muted }]}>
             <Image source={{ uri: p.uri }} style={styles.thumb} />
             {idx === 0 && (
-              <View style={styles.capaBadge}>
+              <View style={[styles.capaBadge, { backgroundColor: colors.secondary }]}>
                 <Text style={styles.capaText}>Capa</Text>
               </View>
             )}
             <View style={styles.thumbActions}>
               {idx > 0 && (
                 <Pressable onPress={() => moveUp(idx)} style={styles.iconBtn}>
-                  <Text style={styles.iconText}>↑</Text>
+                  <Ionicons name="arrow-up" size={13} color="#fff" />
                 </Pressable>
               )}
-              <Pressable onPress={() => removeAt(idx)} style={[styles.iconBtn, styles.removeBtn]}>
-                <Text style={styles.iconText}>✕</Text>
+              <Pressable onPress={() => removeAt(idx)} style={[styles.iconBtn, { backgroundColor: 'rgba(220,38,38,0.9)' }]}>
+                <Ionicons name="close" size={13} color="#fff" />
               </Pressable>
             </View>
           </View>
@@ -94,25 +98,24 @@ export function PhotoPicker({ photos, onChange, max = 6 }: Props) {
       </ScrollView>
       <Button
         title={busy ? 'Processando…' : `Adicionar fotos (${remaining} restantes)`}
+        icon="images"
         variant="outline"
         onPress={pickImages}
         disabled={busy || remaining <= 0}
       />
-      <Text style={styles.hint}>Mínimo 1, máximo {max}. A primeira foto é a capa.</Text>
+      <Text style={[styles.hint, { color: colors.mutedFg }]}>Mínimo 1, máximo {max}. A primeira foto é a capa.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  label: { fontSize: 14, fontWeight: '700', color: '#111827', marginBottom: 8 },
+  label: { fontFamily: fontFamily.bold, fontSize: 14, marginBottom: 8 },
   row: { marginBottom: 12 },
   thumbWrap: {
     width: 96,
     height: 96,
     marginRight: 8,
-    borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: '#F3F4F6',
     position: 'relative',
   },
   thumb: { width: '100%', height: '100%' },
@@ -120,12 +123,11 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     left: 4,
-    backgroundColor: '#16A34A',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
-  capaText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  capaText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 10 },
   thumbActions: {
     position: 'absolute',
     bottom: 4,
@@ -142,7 +144,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 4,
   },
-  removeBtn: { backgroundColor: 'rgba(220,38,38,0.9)' },
-  iconText: { color: '#fff', fontWeight: '800', fontSize: 12 },
-  hint: { fontSize: 12, color: '#6B7280', marginTop: 6 },
+  hint: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 6 },
 });
