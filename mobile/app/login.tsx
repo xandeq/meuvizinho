@@ -95,7 +95,7 @@ export default function Login() {
       login(data.accessToken, data.user);
       router.replace('/feed');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Codigo invalido');
+      Alert.alert('Erro', e?.response?.data?.error || 'Código inválido');
     } finally {
       setTotpLoading(false);
     }

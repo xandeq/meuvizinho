@@ -28,7 +28,7 @@ export default function AuthCallbackScreen() {
         login(data.accessToken, data.user);
         router.replace('/feed');
       } catch (e: any) {
-        const msg = e?.response?.data?.error || 'Link invalido ou expirado';
+        const msg = e?.response?.data?.error || 'Link inválido ou expirado';
         setError(msg);
         Alert.alert('Erro', msg);
       }

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '@/lib/auth-store';
 import { createGroup } from '@/features/groups/groupsApi';
 import { useTheme } from '../../../src/theme/ThemeContext';
-import { fontFamily, radius } from '../../../src/theme/tokens';
+import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 
-const CATEGORIES = ['Esportes', 'Animais', 'Pais', 'Seguranca', 'Jardinagem', 'Negocios', 'Cultura', 'Outros'] as const;
+const CATEGORIES = ['Esportes', 'Animais', 'Pais', 'Segurança', 'Jardinagem', 'Negócios', 'Cultura', 'Outros'] as const;
 
 export default function NewGroupScreen() {
   const router = useRouter();
@@ -127,8 +128,14 @@ export default function NewGroupScreen() {
       <TouchableOpacity
         onPress={handleCreate}
         disabled={submitting}
-        style={[styles.createBtn, { backgroundColor: colors.secondary, borderRadius: radius.md }, submitting && { opacity: 0.6 }]}
+        style={[
+          styles.createBtn,
+          shadow.emerald,
+          { backgroundColor: colors.secondary, borderRadius: radius.md },
+          submitting && { opacity: 0.6, shadowOpacity: 0, elevation: 0 },
+        ]}
       >
+        {!submitting && <Ionicons name="people" size={18} color="#fff" style={{ marginRight: 8 }} />}
         <Text style={styles.createBtnText}>{submitting ? 'Criando...' : 'Criar Grupo'}</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -142,6 +149,6 @@ const styles = StyleSheet.create({
   input: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontFamily: fontFamily.regular, fontSize: 14 },
   chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
   chipText: { fontFamily: fontFamily.regular, fontSize: 13 },
-  createBtn: { paddingVertical: 14, alignItems: 'center' },
+  createBtn: { flexDirection: 'row', paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
   createBtnText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 16 },
 });
