@@ -220,18 +220,22 @@ export default function ListingDetailScreen() {
           />
         </View>
 
-        {isOwner && !isSold && (
+        {isOwner && (
           <View style={[styles.ownerSection, { borderTopColor: colors.border }]}>
             <Text style={[styles.sectionLabel, { color: colors.mutedFg }]}>Gerenciar anúncio</Text>
             <View style={styles.actions}>
-              <Button
-                title="Editar"
-                icon="create"
-                variant="outline"
-                onPress={() => router.push({ pathname: '/marketplace/edit/[id]', params: { id: listing.id } })}
-              />
-              <Button title="Marcar como vendido" icon="checkmark-done" onPress={handleMarkSold} loading={busy} />
-              <Button title="Remover anúncio" icon="trash" variant="outline" onPress={handleDelete} />
+              {!isSold && (
+                <>
+                  <Button
+                    title="Editar"
+                    icon="create"
+                    variant="outline"
+                    onPress={() => router.push({ pathname: '/marketplace/edit/[id]', params: { id: listing.id } })}
+                  />
+                  <Button title="Marcar como vendido" icon="checkmark-done" onPress={handleMarkSold} loading={busy} />
+                </>
+              )}
+              <Button title="Remover anúncio" icon="trash" variant="danger" onPress={handleDelete} />
             </View>
           </View>
         )}
