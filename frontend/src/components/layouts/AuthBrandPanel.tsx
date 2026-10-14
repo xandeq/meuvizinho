@@ -34,8 +34,8 @@ const features = [
 ];
 
 const stats = [
-  { value: "100%", label: "identidades verificadas" },
-  { value: "3", label: "bairros no piloto" },
+  { value: "100%", label: "de quem publica tem endereço comprovado" },
+  { value: "Vila Velha", label: "primeira cidade do piloto" },
   { value: "0", label: "anúncios patrocinados" },
 ];
 
@@ -58,7 +58,7 @@ export default function AuthBrandPanel({
       </span>
     </>
   ),
-  subhead = "Diretório de grupos WhatsApp verificados, marketplace entre vizinhos e feed local — tudo com identidade comprovada.",
+  subhead = "Grupos de WhatsApp do bairro, marketplace entre vizinhos e feed local, tudo com endereço comprovado.",
 }: AuthBrandPanelProps) {
   return (
     <div

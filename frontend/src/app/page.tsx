@@ -401,7 +401,7 @@ export default function LandingPage() {
           {/* Sub */}
           <p className="mt-8 text-lg md:text-xl text-white/60 max-w-xl leading-relaxed font-medium">
             Feed do bairro, marketplace entre vizinhos, alertas de segurança e
-            ferramentas para síndicos. Tudo com identidade comprovada, sem algoritmo e sem anúncio.
+            ferramentas para síndicos. Tudo com endereço comprovado, sem algoritmo e sem anúncio.
           </p>
 
           {/* CTAs */}
@@ -437,8 +437,8 @@ export default function LandingPage() {
       <section className="bg-bg border-b-2 border-border py-6 px-6">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-6 sm:gap-10">
           {[
-            { n: "100%", label: "identidades verificadas" },
-            { n: "3", label: "bairros no piloto" },
+            { n: "100%", label: "de quem publica tem endereço comprovado" },
+            { n: "Vila Velha", label: "primeira cidade do piloto" },
             { n: "0", label: "anúncios patrocinados" },
           ].map(({ n, label }) => (
             <div key={label} className="text-center">
