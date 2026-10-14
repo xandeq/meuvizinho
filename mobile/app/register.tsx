@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, Pressable } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert, Pressable, Linking } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
@@ -50,19 +51,40 @@ export default function Register() {
       )} />
       <Controller control={control} name="acceptedPrivacyPolicy" render={({ field: { onChange, value } }) => (
         <>
-          <Pressable style={styles.checkboxRow} onPress={() => onChange(!value)}>
+          <Pressable
+            style={styles.checkboxRow}
+            onPress={() => onChange(!value)}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: !!value }}
+            accessibilityLabel="Aceito a política de privacidade"
+          >
             <View style={[
               styles.checkbox,
               { borderRadius: radius.xs, borderColor: colors.primary },
-              value && { backgroundColor: colors.primary },
-            ]} />
+              value && { backgroundColor: colors.primaryFill, borderColor: colors.primaryFill },
+            ]}>
+              {value ? <Ionicons name="checkmark" size={16} color="#fff" /> : null}
+            </View>
             <Text style={[styles.checkboxText, { color: colors.fg }]}>Aceito a política de privacidade</Text>
           </Pressable>
+          {/* Link separado: dentro do rótulo ele roubava o toque de quem queria marcar a caixa. */}
+          <Text
+            onPress={() => Linking.openURL('https://meuvizinhoapp.com.br/privacy-policy/')}
+            accessibilityRole="link"
+            style={[styles.policyLink, { color: colors.primary }]}
+          >
+            Ler a política de privacidade
+          </Text>
           {errors.acceptedPrivacyPolicy ? <Text style={[styles.error, { color: colors.danger }]}>{errors.acceptedPrivacyPolicy.message}</Text> : null}
         </>
       )} />
       <View style={{ height: 16 }} />
       <Button title="Criar conta" icon="person-add" onPress={handleSubmit(onSubmit)} loading={loading} />
+      <Pressable onPress={() => router.replace('/login')} hitSlop={8} style={styles.loginLink} accessibilityRole="link">
+        <Text style={[styles.loginLinkText, { color: colors.mutedFg }]}>
+          Já tem conta? <Text style={{ color: colors.primary, fontFamily: fontFamily.semibold }}>Entrar</Text>
+        </Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -71,8 +93,11 @@ const styles = StyleSheet.create({
   container: { padding: 24, flexGrow: 1 },
   title: { fontFamily: fontFamily.extrabold, fontSize: 28 },
   subtitle: { fontFamily: fontFamily.regular, fontSize: 14, marginTop: 4 },
-  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12 },
-  checkbox: { width: 22, height: 22, borderWidth: 2, marginRight: 12 },
-  checkboxText: { fontFamily: fontFamily.regular, fontSize: 14 },
+  checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 12, minHeight: 44 },
+  checkbox: { width: 24, height: 24, borderWidth: 2, marginRight: 12, alignItems: 'center', justifyContent: 'center' },
+  checkboxText: { flex: 1, fontFamily: fontFamily.regular, fontSize: 15, lineHeight: 21 },
+  loginLink: { alignSelf: 'center', marginTop: 20, paddingVertical: 8 },
+  policyLink: { marginLeft: 36, marginTop: 4, paddingVertical: 6, fontFamily: fontFamily.semibold, fontSize: 14 },
+  loginLinkText: { fontFamily: fontFamily.regular, fontSize: 15 },
   error: { marginTop: 6, fontFamily: fontFamily.semibold, fontSize: 13 },
 });

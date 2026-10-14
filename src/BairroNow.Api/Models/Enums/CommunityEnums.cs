@@ -25,6 +25,14 @@ public enum CondominiumResidentStatus { Pending, Approved, Rejected, Revoked }
 // Estado de uma reserva de área comum.
 public enum AreaReservationStatus { Pending, Approved, Rejected, Cancelled }
 
+// ─── Wave U: Ocorrências do condomínio (morador → síndico) ──────────────────
+
+// Assunto da ocorrência aberta pelo morador.
+public enum CondominiumIncidentCategory { Manutencao, Limpeza, Seguranca, Barulho, AreaComum, Outros }
+
+// Ciclo da ocorrência. Recusada = síndico não vai atender (com resposta explicando).
+public enum CondominiumIncidentStatus { Aberta, EmAndamento, Resolvida, Recusada }
+
 // ─── Wave Q: Alertas de Segurança Geolocalizados ────────────────────────────
 
 // Tipo do alerta de segurança reportado por um morador verificado.

@@ -11,7 +11,7 @@ interface Props {
 
 export default function WhatsAppShareButton({ url, text = 'Veja este post no Meu Vizinho' }: Props) {
   return (
-    <TouchableOpacity
+    <TouchableOpacity accessibilityRole="button"
       onPress={() => shareToWhatsApp(url, text)}
       style={styles.button}
     >

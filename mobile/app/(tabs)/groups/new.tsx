@@ -84,13 +84,13 @@ export default function NewGroupScreen() {
             {CATEGORIES.map((c) => {
               const isActive = category === c;
               return (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={c}
                   onPress={() => setCategory(c)}
                   style={[
                     styles.chip,
                     { borderColor: colors.border, backgroundColor: colors.card },
-                    isActive && { backgroundColor: colors.secondary, borderColor: colors.secondary },
+                    isActive && { backgroundColor: colors.secondaryFill, borderColor: colors.secondary },
                   ]}
                 >
                   <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>{c}</Text>
@@ -107,13 +107,13 @@ export default function NewGroupScreen() {
           {(['Open', 'Closed'] as const).map((p) => {
             const isActive = joinPolicy === p;
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={p}
                 onPress={() => setJoinPolicy(p)}
                 style={[
                   styles.chip,
                   { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { backgroundColor: colors.secondary, borderColor: colors.secondary },
+                  isActive && { backgroundColor: colors.secondaryFill, borderColor: colors.secondary },
                 ]}
               >
                 <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>
@@ -125,13 +125,13 @@ export default function NewGroupScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
+      <TouchableOpacity accessibilityRole="button"
         onPress={handleCreate}
         disabled={submitting}
         style={[
           styles.createBtn,
           shadow.emerald,
-          { backgroundColor: colors.secondary, borderRadius: radius.md },
+          { backgroundColor: colors.secondaryFill, borderRadius: radius.md },
           submitting && { opacity: 0.6, shadowOpacity: 0, elevation: 0 },
         ]}
       >

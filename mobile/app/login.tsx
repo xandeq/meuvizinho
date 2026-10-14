@@ -23,6 +23,7 @@ const GOOGLE_CLIENT_ID =
 export default function Login() {
   const router = useRouter();
   const login = useAuthStore((s) => s.login);
+  const sessionExpired = useAuthStore((s) => s.sessionExpired);
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -122,7 +123,7 @@ export default function Login() {
         <View style={{ height: 16 }} />
         <Button title="Verificar" icon="shield-checkmark" onPress={handleTotpVerify} loading={totpLoading} />
         <View style={{ height: 12 }} />
-        <Pressable onPress={() => { setTotpGate(false); setTotpCode(''); }}>
+        <Pressable accessibilityRole="button" onPress={() => { setTotpGate(false); setTotpCode(''); }}>
           <Text style={[styles.link, { color: colors.primary }]}>Voltar</Text>
         </Pressable>
       </ScrollView>
@@ -131,22 +132,32 @@ export default function Login() {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.fg }]}>Entrar</Text>
-      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Acesse seu bairro</Text>
+      <Text style={[styles.title, { color: colors.fg }]} accessibilityRole="header">Bem-vindo de volta</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Entre na sua conta para continuar</Text>
+      {sessionExpired && (
+        <View
+          style={[styles.expiredBanner, { backgroundColor: colors.accent + '18', borderColor: colors.accent + '45' }]}
+          accessibilityLiveRegion="polite"
+        >
+          <Ionicons name="time-outline" size={18} color={colors.accent} />
+          <Text style={[styles.expiredText, { color: colors.fg }]}>Sua sessão expirou. Entre de novo para continuar.</Text>
+        </View>
+      )}
       <View style={{ height: 24 }} />
 
       {/* Google Sign-In */}
       <Pressable
         onPress={() => promptAsync()}
         disabled={!request || googleLoading}
+        accessibilityRole="button"
         style={({ pressed }) => [
           styles.googleButton,
-          { borderRadius: radius.md },
+          { borderRadius: radius.md, borderColor: colors.border },
           (googleLoading || !request) && { opacity: 0.6 },
           pressed && !googleLoading && { transform: [{ scale: 0.97 }] },
         ]}
       >
-        <Ionicons name="logo-google" size={18} color="#fff" style={{ marginRight: 8 }} />
+        <Ionicons name="logo-google" size={18} color="#4285F4" style={{ marginRight: 10 }} />
         <Text style={styles.googleText}>
           {googleLoading ? 'Entrando...' : 'Entrar com Google'}
         </Text>
@@ -189,11 +200,11 @@ export default function Login() {
       <Button title="Entrar" icon="log-in" onPress={handleSubmit(onSubmit)} loading={loading} />
       <View style={{ height: 12 }} />
       <Link href="/magic-link" style={[styles.link, { color: colors.primary }]}>
-        Entrar sem senha (link magico)
+        Entrar sem senha (link mágico)
       </Link>
       <View style={{ height: 16 }} />
       <Link href="/register" style={[styles.link, { color: colors.primary }]}>
-        Nao tem conta? Criar conta
+        Não tem conta? Criar conta
       </Link>
     </ScrollView>
   );
@@ -209,10 +220,12 @@ const styles = StyleSheet.create({
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4285F4',
-    ...shadow.ambientMid,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    ...shadow.ambientLow,
   },
-  googleText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 16 },
+  // Botão claro no padrão da marca Google (azul claro + texto branco dava ~3.6:1).
+  googleText: { color: '#1F1F1F', fontFamily: fontFamily.semibold, fontSize: 16 },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -229,4 +242,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 8,
   },
+  expiredBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12, borderRadius: 12, borderWidth: 1, marginTop: 16 },
+  expiredText: { flex: 1, fontFamily: fontFamily.medium, fontSize: 14, lineHeight: 20 },
 });

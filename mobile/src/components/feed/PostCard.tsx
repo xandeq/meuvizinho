@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ScrollView, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
@@ -13,33 +13,47 @@ const CATEGORY_LABELS: Record<PostCategory, string> = {
   4: 'Geral',
 };
 
+const CATEGORY_ICONS: Record<PostCategory, keyof typeof Ionicons.glyphMap> = {
+  0: 'bulb-outline',
+  1: 'warning-outline',
+  2: 'help-circle-outline',
+  3: 'calendar-outline',
+  4: 'chatbubble-ellipses-outline',
+};
+
+const CARD_MARGIN = 12;
+const CARD_PADDING = 14;
+
 function relativeTime(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
   if (diff < 60) return 'agora';
-  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} d`;
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 }
 
-function Avatar({ name, photoUrl, size = 36 }: { name: string | null; photoUrl: string | null; size?: number }) {
+function Avatar({ name, photoUrl, size = 40 }: { name: string | null; photoUrl: string | null; size?: number }) {
   const { colors } = useTheme();
+  const [failed, setFailed] = useState(false);
   // Filtra palavras que começam com letra antes de pegar as iniciais — nomes
   // como "Alexandre (Admin) Queiroz" geravam "A(" porque "(Admin)" virava a
   // 2ª palavra e seu 1º caractere é "(" (achado ao vivo testando o feed real).
-  const initials = (name ?? '?')
+  const initials = (name ?? '')
     .split(' ')
     .filter((w) => /^[\p{L}]/u.test(w))
     .slice(0, 2)
     .map((w) => w[0])
     .join('')
-    .toUpperCase() || '?';
+    .toUpperCase();
 
-  if (photoUrl) {
+  if (photoUrl && !failed) {
     return (
       <Image
         source={{ uri: photoUrl }}
-        style={{ width: size, height: size, borderRadius: size / 2 }}
+        onError={() => setFailed(true)}
+        style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: colors.border }}
+        accessibilityIgnoresInvertColors
       />
     );
   }
@@ -49,12 +63,44 @@ function Avatar({ name, photoUrl, size = 36 }: { name: string | null; photoUrl: 
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: colors.primary,
+        backgroundColor: initials ? colors.primaryFill : colors.primaryLight,
         alignItems: 'center',
         justifyContent: 'center',
       }}
     >
-      <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: size * 0.38 }}>{initials}</Text>
+      {initials ? (
+        <Text style={{ color: '#fff', fontFamily: fontFamily.bold, fontSize: size * 0.38 }}>{initials}</Text>
+      ) : (
+        // Sem nome: silhueta, nunca um "?" (parecia erro de carregamento).
+        <Ionicons name="person" size={size * 0.5} color={colors.primary} />
+      )}
+    </View>
+  );
+}
+
+// Foto com placeholder: enquanto carrega ou se o arquivo sumiu do servidor,
+// o espaço mostra um ícone em vez de um buraco vazio no card.
+function PostImage({ uri, width, height }: { uri: string; width: number; height: number }) {
+  const { colors } = useTheme();
+  const [state, setState] = useState<'loading' | 'ok' | 'error'>('loading');
+  return (
+    <View style={[styles.imageBox, { width, height, backgroundColor: colors.muted, borderColor: colors.border }]}>
+      {state !== 'ok' && (
+        <View style={styles.imagePlaceholder}>
+          <Ionicons name={state === 'error' ? 'image-outline' : 'image'} size={26} color={colors.mutedFg} />
+          {state === 'error' && <Text style={[styles.imageError, { color: colors.mutedFg }]}>Foto indisponível</Text>}
+        </View>
+      )}
+      {state !== 'error' && (
+        <Image
+          source={{ uri }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onLoad={() => setState('ok')}
+          onError={() => setState('error')}
+          accessibilityIgnoresInvertColors
+        />
+      )}
     </View>
   );
 }
@@ -66,124 +112,142 @@ interface PostCardProps {
 
 export function PostCard({ post, onLike }: PostCardProps) {
   const { colors } = useTheme();
+  const { width: screenWidth } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
-  const TRUNCATE = 160;
+  const TRUNCATE = 220;
   const needsTruncate = post.body.length > TRUNCATE;
-  const bodyText = !expanded && needsTruncate ? post.body.slice(0, TRUNCATE) + '…' : post.body;
+  const bodyText = !expanded && needsTruncate ? post.body.slice(0, TRUNCATE).trimEnd() + '…' : post.body;
 
   const categoryColor: Record<PostCategory, string> = {
-    0: colors.primary,    // Dica — blue
-    1: colors.danger,     // Alerta — red
-    2: colors.accent,     // Pergunta — amber
-    3: colors.secondary,  // Evento — emerald
-    4: colors.mutedFg,    // Geral — slate
+    0: colors.primary,
+    1: colors.danger,
+    2: colors.accent,
+    3: colors.primary,
+    4: colors.mutedFg,
   };
+  // post.category pode vir fora do range 0-4 em dados de teste/legados.
+  const catColor = categoryColor[post.category] ?? colors.mutedFg;
+  const catLabel = CATEGORY_LABELS[post.category] ?? CATEGORY_LABELS[4];
+  const catIcon = CATEGORY_ICONS[post.category] ?? CATEGORY_ICONS[4];
 
-  const s = styles(colors);
+  const images = [...post.images].sort((a, b) => a.order - b.order);
+  const innerWidth = screenWidth - CARD_MARGIN * 2 - CARD_PADDING * 2;
+  const s = styles;
 
   return (
-    <View style={s.card}>
-      {/* Header */}
+    <View style={[s.card, shadow.ambientLow, { backgroundColor: colors.card }]}>
       <View style={s.header}>
         <Avatar name={post.author.displayName} photoUrl={post.author.photoUrl} />
         <View style={s.headerText}>
           <View style={s.nameRow}>
-            <Text style={s.authorName} numberOfLines={1}>
+            <Text style={[s.authorName, { color: colors.fg }]} numberOfLines={1}>
               {post.author.displayName ?? 'Vizinho'}
             </Text>
             {post.author.isVerified && (
-              <Ionicons name="checkmark-circle" size={14} color={colors.secondary} style={{ marginLeft: 3 }} />
+              <Ionicons
+                name="checkmark-circle"
+                size={16}
+                color={colors.verified}
+                accessibilityLabel="Endereço verificado"
+              />
             )}
           </View>
-          <Text style={s.timestamp}>{relativeTime(post.createdAt)}</Text>
+          <View style={s.metaRow}>
+            <Ionicons name={catIcon} size={12} color={catColor} />
+            <Text style={[s.meta, { color: catColor }]}>{catLabel}</Text>
+            <Text style={[s.meta, { color: colors.mutedFg }]}>· {relativeTime(post.createdAt)}</Text>
+          </View>
         </View>
-        {(() => {
-          // post.category pode vir fora do range 0-4 em dados de teste/legados —
-          // sem fallback, categoryColor[post.category] é undefined e o badge
-          // renderiza como pílula preta vazia (visto ao vivo testando o feed real).
-          const badgeColor = categoryColor[post.category] ?? colors.mutedFg;
-          const badgeLabel = CATEGORY_LABELS[post.category] ?? CATEGORY_LABELS[4];
-          return (
-            <View style={[s.categoryBadge, { backgroundColor: badgeColor + '20', borderColor: badgeColor + '40' }]}>
-              <Text style={[s.categoryLabel, { color: badgeColor }]}>{badgeLabel}</Text>
-            </View>
-          );
-        })()}
       </View>
 
-      {/* Body */}
-      <Text style={s.body}>
+      <Text style={[s.body, { color: colors.fg }]}>
         {bodyText}
         {needsTruncate && !expanded && (
-          <Text onPress={() => setExpanded(true)} style={s.readMore}> ver mais</Text>
+          <Text onPress={() => setExpanded(true)} style={[s.readMore, { color: colors.primary }]}> ver mais</Text>
         )}
       </Text>
 
-      {/* Images */}
-      {post.images.length > 0 && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.imageScroll}>
-          {post.images
-            .sort((a, b) => a.order - b.order)
-            .map((img, i) => (
-              <Image
-                key={i}
-                source={{ uri: img.url }}
-                style={s.image}
-                resizeMode="cover"
-              />
-            ))}
+      {images.length === 1 && (
+        <View style={s.single}>
+          <PostImage uri={images[0].url} width={innerWidth} height={Math.round(innerWidth * 0.66)} />
+        </View>
+      )}
+      {images.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={s.imageScroll}
+          contentContainerStyle={s.imageScrollContent}
+        >
+          {images.map((img, i) => (
+            <PostImage
+              key={`${img.url}-${i}`}
+              uri={img.url}
+              width={Math.round(innerWidth * 0.72)}
+              height={Math.round(innerWidth * 0.54)}
+            />
+          ))}
         </ScrollView>
       )}
 
-      {/* Actions */}
-      <View style={s.actions}>
-        <Pressable style={s.actionBtn} onPress={() => onLike(post.id)}>
+      <View style={[s.actions, { borderTopColor: colors.border }]}>
+        <Pressable
+          style={({ pressed }) => [s.actionBtn, { opacity: pressed ? 0.6 : 1 }]}
+          onPress={() => onLike(post.id)}
+          accessibilityRole="button"
+          accessibilityState={{ selected: post.likedByMe }}
+          accessibilityLabel={post.likedByMe ? 'Descurtir' : 'Curtir'}
+        >
           <Ionicons
             name={post.likedByMe ? 'heart' : 'heart-outline'}
-            size={18}
+            size={20}
             color={post.likedByMe ? colors.danger : colors.mutedFg}
           />
-          <Text style={[s.actionCount, post.likedByMe && { color: colors.danger }]}>
-            {post.likeCount > 0 ? post.likeCount : ''}
+          <Text style={[s.actionText, { color: post.likedByMe ? colors.danger : colors.mutedFg }]}>
+            {post.likeCount > 0 ? post.likeCount : 'Curtir'}
           </Text>
         </Pressable>
         <View style={s.actionBtn}>
-          <Ionicons name="chatbubble-outline" size={17} color={colors.mutedFg} />
-          <Text style={s.actionCount}>{post.commentCount > 0 ? post.commentCount : ''}</Text>
+          <Ionicons name="chatbubble-outline" size={19} color={colors.mutedFg} />
+          <Text style={[s.actionText, { color: colors.mutedFg }]}>
+            {post.commentCount > 0
+              ? `${post.commentCount} ${post.commentCount === 1 ? 'comentário' : 'comentários'}`
+              : 'Sem comentários'}
+          </Text>
         </View>
       </View>
     </View>
   );
 }
 
-const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').useTheme>['colors']) =>
-  StyleSheet.create({
-    card: {
-      backgroundColor: colors.card,
-      borderRadius: radius.lg,
-      marginHorizontal: 12,
-      marginVertical: 5,
-      padding: 14,
-      ...shadow.ambientLow,
-    },
-    header: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
-    headerText: { flex: 1 },
-    nameRow: { flexDirection: 'row', alignItems: 'center' },
-    authorName: { fontFamily: fontFamily.bold, fontSize: 14, color: colors.fg, flex: 1 },
-    timestamp: { fontFamily: fontFamily.regular, fontSize: 11, color: colors.mutedFg, marginTop: 2 },
-    categoryBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: radius.xl,
-      borderWidth: 1,
-      alignSelf: 'flex-start',
-    },
-    categoryLabel: { fontFamily: fontFamily.bold, fontSize: 11 },
-    body: { fontFamily: fontFamily.regular, fontSize: 14, color: colors.fg, lineHeight: 20, marginBottom: 10 },
-    readMore: { color: colors.primary, fontFamily: fontFamily.semibold },
-    imageScroll: { marginBottom: 10, marginHorizontal: -14 },
-    image: { width: 200, height: 150, borderRadius: radius.sm, marginHorizontal: 6 },
-    actions: { flexDirection: 'row', gap: 20, marginTop: 4 },
-    actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-    actionCount: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.mutedFg },
-  });
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: radius.lg,
+    marginHorizontal: CARD_MARGIN,
+    marginVertical: 6,
+    paddingHorizontal: CARD_PADDING,
+    paddingTop: CARD_PADDING,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 },
+  headerText: { flex: 1 },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  authorName: { fontFamily: fontFamily.bold, fontSize: 15, flexShrink: 1 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  meta: { fontFamily: fontFamily.medium, fontSize: 12 },
+  body: { fontFamily: fontFamily.regular, fontSize: 15, lineHeight: 22, marginBottom: 12 },
+  readMore: { fontFamily: fontFamily.semibold },
+  single: { marginBottom: 12 },
+  imageScroll: { marginBottom: 12, marginHorizontal: -CARD_PADDING },
+  imageScrollContent: { paddingHorizontal: CARD_PADDING, gap: 8 },
+  imageBox: { borderRadius: radius.md, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth },
+  imagePlaceholder: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  imageError: { fontFamily: fontFamily.medium, fontSize: 12 },
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginHorizontal: -4,
+  },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 4, paddingRight: 12 },
+  actionText: { fontFamily: fontFamily.semibold, fontSize: 13 },
+});

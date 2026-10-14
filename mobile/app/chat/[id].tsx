@@ -93,7 +93,7 @@ export default function ChatScreen() {
         contentContainerStyle={{ paddingVertical: 8 }}
         ListEmptyComponent={
           <View style={styles.center}>
-            <ActivityIndicator color={colors.secondary} />
+            <ActivityIndicator color={colors.primary} />
           </View>
         }
       />

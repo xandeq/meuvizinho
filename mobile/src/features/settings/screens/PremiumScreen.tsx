@@ -56,7 +56,7 @@ export default function PremiumScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content}>
-      <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+      <View style={[styles.hero, { backgroundColor: colors.primaryFill }]}>
         <Text style={styles.heroTitle}>Meu Vizinho Premium</Text>
         <Text style={styles.heroSub}>Mais destaque, mais alcance e mais recursos para você e seu bairro.</Text>
       </View>
@@ -94,16 +94,16 @@ export default function PremiumScreen() {
       {!loading && status && !isPremium && (
         <View style={{ gap: 10 }}>
           {status.isEligibleForTrial && (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={startTrial}
               disabled={starting}
-              style={[styles.btn, { backgroundColor: colors.primary, opacity: starting ? 0.6 : 1 }]}
+              style={[styles.btn, { backgroundColor: colors.primaryFill, opacity: starting ? 0.6 : 1 }]}
             >
               <Text style={styles.btnText}>{starting ? 'Ativando…' : 'Ativar trial grátis de 14 dias'}</Text>
             </Pressable>
           )}
           {CHECKOUT_URL ? (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={() => Linking.openURL(CHECKOUT_URL)}
               style={[styles.btn, styles.btnOutline, { borderColor: colors.primary }]}
             >
@@ -124,7 +124,7 @@ export default function PremiumScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { padding: 16, gap: 16, paddingBottom: 40 },
+  content: { padding: 16, gap: 16, paddingBottom: 80 },
   hero: { borderRadius: radius.lg, padding: 24 },
   heroTitle: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 22, marginBottom: 6 },
   heroSub: { color: 'rgba(255,255,255,0.85)', fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20 },

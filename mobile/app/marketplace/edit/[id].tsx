@@ -39,7 +39,7 @@ export default function EditListingScreen() {
   if (!listing) {
     return (
       <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.secondary} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -62,7 +62,7 @@ export default function EditListingScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16 }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
       <Text style={[styles.label, { color: colors.fg }]}>Título</Text>
       <TextInput
         style={[styles.input, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.card }]}

@@ -31,7 +31,7 @@ export default function MarketplaceSearchScreen() {
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.secondary} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }

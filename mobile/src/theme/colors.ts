@@ -20,6 +20,11 @@ export const lightColors = {
   dangerLight: '#FEF2F2',
   verified: '#059669',    // alias semântico — nunca usar fora de contexto de confiança
   verifiedGlow: '#ECFDF5',
+  // Fundos sólidos com texto/ícone branco por cima (botão, FAB, hero, chip ativo).
+  // Garantem contraste AA >= 4.5:1 com #FFF nos dois temas.
+  primaryFill: '#2563EB',
+  secondaryFill: '#047857',
+  dangerFill: '#DC2626',
 };
 
 export const darkColors = {
@@ -28,7 +33,8 @@ export const darkColors = {
   mutedFg: '#94A3B8',     // slate-400
   card: '#1E293B',        // slate-800
   surfaceElevated: '#1E293B',
-  muted: '#1E293B',       // slate-800
+  // Um degrau acima do card: igual ao card (#1E293B) as pílulas/caixas "muted" sumiam dentro de cards.
+  muted: '#273449',
   border: '#334155',      // slate-700
   borderStrong: '#475569',
   primary: '#60A5FA',     // blue-400
@@ -44,4 +50,9 @@ export const darkColors = {
   dangerLight: '#3A1515',
   verified: '#34D399',
   verifiedGlow: '#0F2922',
+  // No escuro, primary/secondary claros servem p/ texto e ícone; fundo sólido
+  // com texto branco precisa do tom saturado (blue-400 + branco = 2.6:1, reprova AA).
+  primaryFill: '#2563EB',
+  secondaryFill: '#047857',
+  dangerFill: '#DC2626',
 };

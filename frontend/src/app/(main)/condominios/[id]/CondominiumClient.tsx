@@ -224,6 +224,19 @@ export default function CondominiumClient() {
         </div>
       </section>
 
+      {/* Ocorrências */}
+      <section className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 space-y-3">
+        <div>
+          <h2 className="text-lg font-extrabold text-fg">Ocorrências</h2>
+          <p className="text-sm text-muted-fg">Lâmpada queimada, vazamento, barulho: avise o síndico e acompanhe a resposta.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/condominios/${condoId}/ocorrencias`}>
+            <Button variant="primary" size="sm">{condo.isMySindico ? 'Ver ocorrências do condomínio' : 'Abrir ou acompanhar ocorrências'}</Button>
+          </Link>
+        </div>
+      </section>
+
       {/* WhatsApp groups */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">

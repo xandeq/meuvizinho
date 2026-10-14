@@ -63,7 +63,13 @@ export function MessageComposer({ conversationId }: Props) {
 
   return (
     <View style={[styles.container, { borderTopColor: colors.border, backgroundColor: colors.card }]}>
-      <Pressable style={styles.attachBtn} onPress={handleAttach} disabled={sending}>
+      <Pressable
+        style={styles.attachBtn}
+        onPress={handleAttach}
+        disabled={sending}
+        accessibilityRole="button"
+        accessibilityLabel="Anexar foto"
+      >
         <Ionicons name="attach" size={22} color={colors.mutedFg} />
       </Pressable>
       <TextInput
@@ -75,10 +81,12 @@ export function MessageComposer({ conversationId }: Props) {
         multiline
       />
       <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Enviar mensagem"
         style={({ pressed }) => [
           styles.sendBtn,
-          shadow.emerald,
-          { backgroundColor: colors.secondary },
+          shadow.blue,
+          { backgroundColor: colors.secondaryFill },
           (!text.trim() || sending) && { backgroundColor: colors.mutedFg, shadowOpacity: 0, elevation: 0 },
           pressed && !!text.trim() && !sending && { transform: [{ scale: 0.93 }] },
         ]}

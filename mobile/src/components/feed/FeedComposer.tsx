@@ -65,7 +65,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
-      <Pressable style={s.backdrop} onPress={handleClose} />
+      <Pressable style={s.backdrop} onPress={handleClose} accessibilityRole="button" accessibilityLabel="Fechar" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={s.sheetWrapper}
@@ -77,7 +77,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
           {/* Title row */}
           <View style={s.titleRow}>
             <Text style={s.title}>Criar post</Text>
-            <Pressable onPress={handleClose} hitSlop={12}>
+            <Pressable onPress={handleClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Fechar">
               <Ionicons name="close" size={22} color={colors.mutedFg} />
             </Pressable>
           </View>
@@ -85,7 +85,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
           {/* Category chips */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
             {CATEGORIES.map((c) => (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 key={c.value}
                 style={[s.chip, category === c.value && s.chipActive]}
                 onPress={() => setCategory(c.value)}
@@ -113,7 +113,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
           {error && <Text style={s.error}>{error}</Text>}
 
           {/* Submit */}
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[s.submitBtn, (!body.trim() || submitting) && s.submitBtnDisabled]}
             onPress={handleSubmit}
             disabled={!body.trim() || submitting}
@@ -161,7 +161,7 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
       marginRight: 8,
       backgroundColor: colors.muted,
     },
-    chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    chipActive: { backgroundColor: colors.primaryFill, borderColor: colors.primary },
     chipLabel: { fontFamily: fontFamily.bold, fontSize: 13, color: colors.mutedFg },
     chipLabelActive: { color: '#fff' },
     input: {
@@ -179,7 +179,7 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
     charCount: { fontFamily: fontFamily.regular, fontSize: 11, color: colors.mutedFg, textAlign: 'right', marginTop: 4, marginBottom: 12 },
     error: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.danger, marginBottom: 10 },
     submitBtn: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.primaryFill,
       borderRadius: radius.sm,
       paddingVertical: 14,
       alignItems: 'center',

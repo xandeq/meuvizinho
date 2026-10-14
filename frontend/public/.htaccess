@@ -53,6 +53,10 @@
 
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^condominios/[0-9]+/ocorrencias/?$ /condominios/placeholder/ocorrencias/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^condominios/[0-9]+/gerenciar/areas-comuns/?$ /condominios/placeholder/gerenciar/areas-comuns/index.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f

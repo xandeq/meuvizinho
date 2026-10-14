@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../theme/ThemeContext';
 import { fontFamily, radius } from '../../../theme/tokens';
+import { authApi } from '../../../lib/api';
+import { useAuthStore } from '../../../lib/auth-store';
 
 type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -15,16 +18,39 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: keyof typeof Ionic
 export default function SettingsScreen() {
   const { mode, setMode, colors } = useTheme();
   const router = useRouter();
+  const logout = useAuthStore((s) => s.logout);
+  const email = useAuthStore((s) => s.user?.email);
+  const [leaving, setLeaving] = useState(false);
+
+  // Antes não havia "Sair" no app (só dentro do fluxo de exclusão LGPD).
+  const confirmLogout = () => {
+    Alert.alert('Sair da conta?', email ? `Você vai sair de ${email} neste aparelho.` : 'Você vai sair neste aparelho.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: async () => {
+          setLeaving(true);
+          // Revoga a sessão no servidor; sem rede, sai do aparelho do mesmo jeito.
+          try {
+            await authApi.logout();
+          } catch {}
+          logout();
+          router.replace('/');
+        },
+      },
+    ]);
+  };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.container}>
       {/* Appearance section */}
       <Text style={[styles.sectionTitle, { color: colors.fg }]}>Aparência</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         {THEME_OPTIONS.map((opt, i) => {
           const isActive = mode === opt.value;
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               key={opt.value}
               onPress={() => setMode(opt.value)}
               style={[
@@ -46,17 +72,20 @@ export default function SettingsScreen() {
       {/* Notifications section */}
       <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificações</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Pressable style={styles.option}>
+        {/* Ainda não existe: linha informativa, não um botão que não faz nada. */}
+        <View style={styles.option} accessible accessibilityLabel="Resumo semanal do bairro, em breve">
           <View style={styles.optionLeft}>
             <Ionicons name="mail-outline" size={19} color={colors.mutedFg} />
-            <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>
+            <Text style={[styles.optionText, { color: colors.mutedFg }]}>Resumo semanal do bairro</Text>
           </View>
-          <Text style={[styles.optionHint, { color: colors.mutedFg }]}>Em breve</Text>
-        </Pressable>
+          <View style={[styles.soon, { backgroundColor: colors.muted }]}>
+            <Text style={[styles.soonText, { color: colors.mutedFg }]}>Em breve</Text>
+          </View>
+        </View>
       </View>
 
       {/* Premium link */}
-      <Pressable
+      <Pressable accessibilityRole="button"
         onPress={() => router.push('/premium')}
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
@@ -68,7 +97,7 @@ export default function SettingsScreen() {
       </Pressable>
 
       {/* LGPD link */}
-      <Pressable
+      <Pressable accessibilityRole="button"
         onPress={() => router.push('/lgpd')}
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
@@ -78,12 +107,42 @@ export default function SettingsScreen() {
         </View>
         <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
       </Pressable>
-    </View>
+
+      {/* Conta */}
+      <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Conta</Text>
+      <Pressable
+        onPress={confirmLogout}
+        disabled={leaving}
+        accessibilityRole="button"
+        accessibilityLabel="Sair da conta"
+        style={({ pressed }) => [
+          styles.card,
+          styles.lgpdLink,
+          { backgroundColor: colors.card, borderColor: colors.border, opacity: pressed || leaving ? 0.7 : 1 },
+        ]}
+      >
+        <View style={[styles.optionLeft, styles.shrink]}>
+          <Ionicons name="log-out-outline" size={19} color={colors.danger} />
+          <View style={styles.shrink}>
+            <Text style={[styles.optionText, { color: colors.danger }]}>Sair da conta</Text>
+            {email ? (
+              <Text style={[styles.optionHint, { color: colors.mutedFg }]} numberOfLines={1}>
+                {email}
+              </Text>
+            ) : null}
+          </View>
+        </View>
+        {leaving ? <ActivityIndicator size="small" color={colors.danger} /> : null}
+      </Pressable>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { padding: 16, paddingBottom: 80 },
+  shrink: { flexShrink: 1 },
+  soon: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.xl },
+  soonText: { fontFamily: fontFamily.semibold, fontSize: 12 },
   sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, marginBottom: 8 },
   card: {
     borderRadius: radius.md,

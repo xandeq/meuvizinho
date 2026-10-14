@@ -47,17 +47,17 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
+      <Pressable accessibilityRole="button" style={styles.backdrop} onPress={onClose} />
       <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}>
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
             <Ionicons name="close" size={18} color={colors.mutedFg} />
           </Pressable>
         </View>
         {reasons.map((r) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             key={r}
             style={[
               styles.option,

@@ -9,6 +9,8 @@ import { getPins, getPois, updateMapPreference } from '../../src/features/map/ma
 import { buildLeafletHtml, type LeafletPin } from '../../src/features/map/leafletHtml';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily } from '../../src/theme/tokens';
+import { ScreenHeader } from '../../src/components/ScreenHeader';
+import { useBairroName } from '../../src/lib/useBairroName';
 
 // Same default center/zoom as the web map (Vila Velha / ES).
 const DEFAULT_CENTER = { lat: -20.3297, lng: -40.2927, zoom: 15 };
@@ -22,13 +24,19 @@ const FILTER_OPTIONS: Array<{ label: string; value: 'all' | 'verified' | 'new' }
 export default function MapScreen() {
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
+  const bairroName = useBairroName();
   const { pins, pois, filter, showOnMap, setPins, setPois, setFilter, setShowOnMap } = useMapStore();
   const [loading, setLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const webViewRef = useRef<WebView>(null);
 
   const loadPins = useCallback(() => {
-    if (!user?.bairroId) return;
+    // Sem bairro (não verificado ou sessão caiu) o overlay girava para sempre:
+    // loading nasce true e este retorno antecipado nunca o desligava.
+    if (!user?.bairroId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     Promise.all([
       getPins(user.bairroId, filter === 'all' ? undefined : filter),
@@ -42,7 +50,11 @@ export default function MapScreen() {
 
   const handleToggleMap = async (value: boolean) => {
     setShowOnMap(value);
-    await updateMapPreference(value);
+    try {
+      await updateMapPreference(value);
+    } catch {
+      setShowOnMap(!value);
+    }
   };
 
   // HTML is built once; markers are pushed in afterwards so the map never reloads.
@@ -80,16 +92,19 @@ export default function MapScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <ScreenHeader title="Mapa" place={bairroName} />
       <View style={[styles.controls, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
           {FILTER_OPTIONS.map(({ label, value }) => (
             <TouchableOpacity
               key={value}
               onPress={() => setFilter(value)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: filter === value }}
               style={[
                 styles.filterBtn,
                 { borderColor: colors.border },
-                filter === value && { backgroundColor: colors.primary, borderColor: colors.primary },
+                filter === value && { backgroundColor: colors.primaryFill, borderColor: colors.primary },
               ]}
             >
               <Text style={[styles.filterText, { color: colors.mutedFg }, filter === value && { color: '#fff' }]}>
@@ -104,7 +119,9 @@ export default function MapScreen() {
             testID="show-on-map-switch"
             value={showOnMap}
             onValueChange={handleToggleMap}
-            trackColor={{ true: colors.primary }}
+            trackColor={{ true: colors.primaryFill, false: colors.border }}
+            thumbColor="#FFFFFF"
+            accessibilityLabel="Aparecer no mapa para vizinhos"
           />
         </View>
       </View>
@@ -136,10 +153,10 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   controls: { borderBottomWidth: 1, paddingVertical: 8 },
   filterRow: { paddingHorizontal: 16, gap: 8, flexDirection: 'row', alignItems: 'center' },
-  filterBtn: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1 },
+  filterBtn: { height: 36, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 20, borderWidth: 1 },
   filterText: { fontFamily: fontFamily.semibold, fontSize: 13 },
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
-  toggleLabel: { fontFamily: fontFamily.medium, fontSize: 13 },
+  toggleLabel: { fontFamily: fontFamily.medium, fontSize: 14 },
   map: { flex: 1, width: '100%' },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
 });

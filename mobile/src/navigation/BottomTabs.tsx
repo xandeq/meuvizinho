@@ -71,7 +71,16 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
         };
 
         return (
-          <Pressable key={route.key} onPress={onPress} style={styles.tab}>
+          <Pressable
+            key={route.key}
+            onPress={onPress}
+            style={styles.tab}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isFocused }}
+            accessibilityLabel={
+              isChatTab && unreadTotal > 0 ? `${config.label}, ${unreadTotal} mensagens não lidas` : config.label
+            }
+          >
             <View>
               <Ionicons
                 name={isFocused ? config.iconFocused : config.icon}
@@ -79,7 +88,7 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
                 color={isFocused ? colors.primary : colors.mutedFg}
               />
               {isChatTab && unreadTotal > 0 && (
-                <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+                <View style={[styles.badge, { backgroundColor: colors.dangerFill }]}>
                   <Text style={styles.badgeText}>{unreadTotal > 99 ? '99+' : unreadTotal}</Text>
                 </View>
               )}
@@ -100,8 +109,8 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     paddingTop: 6,
   },
-  tab: { flex: 1, alignItems: 'center', gap: 2 },
-  label: { fontSize: 11, fontFamily: fontFamily.medium },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2, minHeight: 48 },
+  label: { fontSize: 12, fontFamily: fontFamily.medium },
   badge: {
     position: 'absolute',
     top: -4,

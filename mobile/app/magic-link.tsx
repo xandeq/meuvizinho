@@ -61,7 +61,13 @@ export default function MagicLinkScreen() {
       <View style={{ height: 8 }} />
       <Button title="Enviar link" icon="mail" onPress={handleSend} loading={loading} />
       <View style={{ height: 16 }} />
-      <Button title="Voltar" icon="arrow-back" variant="outline" onPress={() => router.back()} />
+      <Text
+        onPress={() => router.back()}
+        accessibilityRole="link"
+        style={{ alignSelf: 'center', marginTop: 8, paddingVertical: 10, color: colors.primary, fontFamily: fontFamily.semibold, fontSize: 15 }}
+      >
+        Prefiro entrar com senha
+      </Text>
     </ScrollView>
   );
 }
