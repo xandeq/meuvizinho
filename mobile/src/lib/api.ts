@@ -16,7 +16,7 @@ export const apiClient = createApiClient({
   tokenStore: {
     getAccessToken: () => useAuthStore.getState().accessToken,
     setAccessToken: (t) => useAuthStore.getState().setAccessToken(t),
-    onUnauthorized: () => useAuthStore.getState().logout(),
+    onUnauthorized: () => useAuthStore.getState().expireSession(),
   },
 });
 

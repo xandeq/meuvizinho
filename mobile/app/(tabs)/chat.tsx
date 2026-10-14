@@ -14,6 +14,7 @@ import { VerifiedBadge } from '../../src/components/VerifiedBadge';
 import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../src/theme/tokens';
+import { ScreenHeader } from '../../src/components/ScreenHeader';
 
 export default function ConversationListScreen() {
   const { colors } = useTheme();
@@ -69,24 +70,16 @@ export default function ConversationListScreen() {
           )}
         </Pressable>
       )}
-      ListHeaderComponent={
-        sorted.length > 0 ? (
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.headerTitle, { color: colors.fg }]}>Chat</Text>
-          </View>
-        ) : null
-      }
+      ListHeaderComponent={<ScreenHeader title="Conversas" />}
       ListEmptyComponent={
-        <View style={{ flex: 1 }}>
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.headerTitle, { color: colors.fg }]}>Chat</Text>
-          </View>
-          <EmptyState
-            icon="chatbubble-ellipses-outline"
-            title="Nenhuma conversa ainda"
-            subtitle="Converse com um vizinho a partir de um anúncio no marketplace."
-          />
-        </View>
+        <EmptyState
+          icon="chatbubble-ellipses-outline"
+          title="Nenhuma conversa ainda"
+          subtitle="As conversas começam num anúncio do Mercado: toque em Chat com vendedor."
+          actionLabel="Ver o Mercado"
+          actionIcon="storefront-outline"
+          onAction={() => router.push('/marketplace')}
+        />
       }
     />
   );
@@ -94,14 +87,6 @@ export default function ConversationListScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    marginBottom: 4,
-  },
-  headerTitle: { fontFamily: fontFamily.extrabold, fontSize: 28 },
   row: {
     flexDirection: 'row',
     padding: 12,

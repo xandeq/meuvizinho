@@ -1,5 +1,7 @@
+import { useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { useAuthStore } from '../src/lib/auth-store';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
@@ -38,9 +40,25 @@ function ProfileHeaderRight() {
   );
 }
 
+// Sessão caiu (refresh falhou) em qualquer tela logada: volta pro login, que
+// explica o motivo. Antes o app ficava nas abas sem usuário e o feed dizia
+// "Complete sua verificação" para quem já era verificado.
+function useSessionExpiredRedirect() {
+  const router = useRouter();
+  const sessionExpired = useAuthStore((s) => s.sessionExpired);
+  // Só na transição: no cold start o valor persistido já cai na tela de boas-vindas,
+  // e navegar imperativamente antes do layout montar já derrubou o app antes.
+  const prev = useRef(sessionExpired);
+  useEffect(() => {
+    if (sessionExpired && !prev.current) router.replace('/login');
+    prev.current = sessionExpired;
+  }, [sessionExpired, router]);
+}
+
 function RootNavigator() {
   const { isDark, colors } = useTheme();
   usePushNotifications();
+  useSessionExpiredRedirect();
 
   return (
     <>
@@ -55,13 +73,13 @@ function RootNavigator() {
         }}
       >
         {/* Auth screens */}
-        <Stack.Screen name="index" options={{ title: 'Meu Vizinho' }} />
-        <Stack.Screen name="login" options={{ title: 'Entrar' }} />
-        <Stack.Screen name="register" options={{ title: 'Criar conta' }} />
+        <Stack.Screen name="index" options={{ title: '', headerShadowVisible: false }} />
+        <Stack.Screen name="login" options={{ title: '', headerShadowVisible: false }} />
+        <Stack.Screen name="register" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="cep-lookup" options={{ title: 'Seu endereço' }} />
         <Stack.Screen name="proof-upload" options={{ title: 'Comprovante' }} />
         <Stack.Screen name="pending" options={{ title: 'Verificação' }} />
-        <Stack.Screen name="magic-link" options={{ title: 'Link mágico' }} />
+        <Stack.Screen name="magic-link" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
         {/* Authenticated -- tabs with persistent bottom nav */}
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

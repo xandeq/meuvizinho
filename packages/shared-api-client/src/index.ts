@@ -23,6 +23,9 @@ export interface ClientOptions {
   tokenStore: TokenStore;
 }
 
+const REFRESH_PATH = '/api/v1/auth/refresh';
+const AUTH_PATHS = ['/auth/login', '/auth/refresh', '/auth/register'];
+
 export function createApiClient({ baseURL, tokenStore }: ClientOptions): AxiosInstance {
   const client = axios.create({
     baseURL,
@@ -36,16 +39,37 @@ export function createApiClient({ baseURL, tokenStore }: ClientOptions): AxiosIn
     return config;
   });
 
+  // Um refresh por vez. O backend rotaciona o refresh token e trata reuso como
+  // roubo (revoga todos): 401s simultâneos (ex.: mapa pedindo pins + POIs)
+  // disparavam vários /auth/refresh com o mesmo cookie e o segundo derrubava
+  // a sessão do usuário.
+  let refreshing: Promise<string> | null = null;
+  const refreshOnce = () => {
+    if (!refreshing) {
+      refreshing = client
+        .post<{ accessToken: string }>(REFRESH_PATH)
+        .then(({ data }) => {
+          tokenStore.setAccessToken(data.accessToken);
+          return data.accessToken;
+        })
+        .finally(() => {
+          refreshing = null;
+        });
+    }
+    return refreshing;
+  };
+
   client.interceptors.response.use(
     (r) => r,
     async (error) => {
       const original = error.config;
-      if (error.response?.status === 401 && original && !original._retry) {
+      const isAuthCall = AUTH_PATHS.some((p) => (original?.url ?? '').includes(p));
+      // Nunca tenta refresh em cima do próprio refresh/login (antes: recursão).
+      if (error.response?.status === 401 && original && !original._retry && !isAuthCall) {
         original._retry = true;
         try {
-          const { data } = await client.post<{ accessToken: string }>('/api/v1/auth/refresh');
-          tokenStore.setAccessToken(data.accessToken);
-          original.headers.Authorization = `Bearer ${data.accessToken}`;
+          const token = await refreshOnce();
+          original.headers.Authorization = `Bearer ${token}`;
           return client(original);
         } catch {
           tokenStore.onUnauthorized();

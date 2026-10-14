@@ -19,7 +19,7 @@ export default function Index() {
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Image source={require('../assets/brand/icon.png')} style={[styles.logo, shadow.ambientMid]} />
       <Text style={[styles.title, { color: colors.fg }]}>Meu Vizinho</Text>
-      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>O bairro inteligente brasileiro</Text>
+      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Seu bairro, conectado de verdade.</Text>
       <View style={[styles.trustRow, { backgroundColor: colors.verifiedGlow }]}>
         <Ionicons name="shield-checkmark" size={15} color={colors.verified} />
         <Text style={[styles.trustText, { color: colors.verified }]}>Comunidade com endereço verificado</Text>
