@@ -26,6 +26,12 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
+  # Barra final em https. Sem isto o mod_dir (DirectorySlash) redireciona
+  # /login para http://.../login/: a origem recebe HTTP do Cloudflare (SSL Flexible).
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_URI} !/$
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1/ [R=301,L]
+
   # More-specific routes first (edit sub-route before generic detail)
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
