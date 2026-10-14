@@ -12,7 +12,7 @@ export default function GlobalError({
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 px-4 text-center">
       <h2 className="text-2xl font-semibold text-fg">Algo deu errado</h2>
       <p className="text-muted-fg max-w-md">
-        Ocorreu um erro inesperado. Tente novamente ou volte para a pagina
+        Ocorreu um erro inesperado. Tente novamente ou volte para a página
         inicial.
       </p>
       <div className="flex gap-3">
@@ -26,7 +26,7 @@ export default function GlobalError({
           href="/"
           className="rounded-xl border border-border/50 px-4 py-2 font-medium text-fg hover:bg-muted"
         >
-          Pagina inicial
+          Página inicial
         </Link>
       </div>
     </div>

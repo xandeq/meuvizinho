@@ -28,8 +28,8 @@ export default function ProofDropzone({ onFile }: ProofDropzoneProps) {
       if (rejected.length > 0) {
         const code = rejected[0].errors[0]?.code;
         if (code === "file-too-large") setError("Arquivo muito grande. Maximo 5MB.");
-        else if (code === "file-invalid-type") setError("Formato invalido. Use JPG, PNG, WEBP ou PDF.");
-        else setError("Arquivo invalido.");
+        else if (code === "file-invalid-type") setError("Formato inválido. Use JPG, PNG, WEBP ou PDF.");
+        else setError("Arquivo inválido.");
         return;
       }
       const raw = accepted[0];

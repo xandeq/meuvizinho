@@ -304,3 +304,13 @@ html, body {
   --shadow-blue:    0 4px 20px rgba(96,165,250,0.18), 0 2px 6px rgba(96,165,250,0.10);
   --shadow-emerald: 0 4px 20px rgba(52,211,153,0.15), 0 2px 6px rgba(52,211,153,0.08);
 }
+
+/* Fundos sólidos com texto branco no escuro: primary/danger/secondary claros
+   existem para TEXTO sobre fundo escuro; como fundo de botão davam ~2.5:1 com
+   #fff (reprova WCAG AA). Fora de @layer, estas regras vencem os utilitários. */
+.dark .bg-primary,
+.dark .hover\:bg-primary:hover { background-color: #2563EB; }
+.dark .hover\:bg-primary-hover:hover { background-color: #1D4ED8; }
+.dark .bg-danger { background-color: #DC2626; }
+.dark .hover\:bg-danger-hover:hover { background-color: #B91C1C; }
+.dark .bg-secondary { background-color: #047857; }

@@ -1194,7 +1194,7 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
               type="button"
               onClick={() => handleRsvp(ev)}
               className={`mt-2 text-sm px-3 py-2.5 rounded-xl min-h-[44px] ${
-                ev.myRsvp ? 'bg-secondary text-white' : 'bg-muted text-muted-fg'
+                ev.myRsvp ? 'bg-primary text-white' : 'bg-muted text-muted-fg'
               }`}
             >
               {ev.myRsvp ? 'Confirmado' : 'Confirmar presença'}

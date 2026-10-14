@@ -55,11 +55,11 @@ export default function SettingsPage() {
       }>("/api/v1/account/delete");
       setPendingDeletion(true);
       setDeleteMsg(
-        `Conta agendada para exclusao em ${new Date(data.deletionDate).toLocaleDateString("pt-BR")}. Voce pode cancelar durante este periodo.`
+        `Conta agendada para exclusão em ${new Date(data.deletionDate).toLocaleDateString("pt-BR")}. Você pode cancelar durante este período.`
       );
       setShowDeleteConfirm(false);
     } catch {
-      setDeleteMsg("Erro ao solicitar exclusao. Tente novamente.");
+      setDeleteMsg("Erro ao solicitar exclusão. Tente novamente.");
     } finally {
       setDeleteLoading(false);
     }
@@ -72,7 +72,7 @@ export default function SettingsPage() {
       setPendingDeletion(false);
       setDeleteMsg("Exclusao cancelada com sucesso.");
     } catch {
-      setDeleteMsg("Erro ao cancelar exclusao.");
+      setDeleteMsg("Erro ao cancelar exclusão.");
     } finally {
       setDeleteLoading(false);
     }
@@ -81,7 +81,7 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6 max-w-2xl mx-auto animate-slide-up">
       <header className="flex items-center justify-between">
-        <h1 className="text-3xl font-extrabold text-fg">Configuracoes</h1>
+        <h1 className="text-3xl font-extrabold text-fg">Configurações</h1>
         <Link
           href="/profile/"
           className="text-sm text-primary font-semibold hover:underline"
@@ -92,7 +92,7 @@ export default function SettingsPage() {
 
       {/* Notifications */}
       <Card padding="md">
-        <h2 className="text-lg font-bold text-fg mb-4">Notificacoes</h2>
+        <h2 className="text-lg font-bold text-fg mb-4">Notificações</h2>
         <label className="flex items-center justify-between cursor-pointer">
           <div>
             <p className="font-semibold text-fg">
@@ -145,8 +145,8 @@ export default function SettingsPage() {
       <Card padding="md">
         <h2 className="text-lg font-bold text-danger mb-2">Excluir Conta</h2>
         <p className="text-sm text-fg/60 mb-4">
-          Seus dados serao anonimizados apos 30 dias. Voce pode cancelar
-          durante este periodo.
+          Seus dados serão anonimizados após 30 dias. Você pode cancelar
+          durante este período.
         </p>
 
         {deleteMsg && (
@@ -160,12 +160,12 @@ export default function SettingsPage() {
             onClick={handleCancelDelete}
             loading={deleteLoading}
           >
-            Cancelar exclusao
+            Cancelar exclusão
           </Button>
         ) : showDeleteConfirm ? (
           <div className="space-y-3">
             <p className="text-sm text-danger font-semibold">
-              Tem certeza? Esta acao agendara a exclusao da sua conta em 30
+              Tem certeza? Esta ação agendará a exclusão da sua conta em 30
               dias.
             </p>
             <div className="flex gap-3">
@@ -192,7 +192,7 @@ export default function SettingsPage() {
             onClick={() => setShowDeleteConfirm(true)}
             className="px-4 py-2 border border-danger/60 text-danger font-bold rounded-xl hover:bg-danger hover:text-white transition-all duration-200"
           >
-            Solicitar exclusao da conta
+            Solicitar exclusão da conta
           </button>
         )}
       </Card>
