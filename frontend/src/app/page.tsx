@@ -173,6 +173,13 @@ function IconCheck() {
     </svg>
   );
 }
+function IconWrench() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4 2.5-2.5z" />
+    </svg>
+  );
+}
 function IconBadgeCheck() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -502,7 +509,7 @@ export default function LandingPage() {
               </FeatureIcon>
               <h3 className="mt-5 text-xl font-extrabold text-fg">Condomínios</h3>
               <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Comunicados do síndico, reserva de áreas comuns e moradores vinculados por unidade.
+                Comunicados, ocorrências com resposta do síndico e reserva de áreas comuns.
               </p>
               <a
                 href="#sindicos"
@@ -574,6 +581,7 @@ export default function LandingPage() {
                 {[
                   "O aviso do síndico some em meia hora de conversa.",
                   "Reserva do salão combinada no grito, e dá conflito.",
+                  "Pedido de manutenção some no grupo e ninguém sabe se foi resolvido.",
                   "Ninguém sabe se quem entrou no grupo mora mesmo ali.",
                   "Alerta de segurança vira boato sem confirmação.",
                 ].map((t) => (
@@ -593,6 +601,7 @@ export default function LandingPage() {
                 {[
                   "Comunicado do síndico fixado, com data de validade.",
                   "Reserva com os horários ocupados à vista e aprovação do síndico.",
+                  "Ocorrência com status e resposta do síndico, do aberto ao resolvido.",
                   "Todo vizinho com endereço comprovado e selo de verificado.",
                   "Alerta confirmado por outros vizinhos, com tipo e horário.",
                 ].map((t) => (
@@ -731,6 +740,14 @@ export default function LandingPage() {
               </ul>
             </div>
 
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 rounded-lg border border-border px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-muted-fg">Ocorrência · Manutenção</p>
+                <p className="text-sm font-semibold text-fg">Lâmpada queimada no hall</p>
+              </div>
+              <span className="text-xs font-semibold bg-primary-light text-primary rounded-full px-2.5 py-1 shrink-0 self-start sm:self-auto">Em andamento</span>
+            </div>
+
             <div className="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2.5">
               <p className="text-sm text-fg"><span className="font-semibold">Apto 302</span> pediu vínculo de morador</p>
               <span className="text-xs font-semibold text-primary shrink-0">Aprovar</span>
@@ -752,6 +769,7 @@ export default function LandingPage() {
             <ul className="space-y-5">
               {[
                 { icon: <IconMegaphone />, title: "Comunicados oficiais", text: "Avisos do síndico com destaque fixo no topo. Ninguém diz que não viu." },
+                { icon: <IconWrench />, title: "Ocorrências com resposta", text: "O morador abre o chamado, o síndico responde e os dois acompanham até resolver." },
                 { icon: <IconCalendar />, title: "Reserva de áreas comuns", text: "Salão, churrasqueira e quadra com agenda de horários e aprovação do síndico." },
                 { icon: <IconUserCheck />, title: "Moradores vinculados", text: "Cada morador pede vínculo com a unidade e o síndico aprova, recusa ou revoga." },
                 { icon: <IconBadgeCheck />, title: "Síndico verificado", text: "A reivindicação da página passa pela nossa equipe antes de ser liberada." },
