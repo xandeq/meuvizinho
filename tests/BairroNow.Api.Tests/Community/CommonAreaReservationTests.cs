@@ -124,6 +124,10 @@ public class CommonAreaReservationTests
     private static DateTime TomorrowAt(int hourUtc) =>
         DateTime.UtcNow.Date.AddDays(1).AddHours(hourUtc);
 
+    // Amanhã na hora de Brasília (UTC-3) — a janela diária da área é em hora local.
+    private static DateTime TomorrowLocalAt(int hourBrt) =>
+        DateTime.UtcNow.Date.AddDays(1).AddHours(hourBrt + 3);
+
     // ─── Criação de reserva ──────────────────────────────────────────────────
 
     [Fact]
@@ -353,11 +357,47 @@ public class CommonAreaReservationTests
         SeedResident(db, condo.Id, resident.Id);
 
         var ctrl = BuildController(db, resident.Id);
-        // 6h–9h começa antes da abertura (8h).
+        // 6h–9h (Brasília) começa antes da abertura (8h).
         var result = await ctrl.CreateReservation(condo.Id, area.Id,
-            new CreateReservationRequest(TomorrowAt(6), TomorrowAt(9), null, null), CancellationToken.None);
+            new CreateReservationRequest(TomorrowLocalAt(6), TomorrowLocalAt(9), null, null), CancellationToken.None);
 
         result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task CreateReservation_BeforeOpeningInLocalTime_Returns400_EvenIfAfterOpeningInUtc()
+    {
+        using var db = NewDb();
+        var resident = SeedUser(db);
+        var condo = SeedCondo(db);
+        var area = SeedArea(db, condo.Id,
+            openTime: new TimeOnly(8, 0), closeTime: new TimeOnly(22, 0));
+        SeedResident(db, condo.Id, resident.Id);
+
+        var ctrl = BuildController(db, resident.Id);
+        // 7h–9h em Brasília = 10h–12h UTC: antes da abertura local, mesmo "dentro" da janela em UTC.
+        var result = await ctrl.CreateReservation(condo.Id, area.Id,
+            new CreateReservationRequest(TomorrowLocalAt(7), TomorrowLocalAt(9), null, null), CancellationToken.None);
+
+        result.Should().BeOfType<BadRequestObjectResult>();
+    }
+
+    [Fact]
+    public async Task CreateReservation_EveningInsideLocalWindow_IsAllowed()
+    {
+        using var db = NewDb();
+        var resident = SeedUser(db);
+        var condo = SeedCondo(db);
+        var area = SeedArea(db, condo.Id, requiresApproval: false,
+            openTime: new TimeOnly(8, 0), closeTime: new TimeOnly(23, 0));
+        SeedResident(db, condo.Id, resident.Id);
+
+        var ctrl = BuildController(db, resident.Id);
+        // 20h–22h em Brasília = 23h–01h UTC: cruza a meia-noite UTC, mas não a local.
+        var result = await ctrl.CreateReservation(condo.Id, area.Id,
+            new CreateReservationRequest(TomorrowLocalAt(20), TomorrowLocalAt(22), "Aniversário", null), CancellationToken.None);
+
+        result.Should().BeOfType<CreatedResult>();
     }
 
     [Fact]
@@ -372,7 +412,7 @@ public class CommonAreaReservationTests
 
         var ctrl = BuildController(db, resident.Id);
         var result = await ctrl.CreateReservation(condo.Id, area.Id,
-            new CreateReservationRequest(TomorrowAt(21), TomorrowAt(26), null, null), CancellationToken.None);
+            new CreateReservationRequest(TomorrowLocalAt(21), TomorrowLocalAt(26), null, null), CancellationToken.None);
 
         result.Should().BeOfType<BadRequestObjectResult>();
     }
