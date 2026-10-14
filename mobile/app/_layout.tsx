@@ -81,7 +81,12 @@ function RootNavigator() {
         <Stack.Screen name="whatsapp/index" options={{ title: 'Grupos de WhatsApp' }} />
         <Stack.Screen name="whatsapp/new" options={{ title: 'Indicar grupo' }} />
         <Stack.Screen name="condominios/index" options={{ title: 'Condomínios' }} />
-        <Stack.Screen name="condominios/[id]" options={{ title: 'Condomínio' }} />
+        <Stack.Screen name="condominios/[id]/index" options={{ title: 'Condomínio' }} />
+        <Stack.Screen name="condominios/[id]/comunicados" options={{ title: 'Comunicados' }} />
+        <Stack.Screen name="condominios/[id]/comunicado/[announcementId]" options={{ title: 'Comunicado' }} />
+        <Stack.Screen name="condominios/[id]/areas" options={{ title: 'Áreas comuns' }} />
+        <Stack.Screen name="condominios/[id]/area/[areaId]" options={{ title: 'Reservar' }} />
+        <Stack.Screen name="condominios/[id]/reservas" options={{ title: 'Minhas reservas' }} />
         <Stack.Screen name="alertas/index" options={{ title: 'Alertas de Segurança' }} />
         <Stack.Screen name="alertas/new" options={{ title: 'Reportar ocorrência' }} />
       </Stack>

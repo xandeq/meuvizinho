@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { View, Text, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { useLocalSearchParams, useRouter, type Href } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getCondominium, claimCondominium } from '../../src/lib/api/community';
+import { getCondominium, claimCondominium } from '../../../src/lib/api/community';
+import { getMyResidentStatus, requestResidency } from '../../../src/lib/api/condo';
+import type { MyResidentInfo } from '../../../src/lib/api/condo.types';
+import { useAuthStore } from '../../../src/lib/auth-store';
 import {
   WHATSAPP_KIND_LABELS,
   CONDOMINIUM_STATUS_LABELS,
   type CondominiumDetail,
   type CondominiumRole,
-} from '../../src/lib/api/community.types';
-import { Button } from '../../src/components/Button';
-import { useTheme } from '../../src/theme/ThemeContext';
-import { fontFamily, radius, shadow } from '../../src/theme/tokens';
+} from '../../../src/lib/api/community.types';
+import { Button } from '../../../src/components/Button';
+import { useTheme } from '../../../src/theme/ThemeContext';
+import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 
 const ROLES: { code: CondominiumRole; label: string }[] = [
   { code: 'Sindico', label: 'Síndico' },
@@ -20,12 +23,19 @@ const ROLES: { code: CondominiumRole; label: string }[] = [
   { code: 'Conselheiro', label: 'Conselheiro' },
 ];
 
+type IconName = keyof typeof Ionicons.glyphMap;
+
 export default function CondominiumDetailScreen() {
   const { colors } = useTheme();
+  const router = useRouter();
+  const isAdmin = useAuthStore((s) => !!s.user?.isAdmin);
   const { id } = useLocalSearchParams<{ id: string }>();
   const condoId = Number(id);
 
   const [condo, setCondo] = useState<CondominiumDetail | null>(null);
+  const [residency, setResidency] = useState<MyResidentInfo | null>(null);
+  const [unit, setUnit] = useState('');
+  const [requesting, setRequesting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showClaim, setShowClaim] = useState(false);
   const [role, setRole] = useState<CondominiumRole>('Sindico');
@@ -35,7 +45,24 @@ export default function CondominiumDetailScreen() {
   const load = () => {
     if (!condoId) return;
     setLoading(true);
-    getCondominium(condoId).then(setCondo).finally(() => setLoading(false));
+    Promise.all([
+      getCondominium(condoId).then(setCondo),
+      // Sem vínculo legível (ex.: erro de rede) o card de vínculo só não aparece.
+      getMyResidentStatus(condoId).then(setResidency).catch(() => setResidency(null)),
+    ]).finally(() => setLoading(false));
+  };
+
+  const handleRequestResidency = async () => {
+    setRequesting(true);
+    try {
+      await requestResidency(condoId, { unit: unit.trim() || undefined });
+      setUnit('');
+      load();
+    } catch (err: any) {
+      Alert.alert('Erro', err?.response?.data?.error || 'Não foi possível enviar a solicitação.');
+    } finally {
+      setRequesting(false);
+    }
   };
 
   useEffect(() => { load(); }, [condoId]);
@@ -67,6 +94,17 @@ export default function CondominiumDetailScreen() {
   }
 
   const canClaim = !condo.isMySindico && condo.myClaimStatus == null;
+  const isResident = residency?.status === 'Approved';
+  // Mesma regra do backend (CondoAccess.CanUse) e do site.
+  const canUse = isResident || condo.isMySindico || isAdmin;
+  const canRequestResidency =
+    !condo.isMySindico && residency != null && ['None', 'Rejected', 'Revoked'].includes(residency.status);
+
+  const tiles: { icon: IconName; title: string; sub: string; href: Href }[] = [
+    { icon: 'megaphone-outline', title: 'Comunicados', sub: 'Avisos oficiais do síndico', href: `/condominios/${condoId}/comunicados` },
+    { icon: 'calendar-outline', title: 'Reservar área comum', sub: 'Salão, churrasqueira e mais', href: `/condominios/${condoId}/areas` },
+    { icon: 'bookmark-outline', title: 'Minhas reservas', sub: 'Acompanhe e cancele', href: `/condominios/${condoId}/reservas` },
+  ];
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
@@ -74,6 +112,87 @@ export default function CondominiumDetailScreen() {
         <Ionicons name="business" size={28} color="#fff" style={{ marginBottom: 8 }} />
         <Text style={styles.heroTitle}>{condo.name}</Text>
         {condo.addressLine && <Text style={styles.heroSub}>{condo.addressLine}</Text>}
+        {canUse && (
+          <View style={styles.heroChip}>
+            <Ionicons name={condo.isMySindico ? 'shield-checkmark' : isResident ? 'home' : 'key'} size={12} color="#fff" />
+            <Text style={styles.heroChipText}>
+              {condo.isMySindico
+                ? 'Você é o síndico'
+                : isResident
+                  ? `Morador${residency?.unit ? ` · ${residency.unit}` : ''}`
+                  : 'Acesso de administrador'}
+            </Text>
+          </View>
+        )}
+      </View>
+
+      {residency?.status === 'Pending' && !condo.isMySindico && (
+        <View style={[styles.pendingBanner, { backgroundColor: colors.accent + '15', borderColor: colors.accent + '40', marginTop: 0, marginBottom: 16 }]}>
+          <Ionicons name="time-outline" size={16} color={colors.accent} />
+          <Text style={[styles.pendingText, { color: colors.accent, flex: 1 }]}>
+            Vínculo de morador em análise pelo síndico{residency.unit ? ` · ${residency.unit}` : ''}.
+          </Text>
+        </View>
+      )}
+
+      {canRequestResidency && (
+        <View style={[styles.residencyCard, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.residencyHeader}>
+            <View style={[styles.residencyIcon, { backgroundColor: colors.primary + '15' }]}>
+              <Ionicons name="key-outline" size={18} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.residencyTitle, { color: colors.fg }]}>Você mora aqui?</Text>
+              <Text style={[styles.residencySub, { color: colors.mutedFg }]}>
+                Vincule sua unidade para ler os comunicados e reservar as áreas comuns.
+              </Text>
+            </View>
+          </View>
+          {residency?.status === 'Rejected' && residency.reviewNote && (
+            <Text style={[styles.reviewNote, { color: colors.danger }]}>Solicitação anterior recusada: {residency.reviewNote}</Text>
+          )}
+          <TextInput
+            style={[styles.unitInput, { borderColor: colors.border, backgroundColor: colors.bg, color: colors.fg }]}
+            value={unit}
+            onChangeText={setUnit}
+            placeholder="Unidade (ex: Bloco B, Apto 302)"
+            placeholderTextColor={colors.mutedFg}
+            maxLength={60}
+            accessibilityLabel="Unidade"
+          />
+          <Button title="Solicitar vínculo de morador" icon="send-outline" onPress={handleRequestResidency} loading={requesting} />
+        </View>
+      )}
+
+      <Text style={[styles.sectionLabel, { color: colors.mutedFg }]}>Vida no condomínio</Text>
+      <View style={[styles.tiles, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        {tiles.map((t, i) => (
+          <Pressable
+            key={t.title}
+            onPress={() =>
+              canUse
+                ? router.push(t.href)
+                : Alert.alert('Só para moradores', 'Solicite o vínculo de morador para acessar esta área do condomínio.')
+            }
+            accessibilityRole="button"
+            accessibilityLabel={t.title}
+            accessibilityState={{ disabled: !canUse }}
+            style={({ pressed }) => [
+              styles.tile,
+              i < tiles.length - 1 && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border },
+              { opacity: pressed ? 0.6 : canUse ? 1 : 0.55 },
+            ]}
+          >
+            <View style={[styles.tileIcon, { backgroundColor: colors.primary + '12' }]}>
+              <Ionicons name={t.icon} size={20} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.tileTitle, { color: colors.fg }]}>{t.title}</Text>
+              <Text style={[styles.tileSub, { color: colors.mutedFg }]}>{t.sub}</Text>
+            </View>
+            <Ionicons name={canUse ? 'chevron-forward' : 'lock-closed-outline'} size={18} color={colors.mutedFg} />
+          </Pressable>
+        ))}
       </View>
 
       <View style={[styles.infoCard, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -161,6 +280,20 @@ const styles = StyleSheet.create({
   hero: { borderRadius: radius.lg, padding: 20, marginBottom: 16 },
   heroTitle: { color: '#fff', fontFamily: fontFamily.extrabold, fontSize: 20, marginBottom: 4 },
   heroSub: { color: 'rgba(255,255,255,0.85)', fontFamily: fontFamily.regular, fontSize: 13 },
+  heroChip: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 10, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.lg, backgroundColor: 'rgba(255,255,255,0.18)' },
+  heroChipText: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 12 },
+  residencyCard: { borderRadius: radius.md, borderWidth: 1, padding: 14, marginBottom: 16, gap: 12 },
+  residencyHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  residencyIcon: { width: 36, height: 36, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  residencyTitle: { fontFamily: fontFamily.bold, fontSize: 15 },
+  residencySub: { fontFamily: fontFamily.regular, fontSize: 13, lineHeight: 18, marginTop: 2 },
+  reviewNote: { fontFamily: fontFamily.medium, fontSize: 12 },
+  unitInput: { borderWidth: 1, borderRadius: radius.sm, paddingHorizontal: 12, paddingVertical: 12, fontFamily: fontFamily.regular, fontSize: 14 },
+  tiles: { borderRadius: radius.md, borderWidth: 1, marginBottom: 16, overflow: 'hidden' },
+  tile: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 14 },
+  tileIcon: { width: 38, height: 38, borderRadius: radius.sm, alignItems: 'center', justifyContent: 'center' },
+  tileTitle: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  tileSub: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 1 },
   infoCard: { borderRadius: radius.md, borderWidth: 1, padding: 14, marginBottom: 16, gap: 8 },
   infoRow: { flexDirection: 'row', justifyContent: 'space-between' },
   infoLabel: { fontFamily: fontFamily.medium, fontSize: 13 },
