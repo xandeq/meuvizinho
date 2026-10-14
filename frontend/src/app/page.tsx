@@ -524,6 +524,65 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════════════════════
+          WHATSAPP x MEU VIZINHO — o argumento do mercado (caos do grupo),
+          sem atacar o WhatsApp: ele segue para a conversa.
+      ══════════════════════════════════════════════════════ */}
+      <section className="bg-bg py-20 px-6">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-xs font-semibold uppercase tracking-widest text-primary mb-3">
+            Para prédios e bairros
+          </p>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-fg tracking-tight max-w-3xl">
+            WhatsApp é para conversa. O que importa fica aqui.
+          </h2>
+          <p className="mt-5 text-lg text-muted-fg max-w-2xl leading-relaxed">
+            O grupo do prédio continua existindo. A diferença é que aviso oficial, reserva e alerta
+            não se perdem no meio de cem mensagens de bom dia.
+          </p>
+
+          <div className="mt-12 grid md:grid-cols-2 gap-5">
+            <div className="rounded-2xl bg-muted p-7">
+              <p className="text-sm font-bold text-muted-fg">Só no grupo de WhatsApp</p>
+              <ul className="mt-5 space-y-4">
+                {[
+                  "O aviso do síndico some em meia hora de conversa.",
+                  "Reserva do salão combinada no grito, e dá conflito.",
+                  "Ninguém sabe se quem entrou no grupo mora mesmo ali.",
+                  "Alerta de segurança vira boato sem confirmação.",
+                ].map((t) => (
+                  <li key={t} className="flex gap-3 text-[15px] text-fg/80 leading-snug">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-border text-muted-fg flex items-center justify-center shrink-0" aria-hidden>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="rounded-2xl bg-primary-light p-7 ring-1 ring-primary/20">
+              <p className="text-sm font-bold text-primary">Com o Meu Vizinho</p>
+              <ul className="mt-5 space-y-4">
+                {[
+                  "Comunicado do síndico fixado, com data de validade.",
+                  "Reserva com os horários ocupados à vista e aprovação do síndico.",
+                  "Todo vizinho com endereço comprovado e selo de verificado.",
+                  "Alerta confirmado por outros vizinhos, com tipo e horário.",
+                ].map((t) => (
+                  <li key={t} className="flex gap-3 text-[15px] text-fg leading-snug font-medium">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0" aria-hidden>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7" /></svg>
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════════
           WHATSAPP DIRECTORY — slate-900, green accent
       ══════════════════════════════════════════════════════ */}
       <section className="bg-slate-900 py-20 px-6 text-white">
@@ -537,13 +596,13 @@ export default function LandingPage() {
               O diretório de grupos WhatsApp que o bairro precisava.
             </h2>
             <p className="text-white/60 text-lg leading-relaxed mb-10 max-w-lg">
-              Chega de buscar grupos perdidos. Aqui você encontra todos os grupos verificados do seu bairro — com link ativo, admin identificado e moderação real.
+              Chega de buscar grupos perdidos. Aqui você encontra os grupos verificados do seu bairro, com link ativo, admin identificado e moderação real.
             </p>
             <ul className="space-y-5">
               {[
                 "Grupos por bairro com link verificado e admin identificado",
                 "Perfis de condomínio com síndico reivindicável",
-                "@meuvizinho como co-admin permanente — sem grupos golpe",
+                "@meuvizinho como co-admin permanente: sem grupo de golpe",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-4">
                   <span className="w-6 h-6 rounded-full bg-green-600 text-white flex items-center justify-center shrink-0 mt-0.5">
@@ -558,18 +617,17 @@ export default function LandingPage() {
           {/* Visual — WhatsApp directory mockup */}
           <div className="flex flex-col gap-3">
             <p className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-1">
-              Diretório — Vila Velha · ES
+              Exemplo de como fica o diretório
             </p>
             {[
-              { name: "Vila Velha — Moradores", members: "1.247 membros", tag: "Moradores" },
-              { name: "Pets Praia da Costa", members: "389 membros", tag: "Pets" },
-              { name: "Esporte & Saúde VV", members: "512 membros", tag: "Esporte" },
-              { name: "Cond. Marina Beach · Síndico", members: "243 membros", tag: "Condomínio" },
+              { name: "Moradores do bairro", members: "Link verificado · admin identificado", tag: "Bairro" },
+              { name: "Pets da vizinhança", members: "Link verificado", tag: "Pets" },
+              { name: "Corrida de domingo", members: "Link verificado", tag: "Esporte" },
+              { name: "Condomínio · avisos do síndico", members: "Síndico verificado", tag: "Condomínio" },
             ].map(({ name, members, tag }) => (
               <div
                 key={name}
-                className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4
-                           transition-all duration-200 hover:bg-white/10 cursor-pointer"
+                className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4"
               >
                 <div className="w-10 h-10 rounded-full bg-green-600/80 flex items-center justify-center shrink-0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="white" aria-hidden>
@@ -587,8 +645,8 @@ export default function LandingPage() {
             ))}
             <Link
               href="/register/"
-              className="mt-2 h-12 rounded-xl bg-green-600 text-white font-semibold text-sm
-                         flex items-center justify-center gap-2 transition-all duration-200 hover:bg-green-500"
+              className="mt-2 h-12 rounded-xl bg-primary text-white font-semibold text-sm
+                         flex items-center justify-center gap-2 transition-all duration-200 hover:bg-primary-hover"
             >
               Ver diretório completo
               <IconArrowRight />
@@ -604,12 +662,15 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Visual — condo page mockup */}
           <div className="order-2 lg:order-1 bg-card rounded-2xl border border-border p-6 flex flex-col gap-5">
-            <div className="flex items-center gap-3">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-fg -mb-1">
+              Exemplo de página do condomínio
+            </p>
+            <div className="flex flex-wrap items-center gap-3">
               <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-white shrink-0">
                 <IconBuilding />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-extrabold text-fg truncate">Cond. Marina Beach</p>
+                <p className="font-extrabold text-fg leading-tight">Cond. Marina Beach</p>
                 <p className="text-xs text-muted-fg">Praia da Costa · 48 unidades</p>
               </div>
               <span className="text-xs font-semibold bg-secondary-light text-secondary rounded-full px-2.5 py-1 shrink-0">
@@ -712,9 +773,9 @@ export default function LandingPage() {
             {/* Steps */}
             <ol className="space-y-5">
               {[
-                { step: 1, text: "Informe seu CEP — identificamos seu bairro automaticamente" },
+                { step: 1, text: "Informe seu CEP: identificamos seu bairro automaticamente" },
                 { step: 2, text: "Envie uma foto do seu comprovante de residência" },
-                { step: 3, text: "Nosso time valida em até 24h — você recebe e-mail de confirmação" },
+                { step: 3, text: "Nosso time valida em até 24h e você recebe um e-mail de confirmação" },
                 { step: 4, text: "Acesso completo ao feed, marketplace, grupos e ao seu condomínio" },
               ].map(({ step, text }) => (
                 <li key={step} className="flex items-start gap-4">
@@ -809,8 +870,8 @@ export default function LandingPage() {
           {/* Checklist */}
           <ul className="space-y-4">
             {[
-              "Sem algoritmo — veja tudo do seu bairro, em ordem cronológica",
-              "Sem anúncios patrocinados — nunca",
+              "Sem algoritmo: veja tudo do seu bairro em ordem cronológica",
+              "Sem anúncios patrocinados. Nunca.",
               "Seus dados ficam no Brasil",
               "Código aberto para auditoria da comunidade",
               "Você pode exportar ou apagar sua conta a qualquer momento",
@@ -833,7 +894,7 @@ export default function LandingPage() {
               Feito para o bairro,<br />não para o anunciante.
             </h2>
             <p className="text-lg text-muted-fg leading-relaxed">
-              O Meu Vizinho existe para conectar vizinhos reais — não para vender sua atenção.
+              O Meu Vizinho existe para conectar vizinhos reais, não para vender sua atenção.
               Por isso não há anúncios, algoritmo de engajamento ou recomendação de conteúdo externo.
             </p>
           </div>
