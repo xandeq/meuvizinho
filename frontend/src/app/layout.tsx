@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import ServiceWorkerRegistration from "@/components/ServiceWorkerRegistration";
 
-const outfit = Outfit({
+// Outfit servida do próprio repo (WOFF2 em ./fonts, licença OFL). Com
+// next/font/google o build baixava a fonte do Google na hora e falhava de
+// vez em quando no CI ("next/font/google queries have exactly one entry").
+const outfit = localFont({
+  src: [
+    { path: "./fonts/Outfit-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Outfit-500.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Outfit-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/Outfit-700.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/Outfit-800.woff2", weight: "800", style: "normal" },
+  ],
   variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
