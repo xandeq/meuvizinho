@@ -1,12 +1,14 @@
 name: Mobile EAS Build
 
+# Compila no próprio runner (eas build --local): não consome a cota de builds
+# da Expo. Só usa a conta Expo para o keystore remoto e o versionCode.
 on:
   workflow_dispatch:
     inputs:
       profile:
         description: 'EAS build profile'
         required: true
-        default: 'preview'
+        default: 'production'
         type: choice
         options:
           - preview
@@ -15,6 +17,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -22,12 +25,25 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - run: pnpm install --frozen-lockfile
       - name: Setup EAS
         uses: expo/expo-github-action@v8
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-      - name: Build Android
+      - name: Build Android (local)
         working-directory: mobile
-        run: eas build --platform android --profile ${{ github.event.inputs.profile }} --non-interactive --no-wait
+        env:
+          EXT: ${{ github.event.inputs.profile == 'production' && 'aab' || 'apk' }}
+        run: |
+          eas build --local --platform android --profile ${{ github.event.inputs.profile }} \
+            --non-interactive --output "$GITHUB_WORKSPACE/meuvizinho-${{ github.event.inputs.profile }}.$EXT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: meuvizinho-${{ github.event.inputs.profile }}
+          path: meuvizinho-${{ github.event.inputs.profile }}.*
+          retention-days: 30
