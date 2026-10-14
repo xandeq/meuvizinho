@@ -278,7 +278,7 @@ export default function ProfilePage() {
       return;
     }
     if (isBusinessAccount && !businessName.trim()) {
-      setError("Nome do negocio e obrigatorio");
+      setError("Nome do negócio é obrigatório");
       return;
     }
     setSaving(true);
@@ -478,7 +478,7 @@ export default function ProfilePage() {
             <FormField
               id="displayName"
               name="displayName"
-              label="Nome de exibicao"
+              label="Nome de exibição"
               type="text"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -520,7 +520,7 @@ export default function ProfilePage() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-fg">Conta Negocio</p>
-                  <p className="text-xs text-muted-fg">Exibe seu negocio no mapa do bairro</p>
+                  <p className="text-xs text-muted-fg">Exibe seu negócio no mapa do bairro</p>
                 </div>
               </label>
 
@@ -529,7 +529,7 @@ export default function ProfilePage() {
                   <FormField
                     id="businessName"
                     name="businessName"
-                    label="Nome do negocio"
+                    label="Nome do negócio"
                     type="text"
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
@@ -556,7 +556,7 @@ export default function ProfilePage() {
                       onChange={(e) => setBusinessDescription(e.target.value)}
                       maxLength={300}
                       rows={3}
-                      placeholder="Conte um pouco sobre seu negocio..."
+                      placeholder="Conte um pouco sobre seu negócio..."
                       className="w-full px-4 py-2.5 rounded-lg bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none transition-colors duration-150 focus:bg-card focus:border-primary font-medium resize-none"
                     />
                     <p className="text-xs text-fg/60 mt-1">{businessDescription.length}/300</p>

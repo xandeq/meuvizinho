@@ -16,7 +16,7 @@ const schema = z
       .string()
       .min(8, "Senha deve ter no minimo 8 caracteres")
       .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiuscula")
-      .regex(/[0-9]/, "Senha deve conter pelo menos um numero")
+      .regex(/[0-9]/, "Senha deve conter pelo menos um número")
       .regex(
         /[^A-Za-z0-9]/,
         "Senha deve conter pelo menos um caractere especial"
@@ -24,7 +24,7 @@ const schema = z
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "As senhas nao coincidem",
+    message: "As senhas não coincidem",
     path: ["confirmPassword"],
   });
 

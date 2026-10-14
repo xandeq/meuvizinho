@@ -363,7 +363,7 @@ export default function FeedPage() {
       ) : items.length === 0 ? (
         <EmptyState
           title="Nenhum post ainda no seu bairro"
-          description="Seja o primeiro a compartilhar uma novidade com a vizinhanca."
+          description="Seja o primeiro a compartilhar uma novidade com a vizinhança."
           action={{ label: "Criar post", onClick: () => setComposerOpen(true) }}
         />
       ) : (

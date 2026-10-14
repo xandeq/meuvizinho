@@ -829,15 +829,19 @@ public class CondominiumReservationsController : ControllerBase
 
         if (area.OpenTime.HasValue || area.CloseTime.HasValue)
         {
+            // A janela é digitada pelo síndico em hora local: compara no horário de Brasília,
+            // senão uma reserva 20h–22h vira 23h–01h UTC e é recusada.
+            var startLocal = BrazilTime.FromUtc(startUtc);
+            var endLocal = BrazilTime.FromUtc(endUtc);
             // Com janela diária definida, a reserva não pode cruzar a meia-noite.
-            if (startUtc.Date != endUtc.Date)
+            if (startLocal.Date != endLocal.Date)
                 return "A reserva não pode cruzar a meia-noite fora da janela de funcionamento.";
-            var start = TimeOnly.FromDateTime(startUtc);
-            var end = TimeOnly.FromDateTime(endUtc);
+            var start = TimeOnly.FromDateTime(startLocal);
+            var end = TimeOnly.FromDateTime(endLocal);
             if (area.OpenTime.HasValue && start < area.OpenTime.Value)
-                return $"A área abre às {area.OpenTime.Value:HH:mm} (UTC).";
+                return $"A área abre às {area.OpenTime.Value:HH:mm}.";
             if (area.CloseTime.HasValue && end > area.CloseTime.Value)
-                return $"A área fecha às {area.CloseTime.Value:HH:mm} (UTC).";
+                return $"A área fecha às {area.CloseTime.Value:HH:mm}.";
         }
         return null;
     }

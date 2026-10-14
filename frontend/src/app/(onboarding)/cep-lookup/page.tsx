@@ -33,7 +33,7 @@ export default function CEPLookupPage() {
     setResult(null);
     const parsed = cepSchema.safeParse(cep);
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "CEP invalido");
+      setError(parsed.error.issues[0]?.message ?? "CEP inválido");
       return;
     }
     setLoading(true);
@@ -42,7 +42,7 @@ export default function CEPLookupPage() {
       setResult(r);
     } catch (e: unknown) {
       const msg =
-        e instanceof Error ? e.message : "Nao foi possivel consultar o CEP";
+        e instanceof Error ? e.message : "Não foi possível consultar o CEP";
       setError(msg);
     } finally {
       setLoading(false);
@@ -108,15 +108,15 @@ export default function CEPLookupPage() {
           fullWidth
           disabled={cep.replace(/\D/g, "").length !== 8}
         >
-          Buscar endereco
+          Buscar endereço
         </Button>
 
         {result && (
           <Card bg="muted" padding="md">
             <div className="space-y-1 text-sm font-medium">
-              <p className="text-muted-fg">Endereco encontrado:</p>
+              <p className="text-muted-fg">Endereço encontrado:</p>
               <p className="text-base font-bold text-fg">
-                {result.logradouro || "(Logradouro nao informado)"}
+                {result.logradouro || "(Logradouro não informado)"}
               </p>
               <p>
                 {result.bairro} — {result.localidade}/{result.uf}
@@ -128,7 +128,7 @@ export default function CEPLookupPage() {
                 </p>
               ) : (
                 <p className="mt-2 inline-block rounded-full bg-accent-light px-3 py-1 text-xs font-bold text-accent">
-                  Fora de Vila Velha — verificacao manual sera necessaria
+                  Fora de Vila Velha — verificação manual será necessária
                 </p>
               )}
             </div>

@@ -10,7 +10,7 @@ import FormField from "@/components/ui/FormField";
 import Button from "@/components/ui/Button";
 
 const schema = z.object({
-  email: z.string().email("E-mail invalido"),
+  email: z.string().email("E-mail inválido"),
 });
 
 type FormData = z.infer<typeof schema>;

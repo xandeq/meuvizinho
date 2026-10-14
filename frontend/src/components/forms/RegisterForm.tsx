@@ -14,23 +14,23 @@ const API_BASE_URL =
 
 const registerSchema = z
   .object({
-    email: z.string().email("E-mail invalido"),
+    email: z.string().email("E-mail inválido"),
     password: z
       .string()
       .min(8, "Senha deve ter no minimo 8 caracteres")
       .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiuscula")
-      .regex(/[0-9]/, "Senha deve conter pelo menos um numero")
+      .regex(/[0-9]/, "Senha deve conter pelo menos um número")
       .regex(
         /[^A-Za-z0-9]/,
         "Senha deve conter pelo menos um caractere especial"
       ),
     confirmPassword: z.string(),
     acceptedPrivacyPolicy: z.literal(true, {
-      error: "Voce deve aceitar a politica de privacidade",
+      error: "Você deve aceitar a política de privacidade",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "As senhas nao coincidem",
+    message: "As senhas não coincidem",
     path: ["confirmPassword"],
   });
 
@@ -157,7 +157,7 @@ export default function RegisterForm() {
                 className="text-primary font-semibold hover:text-primary-hover"
                 target="_blank"
               >
-                Politica de Privacidade
+                Política de Privacidade
               </Link>
             </span>
           </label>
@@ -181,7 +181,7 @@ export default function RegisterForm() {
             href="/login/"
             className="text-primary hover:text-primary-hover transition-colors"
           >
-            Ja tem conta? Entrar
+            Já tem conta? Entrar
           </Link>
         </p>
       </form>

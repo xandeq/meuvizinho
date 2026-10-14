@@ -22,7 +22,7 @@ public class CommonArea
     // true = síndico aprova cada reserva; false = aprovação automática (sem conflito).
     public bool RequiresApproval { get; set; } = true;
 
-    // Janela diária permitida (UTC). Null = sem restrição.
+    // Janela diária permitida (horário de Brasília, como o síndico digita). Null = sem restrição.
     public TimeOnly? OpenTime { get; set; }
     public TimeOnly? CloseTime { get; set; }
 

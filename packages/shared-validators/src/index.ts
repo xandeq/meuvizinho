@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 export * from './feed';
 
-export const emailSchema = z.string().email('E-mail invalido');
-export const passwordSchema = z.string().min(8, 'Senha deve ter no minimo 8 caracteres');
+export const emailSchema = z.string().email('E-mail inválido');
+export const passwordSchema = z.string().min(8, 'Senha deve ter no mínimo 8 caracteres');
 
 export const loginSchema = z.object({
   email: emailSchema,
@@ -17,12 +17,12 @@ export const registerSchema = z
     password: passwordSchema,
     confirmPassword: z.string(),
     acceptedPrivacyPolicy: z.literal(true, {
-      message: 'Voce precisa aceitar a politica de privacidade',
+      message: 'Você precisa aceitar a política de privacidade',
     } as never),
   })
   .refine((d) => d.password === d.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'As senhas nao conferem',
+    message: 'As senhas não conferem',
   });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -40,13 +40,13 @@ export const resetPasswordSchema = z
   })
   .refine((d) => d.newPassword === d.confirmPassword, {
     path: ['confirmPassword'],
-    message: 'As senhas nao conferem',
+    message: 'As senhas não conferem',
   });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 export const cepSchema = z
   .string()
-  .regex(/^\d{5}-?\d{3}$/, 'CEP invalido (use 00000-000)');
+  .regex(/^\d{5}-?\d{3}$/, 'CEP inválido (use 00000-000)');
 
 export const proofUploadSchema = z.object({
   cep: cepSchema,
@@ -55,7 +55,7 @@ export const proofUploadSchema = z.object({
 export type ProofUploadInput = z.infer<typeof proofUploadSchema>;
 
 export const updateProfileSchema = z.object({
-  displayName: z.string().min(1, 'Nome obrigatorio').max(80, 'Nome muito longo'),
-  bio: z.string().max(160, 'Bio deve ter no maximo 160 caracteres'),
+  displayName: z.string().min(1, 'Nome obrigatório').max(80, 'Nome muito longo'),
+  bio: z.string().max(160, 'Bio deve ter no máximo 160 caracteres'),
 });
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

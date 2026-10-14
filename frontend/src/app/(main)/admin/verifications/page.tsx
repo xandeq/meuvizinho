@@ -74,7 +74,7 @@ export default function AdminVerificationsPage() {
       <Card padding="md">
         <h1 className="text-2xl font-extrabold text-fg">Acesso negado</h1>
         <p className="mt-2 text-fg/70 font-medium">
-          Voce nao tem permissao para acessar esta area.
+          Você não tem permissão para acessar esta área.
         </p>
       </Card>
     );
@@ -107,7 +107,7 @@ export default function AdminVerificationsPage() {
       ) : items.length === 0 ? (
         <Card padding="md">
           <p className="text-fg/70 font-medium">
-            Nenhuma verificacao pendente.
+            Nenhuma verificação pendente.
           </p>
         </Card>
       ) : (

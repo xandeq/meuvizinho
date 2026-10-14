@@ -71,7 +71,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex items-center justify-center">
             <span
               role="status"
-              aria-label="Anuncio vendido"
+              aria-label="Anúncio vendido"
               className="bg-danger text-white text-sm font-extrabold px-4 py-2 rounded-xl shadow-md"
             >
               VENDIDO
@@ -84,7 +84,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 flex items-center justify-center">
             <span
               role="status"
-              aria-label="Anuncio expirado"
+              aria-label="Anúncio expirado"
               className="bg-muted-fg text-white text-sm font-extrabold px-4 py-2 rounded-xl shadow-md"
             >
               EXPIRADO

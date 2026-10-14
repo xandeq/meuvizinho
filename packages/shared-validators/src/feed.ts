@@ -13,8 +13,8 @@ export const createPostSchema = z.object({
   category: postCategorySchema,
   body: z
     .string()
-    .min(1, 'Conteudo obrigatorio')
-    .max(2000, 'Maximo 2000 caracteres'),
+    .min(1, 'Conteúdo obrigatório')
+    .max(2000, 'Máximo 2000 caracteres'),
 });
 export type CreatePostInput = z.infer<typeof createPostSchema>;
 
@@ -23,8 +23,8 @@ export const createCommentSchema = z.object({
   parentCommentId: z.number().int().positive().nullable(),
   body: z
     .string()
-    .min(1, 'Comentario obrigatorio')
-    .max(500, 'Maximo 500 caracteres'),
+    .min(1, 'Comentário obrigatório')
+    .max(500, 'Máximo 500 caracteres'),
 });
 export type CreateCommentInput = z.infer<typeof createCommentSchema>;
 
@@ -46,7 +46,7 @@ export const createReportSchema = z.object({
 export type CreateReportInput = z.infer<typeof createReportSchema>;
 
 export const searchSchema = z.object({
-  q: z.string().min(1, 'Busca obrigatoria').max(200),
+  q: z.string().min(1, 'Busca obrigatória').max(200),
   category: postCategorySchema.optional(),
   from: z.string().datetime().optional(),
   to: z.string().datetime().optional(),

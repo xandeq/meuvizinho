@@ -24,6 +24,11 @@ public class AuthService : IAuthService
     private const int MaxFailedAttempts = 5;
     private const int LockoutMinutes = 15;
     private const int RefreshTokenDays = 7;
+
+    // Janela em que reenviar um refresh token recém-rotacionado é tratado como
+    // corrida (duas abas/requisições renovando juntas), não como roubo.
+    // Fora dela o reuso continua revogando todas as sessões do usuário.
+    internal static readonly TimeSpan RefreshReuseGrace = TimeSpan.FromSeconds(30);
     private const int PasswordResetHours = 1;
 
     public AuthService(
@@ -116,6 +121,7 @@ public class AuthService : IAuthService
             Token = HashToken(rawRefreshToken),
             UserId = user.Id,
             ExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays),
+            CreatedAt = DateTime.UtcNow,
             CreatedByIp = ipAddress
         };
 
@@ -138,6 +144,17 @@ public class AuthService : IAuthService
 
         if (storedToken.IsRevoked)
         {
+            if (storedToken.ReplacedByTokenId is Guid successorId)
+            {
+                var successor = await _db.RefreshTokens.AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.Id == successorId, ct);
+                if (successor is { IsRevoked: false } && successor.CreatedAt > DateTime.UtcNow - RefreshReuseGrace)
+                {
+                    _logger.LogInformation("Concurrent refresh within grace window for user {UserId}", storedToken.UserId);
+                    return (null, null, "Token invalido.");
+                }
+            }
+
             // Token reuse detected: revoke all tokens for this user
             var allTokens = await _db.RefreshTokens
                 .Where(t => t.UserId == storedToken.UserId && !t.IsRevoked)
@@ -181,6 +198,7 @@ public class AuthService : IAuthService
             Token = HashToken(rawNewToken),
             UserId = storedToken.UserId,
             ExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays),
+            CreatedAt = DateTime.UtcNow,
             CreatedByIp = ipAddress
         };
         storedToken.ReplacedByTokenId = newToken.Id;
@@ -481,6 +499,7 @@ public class AuthService : IAuthService
             Token = HashToken(rawRefreshToken),
             UserId = user.Id,
             ExpiresAt = DateTime.UtcNow.AddDays(RefreshTokenDays),
+            CreatedAt = DateTime.UtcNow,
             CreatedByIp = method
         };
 
