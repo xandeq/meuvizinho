@@ -235,7 +235,7 @@ function IconArrowRight() {
 
 function FeatureIcon({ children, bg }: { children: React.ReactNode; bg: string }) {
   return (
-    <div className={["w-14 h-14 rounded-full flex items-center justify-center shrink-0", bg].join(" ")}>
+    <div className={["w-12 h-12 rounded-xl flex items-center justify-center shrink-0", bg].join(" ")}>
       {children}
     </div>
   );
@@ -318,11 +318,11 @@ export default function LandingPage() {
 
         {/* Nav */}
         <header className="relative z-10 px-6 py-5 max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-xl font-extrabold text-white">
+          <Link href="/" className="flex items-center gap-2 text-lg sm:text-xl font-extrabold text-white whitespace-nowrap">
             <Image src="/brand/logo-icon.png" alt="Meu Vizinho" width={32} height={32} priority />
             Meu Vizinho
           </Link>
-          <nav className="flex items-center gap-4 text-sm font-semibold">
+          <nav className="flex items-center gap-3 sm:gap-4 text-sm font-semibold">
             <a
               href="#sindicos"
               className="hidden sm:inline text-white/70 hover:text-white transition-colors"
@@ -337,7 +337,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/register/"
-              className="h-10 px-5 rounded-lg bg-primary text-white hover:bg-primary-hover
+              className="h-10 px-4 sm:px-5 rounded-lg bg-primary text-white hover:bg-primary-hover whitespace-nowrap
                          flex items-center transition-all duration-200 hover:scale-[1.03]"
             >
               Criar conta
@@ -427,72 +427,98 @@ export default function LandingPage() {
             Tudo que seu bairro precisa, num só lugar.
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Feed */}
-            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
-              <FeatureIcon bg="bg-primary/10 text-primary">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-5">
+            {/* Feed: o coração do produto, ocupa o maior bloco */}
+            <article className="sm:col-span-2 lg:col-span-4 lg:row-span-2 bg-bg rounded-2xl p-7 md:p-9 flex flex-col">
+              <FeatureIcon bg="bg-primary-light text-primary">
                 <IconHome />
               </FeatureIcon>
-              <h3 className="mt-5 text-xl font-extrabold text-fg">Feed do Bairro</h3>
-              <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Fique por dentro do que acontece perto de você em tempo real. Posts, avisos e eventos do bairro.
+              <h3 className="mt-5 text-2xl md:text-3xl font-extrabold text-fg tracking-tight">Feed do bairro</h3>
+              <p className="mt-2 text-base text-muted-fg leading-relaxed max-w-md">
+                Avisos, dicas, perguntas e eventos de quem mora perto. Ordem cronológica, sem algoritmo
+                decidindo o que você vê.
               </p>
-            </div>
+              <div className="mt-auto pt-8 grid sm:grid-cols-2 gap-3 max-w-xl" aria-hidden="true">
+                <MiniPost
+                  initials="RS" name="Renata Souza" tag="Dica" tagCls="text-[#2563EB]" time="20 min"
+                  body="A padaria da esquina agora abre às 6h aos domingos."
+                />
+                <MiniPost
+                  initials="AC" name="André Costa" tag="Evento" tagCls="text-[#2563EB]" time="2 h"
+                  body="Mutirão de limpeza da praça no sábado, 8h. Levo luvas pra quem precisar."
+                />
+              </div>
+            </article>
 
-            {/* Marketplace */}
-            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
-              <FeatureIcon bg="bg-amber-100 text-amber-600">
-                <IconShoppingBag />
-              </FeatureIcon>
-              <h3 className="mt-5 text-xl font-extrabold text-fg">Marketplace Local</h3>
-              <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Compre, venda e troque com vizinhos verificados. Sem golpe — você sabe com quem está negociando.
-              </p>
-            </div>
-
-            {/* Chat */}
-            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
-              <FeatureIcon bg="bg-emerald-100 text-emerald-600">
-                <IconChat />
-              </FeatureIcon>
-              <h3 className="mt-5 text-xl font-extrabold text-fg">Chat Privado</h3>
-              <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Converse de forma direta e segura com qualquer vizinho verificado. Sem expor seu telefone.
-              </p>
-            </div>
-
-            {/* Grupos WhatsApp */}
-            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
-              <FeatureIcon bg="bg-green-100 text-green-700">
-                <IconUsers />
-              </FeatureIcon>
-              <h3 className="mt-5 text-xl font-extrabold text-fg">Grupos WhatsApp</h3>
-              <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Diretório verificado de grupos do bairro — link ativo, admin identificado e moderação real. Zero grupos fantasma.
-              </p>
-            </div>
-
-            {/* Alertas de Segurança */}
-            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
+            {/* Alertas */}
+            <article className="lg:col-span-2 bg-bg rounded-2xl p-7 flex flex-col">
               <FeatureIcon bg="bg-danger-light text-danger">
                 <IconShield />
               </FeatureIcon>
-              <h3 className="mt-5 text-xl font-extrabold text-fg">Alertas de Segurança</h3>
+              <h3 className="mt-5 text-xl font-extrabold text-fg">Alertas de segurança</h3>
               <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Furto, pessoa suspeita, incêndio ou acidente: avise o bairro na hora. Vizinhos confirmam o alerta e todo mundo fica sabendo.
+                Avise o bairro na hora. Vizinhos confirmam o alerta e todo mundo fica sabendo.
               </p>
-            </div>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["Furto", "Pessoa suspeita", "Incêndio", "Acidente"].map((k) => (
+                  <span key={k} className="text-xs font-semibold rounded-full px-3 py-1 bg-danger-light text-danger">
+                    {k}
+                  </span>
+                ))}
+              </div>
+            </article>
 
             {/* Condomínios */}
-            <div className="group bg-bg rounded-lg p-6 transition-all duration-200 hover:scale-[1.02] cursor-default">
-              <FeatureIcon bg="bg-primary/10 text-primary">
+            <article className="lg:col-span-2 bg-bg rounded-2xl p-7 flex flex-col">
+              <FeatureIcon bg="bg-primary-light text-primary">
                 <IconBuilding />
               </FeatureIcon>
               <h3 className="mt-5 text-xl font-extrabold text-fg">Condomínios</h3>
               <p className="mt-2 text-sm text-muted-fg leading-relaxed">
-                Cada prédio com sua página: comunicados do síndico, reserva de áreas comuns e moradores vinculados.
+                Comunicados do síndico, reserva de áreas comuns e moradores vinculados por unidade.
               </p>
-            </div>
+              <a
+                href="#sindicos"
+                className="mt-auto pt-5 inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline underline-offset-4"
+              >
+                Ferramentas para síndicos <IconArrowRight />
+              </a>
+            </article>
+
+            {/* Linha de apoio: três recursos com o mesmo peso, mas sem virar card genérico */}
+            <article className="lg:col-span-2 bg-bg rounded-2xl p-6 flex gap-4 items-start">
+              <FeatureIcon bg="bg-accent-light text-accent">
+                <IconShoppingBag />
+              </FeatureIcon>
+              <div>
+                <h3 className="text-lg font-extrabold text-fg">Mercado local</h3>
+                <p className="mt-1 text-sm text-muted-fg leading-relaxed">
+                  Compre, venda e doe com vizinhos verificados. Você sabe com quem está negociando.
+                </p>
+              </div>
+            </article>
+            <article className="lg:col-span-2 bg-bg rounded-2xl p-6 flex gap-4 items-start">
+              <FeatureIcon bg="bg-primary-light text-primary">
+                <IconChat />
+              </FeatureIcon>
+              <div>
+                <h3 className="text-lg font-extrabold text-fg">Chat privado</h3>
+                <p className="mt-1 text-sm text-muted-fg leading-relaxed">
+                  Converse direto com o vizinho, sem expor seu telefone.
+                </p>
+              </div>
+            </article>
+            <article className="sm:col-span-2 lg:col-span-2 bg-bg rounded-2xl p-6 flex gap-4 items-start">
+              <FeatureIcon bg="bg-[#25D366]/15 text-[#1DA851]">
+                <IconUsers />
+              </FeatureIcon>
+              <div>
+                <h3 className="text-lg font-extrabold text-fg">Grupos de WhatsApp</h3>
+                <p className="mt-1 text-sm text-muted-fg leading-relaxed">
+                  Diretório verificado do bairro: link ativo e admin identificado. Zero grupo fantasma.
+                </p>
+              </div>
+            </article>
           </div>
         </div>
       </section>

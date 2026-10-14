@@ -48,6 +48,25 @@ api.interceptors.request.use((config) => {
 
 const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/register'];
 
+// Um refresh por vez: o backend rotaciona o refresh token e trata reuso como
+// roubo (revoga todos). Vários 401/403 simultâneos disparavam vários
+// /auth/refresh com o mesmo cookie e o segundo derrubava a sessão.
+let refreshing: Promise<string> | null = null;
+function refreshOnce(): Promise<string> {
+  if (!refreshing) {
+    refreshing = api
+      .post('/api/v1/auth/refresh')
+      .then(({ data }) => {
+        useAuthStore.getState().setAccessToken(data.accessToken);
+        return data.accessToken as string;
+      })
+      .finally(() => {
+        refreshing = null;
+      });
+  }
+  return refreshing;
+}
+
 api.interceptors.response.use(
   (response) => {
     if (response.config.method === 'post') {
@@ -72,9 +91,8 @@ api.interceptors.response.use(
     if (shouldRefresh) {
       error.config._retry = true;
       try {
-        const { data } = await api.post('/api/v1/auth/refresh');
-        useAuthStore.getState().setAccessToken(data.accessToken);
-        error.config.headers.Authorization = `Bearer ${data.accessToken}`;
+        const token = await refreshOnce();
+        error.config.headers.Authorization = `Bearer ${token}`;
         return api(error.config);
       } catch {
         useAuthStore.getState().logout();
