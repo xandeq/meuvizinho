@@ -104,10 +104,13 @@ export default function FeedScreen() {
       {/* FAB — only for verified users */}
       {isVerified && (
         <Pressable
-          style={[styles.fab, shadow.blue, { backgroundColor: colors.primaryFill }]}
+          style={({ pressed }) => [styles.fab, shadow.blue, { backgroundColor: colors.primaryFill, opacity: pressed ? 0.9 : 1 }]}
           onPress={() => setComposerOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel="Publicar no bairro"
         >
-          <Ionicons name="add" size={26} color="#fff" />
+          <Ionicons name="create-outline" size={20} color="#fff" />
+          <Text style={styles.fabText}>Publicar</Text>
         </Pressable>
       )}
 
@@ -123,14 +126,17 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingBottom: 100 },
+  // Pílula com rótulo, igual a "Novo anúncio" e "Cadastrar": ícone solto "+" não dizia o que fazia.
   fab: {
     position: 'absolute',
     right: 16,
-    bottom: 28,
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    bottom: 24,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 8,
+    height: 52,
+    paddingHorizontal: 20,
+    borderRadius: 26,
   },
+  fabText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 15 },
 });
