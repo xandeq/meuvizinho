@@ -6,7 +6,130 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAuthStore } from "@/lib/auth";
 
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.meuvizinho.app";
+
 /* ─── Inline SVG icons — flat, 24×24, no dependency ──────────── */
+
+function IconGooglePlay() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#34A853" d="M3.6 2.2 13.4 12 3.6 21.8a1.6 1.6 0 0 1-.6-1.3V3.5c0-.5.2-1 .6-1.3Z" />
+      <path fill="#FBBC04" d="m16.7 15.3-3.3-3.3 3.3-3.3 3.7 2.1c1.1.6 1.1 1.8 0 2.4l-3.7 2.1Z" />
+      <path fill="#4285F4" d="M16.7 15.3 13.4 12l-9.8 9.8c.4.4 1 .4 1.6.1l11.5-6.6Z" />
+      <path fill="#EA4335" d="M16.7 8.7 5.2 2.1c-.6-.3-1.2-.3-1.6.1L13.4 12l3.3-3.3Z" />
+    </svg>
+  );
+}
+
+/* Botão de loja: mesmo peso visual de um CTA secundário, nunca imagem oficial esticada. */
+function GooglePlayButton({ tone = "dark" }: { tone?: "dark" | "light" }) {
+  const toneCls =
+    tone === "dark"
+      ? "bg-white/10 text-white border-white/25 hover:bg-white/15 hover:border-white/50"
+      : "bg-white text-slate-900 border-white hover:scale-[1.03]";
+  return (
+    <a
+      href={PLAY_STORE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`h-14 pl-4 pr-6 rounded-lg border-2 flex items-center gap-3 transition-all duration-200 ${toneCls}`}
+    >
+      <IconGooglePlay />
+      <span className="flex flex-col leading-tight text-left">
+        <span className="text-[11px] font-medium opacity-70">Disponível no</span>
+        <span className="text-base font-bold">Google Play</span>
+      </span>
+    </a>
+  );
+}
+
+/* Ilustração do app em HTML (mesmo visual do app: Outfit, cards, selo verde).
+   É ilustração de produto, não print nem depoimento de usuário real. */
+function MiniPost({
+  initials, name, tag, tagCls, time, body,
+}: { initials: string; name: string; tag: string; tagCls: string; time: string; body: string }) {
+  return (
+    <div className="rounded-2xl bg-white p-3.5 text-slate-900" style={{ boxShadow: "0 1px 2px rgba(15,23,42,0.06)" }}>
+      <div className="flex items-center gap-2.5">
+        <span className="w-9 h-9 rounded-full bg-[#2563EB] text-white text-xs font-bold flex items-center justify-center">
+          {initials}
+        </span>
+        <div className="min-w-0">
+          <p className="flex items-center gap-1 text-[13px] font-bold leading-tight">
+            {name}
+            <svg width="13" height="13" viewBox="0 0 24 24" aria-label="verificado">
+              <circle cx="12" cy="12" r="11" fill="#059669" />
+              <path d="M7 12.5l3.2 3.2L17 9" stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </p>
+          <p className="text-[11px] font-medium text-slate-500">
+            <span className={tagCls}>{tag}</span> · {time}
+          </p>
+        </div>
+      </div>
+      <p className="mt-2 text-[12.5px] leading-snug text-slate-800">{body}</p>
+    </div>
+  );
+}
+
+function HeroPhone() {
+  return (
+    <div className="relative mx-auto w-[260px] sm:w-[280px]" aria-hidden="true">
+      <div
+        className="rounded-[2.4rem] bg-slate-950 p-2.5 ring-1 ring-white/15"
+        style={{ boxShadow: "0 40px 80px -24px rgba(2,6,23,0.7)" }}
+      >
+        <div className="rounded-[2rem] bg-[#F8FAFC] overflow-hidden">
+          <div className="flex items-center justify-between px-5 pt-3 text-[10px] font-semibold text-slate-700">
+            <span>9:41</span>
+            <span className="w-14 h-4 rounded-full bg-slate-950" />
+            <span>100%</span>
+          </div>
+          <div className="px-4 pt-3 pb-2">
+            <p className="flex items-center gap-1 text-[11px] font-semibold text-[#2563EB]">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="#2563EB"><path d="M12 2a7 7 0 00-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 00-7-7zm0 9.5A2.5 2.5 0 1112 6a2.5 2.5 0 010 5.5z" /></svg>
+              Praia da Costa
+            </p>
+            <p className="text-[22px] font-extrabold tracking-tight text-slate-900">Bairro</p>
+          </div>
+          <div className="space-y-2.5 px-3 pb-6">
+            <MiniPost
+              initials="PL" name="Patrícia Lima" tag="Pergunta" tagCls="text-[#D97706]" time="12 min"
+              body="Alguém indica um eletricista de confiança aqui perto? Preciso pra amanhã."
+            />
+            <MiniPost
+              initials="MV" name="Marcos Vieira" tag="Alerta" tagCls="text-[#DC2626]" time="1 h"
+              body="Portão da garagem do 210 ficou aberto a noite toda. Já avisei a portaria."
+            />
+            <MiniPost
+              initials="JR" name="Júlia Rocha" tag="Dica" tagCls="text-[#2563EB]" time="3 h"
+              body="Feira orgânica volta sábado na praça, 7h às 12h."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Cartões flutuantes: o que o condomínio recebe, sobreposto ao celular */}
+      <div
+        className="hidden sm:block absolute -right-44 top-20 w-48 rounded-2xl bg-white p-3 text-slate-900 rotate-2"
+        style={{ boxShadow: "0 18px 40px -12px rgba(2,6,23,0.45)" }}
+      >
+        <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#2563EB]">
+          <IconMegaphone /> Comunicado do síndico
+        </p>
+        <p className="mt-1 text-[12px] font-semibold leading-snug">Manutenção do elevador quinta, das 9h às 12h.</p>
+      </div>
+      <div
+        className="hidden sm:block absolute -right-36 bottom-24 w-44 rounded-2xl bg-white p-3 text-slate-900 -rotate-2"
+        style={{ boxShadow: "0 18px 40px -12px rgba(2,6,23,0.45)" }}
+      >
+        <p className="text-[11px] font-bold text-slate-500">Reserva confirmada</p>
+        <p className="mt-0.5 text-[12.5px] font-bold">Salão de festas</p>
+        <p className="text-[11px] font-medium text-slate-600">Sáb, 19:00 às 23:00</p>
+      </div>
+    </div>
+  );
+}
 
 function IconHome() {
   return (
@@ -223,7 +346,9 @@ export default function LandingPage() {
         </header>
 
         {/* Hero content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-28 md:pt-24 md:pb-36">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-16 pb-24 md:pt-20 md:pb-28
+                        grid lg:grid-cols-[minmax(0,1fr)_420px] gap-14 items-center">
+          <div>
           {/* Eyebrow */}
           <p className="inline-flex items-center gap-2 bg-white/10 text-white/80 rounded-full px-4 py-1.5
                         text-xs font-semibold uppercase tracking-widest mb-8">
@@ -232,8 +357,8 @@ export default function LandingPage() {
           </p>
 
           {/* Headline */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-extrabold
-                         leading-[0.95] tracking-tight text-white max-w-4xl">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold
+                         leading-[0.95] tracking-tight text-white max-w-3xl">
             Seu bairro,{" "}
             <span className="text-primary">conectado</span>{" "}
             de verdade.
@@ -255,13 +380,19 @@ export default function LandingPage() {
               Criar conta grátis
               <IconArrowRight />
             </Link>
-            <Link
-              href="/login/"
-              className="h-14 px-8 rounded-lg border-4 border-white/30 text-white font-semibold text-base
-                         flex items-center gap-2 transition-all duration-200 hover:border-white hover:scale-[1.03]"
-            >
-              Já sou vizinho
+            <GooglePlayButton tone="dark" />
+          </div>
+          <p className="mt-5 text-sm text-white/50 font-medium">
+            Já tem conta?{" "}
+            <Link href="/login/" className="text-white/80 underline underline-offset-4 hover:text-white">
+              Entrar
             </Link>
+          </p>
+          </div>
+
+          {/* Ilustração do app com cartões sobrepostos (profundidade, sem print de dado de teste) */}
+          <div className="relative sm:-translate-x-16 lg:-translate-x-20">
+            <HeroPhone />
           </div>
         </div>
       </section>
@@ -710,13 +841,7 @@ export default function LandingPage() {
               Criar minha conta
               <IconArrowRight />
             </Link>
-            <Link
-              href="/login/"
-              className="h-14 px-8 rounded-lg border-4 border-white/30 text-white font-semibold text-base
-                         flex items-center transition-all duration-200 hover:border-white hover:scale-[1.03]"
-            >
-              Já tenho conta
-            </Link>
+            <GooglePlayButton tone="dark" />
           </div>
         </div>
       </section>
@@ -734,6 +859,9 @@ export default function LandingPage() {
           <nav className="flex flex-wrap items-center gap-6 text-sm font-medium text-white/60">
             <a href="#sindicos" className="hover:text-white transition-colors">
               Para síndicos
+            </a>
+            <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+              App Android
             </a>
             <Link href="/privacy-policy/" className="hover:text-white transition-colors">
               Política de Privacidade
