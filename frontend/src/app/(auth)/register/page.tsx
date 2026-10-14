@@ -22,7 +22,7 @@ export default function RegisterPage() {
               </span>
             </>
           }
-          subhead="Verificamos CEP e comprovante de residência de cada vizinho — sua identidade protege toda a comunidade."
+          subhead="Verificamos CEP e comprovante de residência de cada vizinho. Isso protege toda a comunidade."
         />
       }
     >
