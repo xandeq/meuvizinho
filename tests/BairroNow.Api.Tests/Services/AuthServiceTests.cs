@@ -171,6 +171,64 @@ public class AuthServiceTests : IDisposable
         Assert.Null(error);
     }
 
+    private async Task<string> SeedRefreshTokenAsync(Guid userId, string rawToken)
+    {
+        var hash = Convert.ToBase64String(System.Security.Cryptography.SHA256.HashData(
+            System.Text.Encoding.UTF8.GetBytes(rawToken)));
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            Token = hash,
+            UserId = userId,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow,
+            CreatedByIp = "127.0.0.1"
+        });
+        await _db.SaveChangesAsync();
+        return rawToken;
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ConcurrentReuseWithinGrace_KeepsSessionAlive()
+    {
+        var userId = Guid.NewGuid();
+        _db.Users.Add(new User { Id = userId, Email = "race@test.com", PasswordHash = "hash" });
+        var raw = await SeedRefreshTokenAsync(userId, "race-token");
+
+        var (first, successorRaw, _) = await _service.RefreshAsync(raw, "127.0.0.1");
+        // Segunda requisição concorrente com o mesmo cookie, logo depois da rotação.
+        var (second, _, error) = await _service.RefreshAsync(raw, "127.0.0.1");
+
+        Assert.NotNull(first);
+        Assert.Null(second);
+        Assert.NotNull(error);
+        // A sessão nova continua válida: dá pra renovar com ela.
+        var (third, _, thirdError) = await _service.RefreshAsync(successorRaw!, "127.0.0.1");
+        Assert.NotNull(third);
+        Assert.Null(thirdError);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_ReuseAfterGrace_RevokesAllSessions()
+    {
+        var userId = Guid.NewGuid();
+        _db.Users.Add(new User { Id = userId, Email = "theft@test.com", PasswordHash = "hash" });
+        var raw = await SeedRefreshTokenAsync(userId, "stolen-token");
+
+        var (_, successorRaw, _) = await _service.RefreshAsync(raw, "127.0.0.1");
+        // Simula o token antigo reaparecendo bem depois da rotação (roubo).
+        foreach (var t in _db.RefreshTokens.Where(t => t.UserId == userId && !t.IsRevoked))
+            t.CreatedAt = DateTime.UtcNow - AuthService.RefreshReuseGrace - TimeSpan.FromMinutes(1);
+        await _db.SaveChangesAsync();
+
+        var (reused, _, _) = await _service.RefreshAsync(raw, "10.0.0.9");
+        var (afterTheft, _, afterError) = await _service.RefreshAsync(successorRaw!, "127.0.0.1");
+
+        Assert.Null(reused);
+        Assert.Null(afterTheft);
+        Assert.NotNull(afterError);
+    }
+
     [Fact]
     public async Task LogoutAsync_RevokesToken()
     {
