@@ -249,23 +249,50 @@ function StepBadge({ n }: { n: number }) {
   );
 }
 
-/** Fake listing card — demonstrates the amber-tinted marketplace aesthetic */
+const LISTING_ART: Record<string, React.ReactNode> = {
+  bike: (
+    <>
+      <circle cx="16" cy="44" r="12" />
+      <circle cx="56" cy="44" r="12" />
+      <path d="M16 44l14-22h16l10 22M30 22l12 22h-26M42 16h8M28 16h6" />
+    </>
+  ),
+  desk: (
+    <>
+      <path d="M8 24h56v6H8zM14 30v26M58 30v26M40 30v14h18" />
+      <path d="M24 24V14h14v10M31 14v-4" />
+    </>
+  ),
+  guitar: (
+    <>
+      <path d="M44 12l10-6 4 4-6 10" />
+      <path d="M50 16L34 32" />
+      <path d="M34 32c-4-4-12-3-15 1-3 3-1 7-4 10-4 4-4 10 0 14s10 4 14 0c3-3 7-1 10-4 4-3 5-11 1-15z" />
+      <circle cx="26" cy="44" r="4" />
+    </>
+  ),
+};
+
+/** Card de exemplo do Mercado: ilustração por categoria (não é foto de anúncio real). */
 function FakeListingCard({
   title,
   price,
   category,
   verified,
+  art,
 }: {
   title: string;
   price: string;
   category: string;
   verified: boolean;
+  art: keyof typeof LISTING_ART;
 }) {
   return (
-    <div className="bg-bg rounded-lg p-5 flex flex-col gap-3">
-      {/* Colour-blocked image placeholder */}
-      <div className="w-full h-32 rounded-md bg-amber-100 flex items-center justify-center">
-        <div aria-hidden className="w-12 h-12 bg-amber-200 rounded-full" />
+    <div className="bg-bg rounded-2xl p-5 flex flex-col gap-3">
+      <div className="w-full h-32 rounded-xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center" aria-hidden>
+        <svg width="72" height="64" viewBox="0 0 72 64" fill="none" stroke="#B45309" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          {LISTING_ART[art]}
+        </svg>
       </div>
       <div>
         <span className="inline-block bg-amber-100 text-amber-700 text-xs font-semibold rounded-md px-2 py-0.5 mb-1">
@@ -821,7 +848,7 @@ export default function LandingPage() {
 
               <div className="mt-6 pt-6 border-t-2 border-border">
                 <p className="text-xs text-muted-fg font-medium">
-                  Verificada em 15 de março de 2025
+                  Verificada há 3 meses
                 </p>
               </div>
             </div>
@@ -840,24 +867,25 @@ export default function LandingPage() {
                 Marketplace
               </p>
               <h2 className="text-4xl md:text-5xl font-extrabold text-fg tracking-tight">
-                Compre e venda com<br />quem você conhece.
+                Compre e venda com<br className="hidden sm:block" />{" "}quem você conhece.
               </h2>
             </div>
             <Link
               href="/register/"
-              className="h-12 px-6 rounded-lg bg-amber-500 text-white font-semibold text-sm shrink-0
-                         flex items-center gap-2 transition-all duration-200 hover:bg-amber-600 hover:scale-[1.03] w-fit"
+              className="h-12 px-6 rounded-lg bg-amber-700 text-white font-semibold text-sm shrink-0
+                         flex items-center gap-2 transition-all duration-200 hover:bg-amber-800 hover:scale-[1.03] w-fit"
             >
               Ver marketplace
               <IconArrowRight />
             </Link>
           </div>
 
-          {/* Fake listings grid */}
+          {/* Exemplos do Mercado (ilustrativos) */}
+          <p className="text-xs font-semibold uppercase tracking-widest text-amber-800/70 mb-3">Exemplo de anúncios</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            <FakeListingCard title="Bicicleta caloi aro 26 conservada" price="R$&nbsp;380" category="Esporte" verified />
-            <FakeListingCard title="Mesa de escritório cor carvalho" price="R$&nbsp;250" category="Móveis" verified />
-            <FakeListingCard title="Aulas de violão para crianças" price="R$&nbsp;80/aula" category="Serviços" verified />
+            <FakeListingCard title="Bicicleta aro 26 conservada" price="R$&nbsp;380" category="Esporte" art="bike" verified />
+            <FakeListingCard title="Mesa de escritório cor carvalho" price="R$&nbsp;250" category="Móveis" art="desk" verified />
+            <FakeListingCard title="Aulas de violão para crianças" price="R$&nbsp;80/aula" category="Serviços" art="guitar" verified />
           </div>
         </div>
       </section>
@@ -872,8 +900,8 @@ export default function LandingPage() {
             {[
               "Sem algoritmo: veja tudo do seu bairro em ordem cronológica",
               "Sem anúncios patrocinados. Nunca.",
-              "Seus dados ficam no Brasil",
-              "Código aberto para auditoria da comunidade",
+              "Seu endereço exato nunca aparece: no mapa a posição é aproximada",
+              "Código público no GitHub, aberto para auditoria",
               "Você pode exportar ou apagar sua conta a qualquer momento",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3">
@@ -891,7 +919,7 @@ export default function LandingPage() {
               Nossos princípios
             </p>
             <h2 className="text-4xl md:text-5xl font-extrabold text-fg tracking-tight mb-6">
-              Feito para o bairro,<br />não para o anunciante.
+              Feito para o bairro,<br className="hidden sm:block" />{" "}não para o anunciante.
             </h2>
             <p className="text-lg text-muted-fg leading-relaxed">
               O Meu Vizinho existe para conectar vizinhos reais, não para vender sua atenção.
