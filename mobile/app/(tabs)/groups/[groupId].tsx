@@ -122,7 +122,7 @@ export default function GroupDetailScreen() {
       {item.location && <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.location}</Text>}
       <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{new Date(item.startsAt).toLocaleString('pt-BR')}</Text>
       <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.rsvpCount} confirmados</Text>
-      <TouchableOpacity
+      <TouchableOpacity accessibilityRole="button"
         style={[
           styles.rsvpBtn,
           { borderColor: colors.border, borderRadius: radius.sm },
@@ -152,7 +152,7 @@ export default function GroupDetailScreen() {
           {(['feed', 'events'] as const).map((tab) => {
             const isActive = activeTab === tab;
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={tab}
                 onPress={() => setActiveTab(tab)}
                 style={[styles.tab, isActive && { borderBottomWidth: 2, borderBottomColor: colors.primary }]}
@@ -194,7 +194,7 @@ export default function GroupDetailScreen() {
                 onChangeText={setComposerText}
                 multiline
               />
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 onPress={handlePost}
                 disabled={submitting || !composerText.trim()}
                 style={[styles.sendBtn, { backgroundColor: colors.secondaryFill, borderRadius: radius.sm }]}

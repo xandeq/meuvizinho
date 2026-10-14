@@ -84,7 +84,7 @@ export default function NewGroupScreen() {
             {CATEGORIES.map((c) => {
               const isActive = category === c;
               return (
-                <TouchableOpacity
+                <TouchableOpacity accessibilityRole="button"
                   key={c}
                   onPress={() => setCategory(c)}
                   style={[
@@ -107,7 +107,7 @@ export default function NewGroupScreen() {
           {(['Open', 'Closed'] as const).map((p) => {
             const isActive = joinPolicy === p;
             return (
-              <TouchableOpacity
+              <TouchableOpacity accessibilityRole="button"
                 key={p}
                 onPress={() => setJoinPolicy(p)}
                 style={[
@@ -125,7 +125,7 @@ export default function NewGroupScreen() {
         </View>
       </View>
 
-      <TouchableOpacity
+      <TouchableOpacity accessibilityRole="button"
         onPress={handleCreate}
         disabled={submitting}
         style={[

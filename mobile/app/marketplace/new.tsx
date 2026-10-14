@@ -148,7 +148,7 @@ export default function CreateListingScreen() {
       {errors.price && <Text style={[styles.error, { color: colors.danger }]}>{errors.price.message}</Text>}
 
       <Text style={[styles.label, { color: colors.fg }]}>Categoria</Text>
-      <Pressable style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card }]} onPress={() => setPickerOpen(true)}>
+      <Pressable accessibilityRole="button" style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card }]} onPress={() => setPickerOpen(true)}>
         <Text style={{ color: selectedCat ? colors.fg : colors.mutedFg }}>
           {selectedCat && selectedSub
             ? `${selectedCat.displayName} → ${selectedSub.displayName}`

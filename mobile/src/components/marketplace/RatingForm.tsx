@@ -40,7 +40,7 @@ export function RatingForm({ sellerId, listingId, onSubmitted }: Props) {
       <Text style={[styles.label, { color: colors.fg }]}>Avalie o vendedor</Text>
       <View style={styles.starsRow}>
         {[1, 2, 3, 4, 5].map((n) => (
-          <Pressable key={n} onPress={() => setStars(n)} style={styles.star}>
+          <Pressable accessibilityRole="button" key={n} onPress={() => setStars(n)} style={styles.star}>
             <Ionicons
               name={n <= stars ? 'star' : 'star-outline'}
               size={32}

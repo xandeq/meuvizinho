@@ -104,7 +104,7 @@ export default function AlertasScreen() {
         renderItem={({ item }) => {
           const active = kind === item.code;
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={() => setKind(item.code)}
               style={[
                 styles.chip,
@@ -150,7 +150,7 @@ export default function AlertasScreen() {
                 <Text style={[styles.location, { color: colors.mutedFg }]}>{item.locationDescription}</Text>
               </View>
             )}
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={() => handleUpvote(item)}
               disabled={upvoting === item.id}
               style={[styles.upvoteBtn, { borderColor: colors.border }]}
@@ -165,7 +165,7 @@ export default function AlertasScreen() {
       />
 
       {isVerified && (
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={[styles.fab, shadow.ambientHigh, { backgroundColor: colors.dangerFill, bottom: 24 + insets.bottom }]}
           onPress={() => router.push('/alertas/new')}
         >

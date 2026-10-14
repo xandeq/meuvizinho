@@ -112,7 +112,7 @@ export default function WhatsAppGroupsScreen() {
           )
         }
         renderItem={({ item }) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             onPress={() => handleOpen(item)}
             style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.lg }]}
           >

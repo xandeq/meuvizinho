@@ -123,7 +123,7 @@ export default function Login() {
         <View style={{ height: 16 }} />
         <Button title="Verificar" icon="shield-checkmark" onPress={handleTotpVerify} loading={totpLoading} />
         <View style={{ height: 12 }} />
-        <Pressable onPress={() => { setTotpGate(false); setTotpCode(''); }}>
+        <Pressable accessibilityRole="button" onPress={() => { setTotpGate(false); setTotpCode(''); }}>
           <Text style={[styles.link, { color: colors.primary }]}>Voltar</Text>
         </Pressable>
       </ScrollView>

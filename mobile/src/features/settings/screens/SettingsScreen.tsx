@@ -24,7 +24,7 @@ export default function SettingsScreen() {
         {THEME_OPTIONS.map((opt, i) => {
           const isActive = mode === opt.value;
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               key={opt.value}
               onPress={() => setMode(opt.value)}
               style={[
@@ -46,7 +46,7 @@ export default function SettingsScreen() {
       {/* Notifications section */}
       <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificações</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Pressable style={styles.option}>
+        <Pressable accessibilityRole="button" style={styles.option}>
           <View style={styles.optionLeft}>
             <Ionicons name="mail-outline" size={19} color={colors.mutedFg} />
             <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>
@@ -56,7 +56,7 @@ export default function SettingsScreen() {
       </View>
 
       {/* Premium link */}
-      <Pressable
+      <Pressable accessibilityRole="button"
         onPress={() => router.push('/premium')}
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >
@@ -68,7 +68,7 @@ export default function SettingsScreen() {
       </Pressable>
 
       {/* LGPD link */}
-      <Pressable
+      <Pressable accessibilityRole="button"
         onPress={() => router.push('/lgpd')}
         style={[styles.card, styles.lgpdLink, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 24 }]}
       >

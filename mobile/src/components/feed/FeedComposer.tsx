@@ -65,7 +65,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
-      <Pressable style={s.backdrop} onPress={handleClose} />
+      <Pressable style={s.backdrop} onPress={handleClose} accessibilityRole="button" accessibilityLabel="Fechar" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={s.sheetWrapper}
@@ -77,7 +77,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
           {/* Title row */}
           <View style={s.titleRow}>
             <Text style={s.title}>Criar post</Text>
-            <Pressable onPress={handleClose} hitSlop={12}>
+            <Pressable onPress={handleClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Fechar">
               <Ionicons name="close" size={22} color={colors.mutedFg} />
             </Pressable>
           </View>
@@ -85,7 +85,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
           {/* Category chips */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.chipScroll}>
             {CATEGORIES.map((c) => (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 key={c.value}
                 style={[s.chip, category === c.value && s.chipActive]}
                 onPress={() => setCategory(c.value)}
@@ -113,7 +113,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
           {error && <Text style={s.error}>{error}</Text>}
 
           {/* Submit */}
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[s.submitBtn, (!body.trim() || submitting) && s.submitBtnDisabled]}
             onPress={handleSubmit}
             disabled={!body.trim() || submitting}

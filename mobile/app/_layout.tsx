@@ -19,7 +19,13 @@ import { usePushNotifications } from '../src/lib/usePushNotifications';
 function ThemeToggleButton() {
   const { isDark, toggleTheme, colors } = useTheme();
   return (
-    <Pressable onPress={toggleTheme} style={{ marginRight: 16 }}>
+    <Pressable
+      onPress={toggleTheme}
+      style={{ marginRight: 16 }}
+      hitSlop={12}
+      accessibilityRole="button"
+      accessibilityLabel={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
+    >
       <Ionicons name={isDark ? 'sunny' : 'moon'} size={22} color={colors.fg} />
     </Pressable>
   );
@@ -32,7 +38,13 @@ function ProfileHeaderRight() {
   const { colors } = useTheme();
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-      <Pressable onPress={() => router.push('/settings')} style={{ marginRight: 16 }}>
+      <Pressable
+        onPress={() => router.push('/settings')}
+        style={{ marginRight: 16 }}
+        hitSlop={12}
+        accessibilityRole="button"
+        accessibilityLabel="Configurações"
+      >
         <Ionicons name="settings-outline" size={22} color={colors.fg} />
       </Pressable>
       <ThemeToggleButton />
