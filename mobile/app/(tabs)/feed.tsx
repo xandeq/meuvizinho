@@ -7,14 +7,18 @@ import { useFeedStore } from '../../src/lib/feed-store';
 import { PostCard } from '../../src/components/feed/PostCard';
 import { FeedComposer } from '../../src/components/feed/FeedComposer';
 import { EmptyState } from '../../src/components/EmptyState';
+import { ScreenHeader, HeaderIconButton } from '../../src/components/ScreenHeader';
+import { ListSkeleton } from '../../src/components/Skeleton';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, shadow } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
+import { useBairroName } from '../../src/lib/useBairroName';
 
 export default function FeedScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const bairroName = useBairroName();
   const bairroId = user?.bairroId ?? 0;
   const isVerified = !!user?.isVerified;
 
@@ -65,21 +69,20 @@ export default function FeedScreen() {
         onEndReached={() => hasMore && loadNextPage(bairroId)}
         onEndReachedThreshold={0.5}
         ListHeaderComponent={
-          <View style={[styles.header, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.headerTitle, { color: colors.fg }]}>Bairro</Text>
-            <View style={styles.headerActions}>
-              <Pressable onPress={() => router.push('/alertas')} hitSlop={8} style={styles.headerIconBtn}>
-                <Ionicons name="shield-outline" size={24} color={colors.fg} />
-              </Pressable>
-              {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
-              <Pressable onPress={() => router.push('/profile')} hitSlop={8}>
-                <Ionicons name="person-circle-outline" size={30} color={colors.fg} />
-              </Pressable>
-            </View>
-          </View>
+          <ScreenHeader
+            title="Bairro"
+            place={bairroName}
+            actions={
+              <>
+                <HeaderIconButton icon="shield-outline" label="Alertas de segurança" onPress={() => router.push('/alertas')} />
+                {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
+                <HeaderIconButton icon="person-outline" label="Meu perfil" onPress={() => router.push('/profile')} />
+              </>
+            }
+          />
         }
         ListEmptyComponent={
-          loading ? null : (
+          loading ? <ListSkeleton rows={3} /> : (
             <EmptyState
               icon="chatbubbles-outline"
               title="Nenhum post no seu bairro ainda"
@@ -101,7 +104,7 @@ export default function FeedScreen() {
       {/* FAB — only for verified users */}
       {isVerified && (
         <Pressable
-          style={[styles.fab, shadow.blue, { backgroundColor: colors.primary }]}
+          style={[styles.fab, shadow.blue, { backgroundColor: colors.primaryFill }]}
           onPress={() => setComposerOpen(true)}
         >
           <Ionicons name="add" size={26} color="#fff" />
@@ -120,19 +123,6 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   list: { paddingBottom: 100 },
-  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  headerIconBtn: {},
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    marginBottom: 4,
-  },
-  headerTitle: { fontFamily: fontFamily.extrabold, fontSize: 28 },
   fab: {
     position: 'absolute',
     right: 16,

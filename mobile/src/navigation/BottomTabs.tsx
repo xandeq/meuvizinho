@@ -79,7 +79,7 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
                 color={isFocused ? colors.primary : colors.mutedFg}
               />
               {isChatTab && unreadTotal > 0 && (
-                <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+                <View style={[styles.badge, { backgroundColor: colors.dangerFill }]}>
                   <Text style={styles.badgeText}>{unreadTotal > 99 ? '99+' : unreadTotal}</Text>
                 </View>
               )}

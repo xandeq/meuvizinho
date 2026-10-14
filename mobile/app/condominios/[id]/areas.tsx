@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getCommonAreas } from '../../../src/lib/api/condo';
 import type { CommonAreaSummary } from '../../../src/lib/api/condo.types';
 import { EmptyState } from '../../../src/components/EmptyState';
+import { ListSkeleton } from '../../../src/components/Skeleton';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 
@@ -39,8 +40,8 @@ export default function AreasComunsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.primary} />
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ListSkeleton rows={4} />
       </View>
     );
   }
@@ -96,13 +97,13 @@ export default function AreasComunsScreen() {
                 <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
               </View>
               <View style={styles.chips}>
-                <View style={[styles.chip, { backgroundColor: (a.requiresApproval ? colors.accent : colors.secondary) + '15' }]}>
+                <View style={[styles.chip, { backgroundColor: (a.requiresApproval ? colors.accent : colors.primary) + '15' }]}>
                   <Ionicons
                     name={a.requiresApproval ? 'hourglass-outline' : 'flash-outline'}
                     size={11}
-                    color={a.requiresApproval ? colors.accent : colors.secondary}
+                    color={a.requiresApproval ? colors.accent : colors.primary}
                   />
-                  <Text style={[styles.chipText, { color: a.requiresApproval ? colors.accent : colors.secondary }]}>
+                  <Text style={[styles.chipText, { color: a.requiresApproval ? colors.accent : colors.primary }]}>
                     {a.requiresApproval ? 'Com aprovação do síndico' : 'Confirmação imediata'}
                   </Text>
                 </View>

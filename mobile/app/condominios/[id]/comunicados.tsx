@@ -6,6 +6,7 @@ import { getAnnouncements } from '../../../src/lib/api/condo';
 import type { AnnouncementSummary } from '../../../src/lib/api/condo.types';
 import { formatDayMonth } from '../../../src/features/condominium/reservation-slots';
 import { EmptyState } from '../../../src/components/EmptyState';
+import { ListSkeleton } from '../../../src/components/Skeleton';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 
@@ -38,8 +39,8 @@ export default function ComunicadosScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.primary} />
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ListSkeleton rows={4} />
       </View>
     );
   }
@@ -96,7 +97,7 @@ export default function ComunicadosScreen() {
             <Text style={[styles.meta, { color: colors.mutedFg }]} numberOfLines={1}>
               {a.authorName ?? 'Síndico'}
             </Text>
-            {a.authorVerified && <Ionicons name="checkmark-circle" size={13} color={colors.secondary} />}
+            {a.authorVerified && <Ionicons name="checkmark-circle" size={13} color={colors.verified} />}
             <Text style={[styles.meta, { color: colors.mutedFg, marginLeft: 'auto' }]}>{formatDayMonth(a.publishedAt)}</Text>
           </View>
         </Pressable>

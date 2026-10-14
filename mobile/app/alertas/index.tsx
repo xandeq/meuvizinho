@@ -9,6 +9,7 @@ import { SECURITY_ALERT_KIND_LABELS, type SecurityAlertKind, type SecurityAlertS
 import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
+import { ListSkeleton } from '../../src/components/Skeleton';
 
 const KIND_FILTERS: { code: SecurityAlertKind | ''; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { code: '', label: 'Todos', icon: 'apps-outline' },
@@ -107,7 +108,7 @@ export default function AlertasScreen() {
               onPress={() => setKind(item.code)}
               style={[
                 styles.chip,
-                { borderColor: colors.border, backgroundColor: active ? colors.danger : colors.card },
+                { borderColor: colors.border, backgroundColor: active ? colors.dangerFill : colors.card },
               ]}
             >
               <Ionicons name={item.icon} size={14} color={active ? '#fff' : colors.mutedFg} style={{ marginRight: 5 }} />
@@ -124,7 +125,7 @@ export default function AlertasScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.danger} />}
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={colors.danger} style={{ marginTop: 40 }} />
+            <ListSkeleton rows={4} />
           ) : (
             <EmptyState
               icon="shield-checkmark-outline"
@@ -156,7 +157,7 @@ export default function AlertasScreen() {
             >
               <Ionicons name="arrow-up-circle-outline" size={16} color={colors.mutedFg} />
               <Text style={[styles.upvoteText, { color: colors.mutedFg }]}>
-                {item.upvoteCount > 0 ? `${item.upvoteCount} confirmaram` : 'Confirmar'}
+                {item.upvoteCount > 0 ? `${item.upvoteCount} ${item.upvoteCount === 1 ? 'confirmou' : 'confirmaram'}` : 'Confirmar'}
               </Text>
             </Pressable>
           </View>
@@ -165,7 +166,7 @@ export default function AlertasScreen() {
 
       {isVerified && (
         <Pressable
-          style={[styles.fab, shadow.ambientHigh, { backgroundColor: colors.danger, bottom: 24 + insets.bottom }]}
+          style={[styles.fab, shadow.ambientHigh, { backgroundColor: colors.dangerFill, bottom: 24 + insets.bottom }]}
           onPress={() => router.push('/alertas/new')}
         >
           <Ionicons name="add" size={22} color="#fff" style={{ marginRight: 6 }} />

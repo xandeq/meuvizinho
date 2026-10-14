@@ -52,7 +52,7 @@ export default function ComunicadoDetailScreen() {
       <View style={styles.metaRow}>
         <Ionicons name="person-circle-outline" size={16} color={colors.mutedFg} />
         <Text style={[styles.meta, { color: colors.mutedFg }]}>{item.authorName ?? 'Síndico'}</Text>
-        {item.authorVerified && <Ionicons name="checkmark-circle" size={14} color={colors.secondary} />}
+        {item.authorVerified && <Ionicons name="checkmark-circle" size={14} color={colors.verified} />}
         <Text style={[styles.meta, { color: colors.mutedFg }]}>
           · {formatDayMonth(item.publishedAt)} às {formatTime(item.publishedAt)}
         </Text>

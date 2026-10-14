@@ -65,7 +65,7 @@ export default function ListingDetailScreen() {
   if (loading || !listing) {
     return (
       <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.secondary} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -179,7 +179,7 @@ export default function ListingDetailScreen() {
       </View>
 
       <View style={styles.body}>
-        <Text style={[styles.price, { color: colors.secondary }]}>{priceFormatter.format(listing.price)}</Text>
+        <Text style={[styles.price, { color: colors.fg }]}>{priceFormatter.format(listing.price)}</Text>
         <Text style={[styles.title, { color: colors.fg }]}>{listing.title}</Text>
 
         <View style={[styles.sellerCard, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border }]}>

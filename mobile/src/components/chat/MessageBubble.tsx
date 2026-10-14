@@ -25,7 +25,7 @@ export function MessageBubble({ message, isOwn }: Props) {
         style={[
           styles.bubble,
           shadow.ambientLow,
-          { backgroundColor: isOwn ? colors.secondary : colors.card },
+          { backgroundColor: isOwn ? colors.primaryFill : colors.card },
           isOwn ? styles.bubbleOwn : styles.bubbleOther,
         ]}
       >

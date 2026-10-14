@@ -79,7 +79,7 @@ export function PhotoPicker({ photos, onChange, max = 6 }: Props) {
           <View key={p.uri} style={[styles.thumbWrap, { borderRadius: radius.sm, backgroundColor: colors.muted }]}>
             <Image source={{ uri: p.uri }} style={styles.thumb} />
             {idx === 0 && (
-              <View style={[styles.capaBadge, { backgroundColor: colors.secondary }]}>
+              <View style={[styles.capaBadge, { backgroundColor: colors.secondaryFill }]}>
                 <Text style={styles.capaText}>Capa</Text>
               </View>
             )}

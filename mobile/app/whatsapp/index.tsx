@@ -9,6 +9,7 @@ import { WHATSAPP_KIND_LABELS, type WhatsAppGroupKind, type WhatsAppGroupSummary
 import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
+import { ListSkeleton } from '../../src/components/Skeleton';
 
 const KIND_FILTERS: { code: WhatsAppGroupKind | ''; label: string }[] = [
   { code: '', label: 'Todos' },
@@ -84,7 +85,9 @@ export default function WhatsAppGroupsScreen() {
           return (
             <Pressable
               onPress={() => setKind(item.code)}
-              style={[styles.chip, { borderColor: colors.border, backgroundColor: active ? colors.secondary : colors.card }]}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              style={[styles.chip, { borderColor: active ? colors.primaryFill : colors.border, backgroundColor: active ? colors.primaryFill : colors.card }]}
             >
               <Text style={[styles.chipText, { color: active ? '#fff' : colors.fg }]}>{item.label}</Text>
             </Pressable>
@@ -96,10 +99,10 @@ export default function WhatsAppGroupsScreen() {
         data={groups}
         keyExtractor={(g) => String(g.id)}
         contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1, paddingBottom: 100 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.secondary} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.primary} />}
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={colors.secondary} style={{ marginTop: 40 }} />
+            <ListSkeleton rows={4} />
           ) : (
             <EmptyState
               icon="logo-whatsapp"
@@ -113,8 +116,8 @@ export default function WhatsAppGroupsScreen() {
             onPress={() => handleOpen(item)}
             style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.lg }]}
           >
-            <View style={[styles.waIcon, { backgroundColor: colors.secondary + '18' }]}>
-              <Ionicons name="logo-whatsapp" size={22} color={colors.secondary} />
+            <View style={[styles.waIcon, { backgroundColor: '#25D3661F' }]}>
+              <Ionicons name="logo-whatsapp" size={22} color="#25D366" />
             </View>
             <View style={styles.cardBody}>
               <Text style={[styles.name, { color: colors.fg }]} numberOfLines={1}>{item.name}</Text>
@@ -137,10 +140,12 @@ export default function WhatsAppGroupsScreen() {
 
       {isVerified && (
         <Pressable
-          style={[styles.fab, shadow.emerald, { backgroundColor: colors.secondary, bottom: 24 + insets.bottom }]}
+          style={[styles.fab, shadow.blue, { backgroundColor: colors.primaryFill, bottom: 24 + insets.bottom }]}
           onPress={() => router.push('/whatsapp/new')}
+          accessibilityRole="button"
+          accessibilityLabel="Indicar grupo de WhatsApp"
         >
-          <Ionicons name="add" size={22} color="#fff" style={{ marginRight: 6 }} />
+          <Ionicons name="logo-whatsapp" size={20} color="#fff" style={{ marginRight: 8 }} />
           <Text style={styles.fabText}>Indicar grupo</Text>
         </Pressable>
       )}
@@ -151,7 +156,8 @@ export default function WhatsAppGroupsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   filterRow: { maxHeight: 48, marginTop: 12, marginBottom: 4 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: radius.xl, borderWidth: 1 },
+  // Altura fixa + centro: na FlatList horizontal o chip esticava e o texto ficava colado no topo.
+  chip: { height: 38, alignSelf: 'center', justifyContent: 'center', paddingHorizontal: 14, borderRadius: radius.xl, borderWidth: 1 },
   chipText: { fontFamily: fontFamily.semibold, fontSize: 13 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   waIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },

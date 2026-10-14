@@ -161,7 +161,7 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
       marginRight: 8,
       backgroundColor: colors.muted,
     },
-    chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    chipActive: { backgroundColor: colors.primaryFill, borderColor: colors.primary },
     chipLabel: { fontFamily: fontFamily.bold, fontSize: 13, color: colors.mutedFg },
     chipLabelActive: { color: '#fff' },
     input: {
@@ -179,7 +179,7 @@ const styles = (colors: ReturnType<typeof import('../../theme/ThemeContext').use
     charCount: { fontFamily: fontFamily.regular, fontSize: 11, color: colors.mutedFg, textAlign: 'right', marginTop: 4, marginBottom: 12 },
     error: { fontFamily: fontFamily.semibold, fontSize: 13, color: colors.danger, marginBottom: 10 },
     submitBtn: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.primaryFill,
       borderRadius: radius.sm,
       paddingVertical: 14,
       alignItems: 'center',

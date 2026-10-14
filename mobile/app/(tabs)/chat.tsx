@@ -63,7 +63,7 @@ export default function ConversationListScreen() {
             </Text>
           </View>
           {item.unreadCount > 0 && (
-            <View style={[styles.badge, { backgroundColor: colors.danger }]}>
+            <View style={[styles.badge, { backgroundColor: colors.dangerFill }]}>
               <Text style={styles.badgeText}>{item.unreadCount}</Text>
             </View>
           )}

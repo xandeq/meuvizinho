@@ -56,7 +56,7 @@ export default function PremiumScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={styles.content}>
-      <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+      <View style={[styles.hero, { backgroundColor: colors.primaryFill }]}>
         <Text style={styles.heroTitle}>Meu Vizinho Premium</Text>
         <Text style={styles.heroSub}>Mais destaque, mais alcance e mais recursos para você e seu bairro.</Text>
       </View>
@@ -97,7 +97,7 @@ export default function PremiumScreen() {
             <Pressable
               onPress={startTrial}
               disabled={starting}
-              style={[styles.btn, { backgroundColor: colors.primary, opacity: starting ? 0.6 : 1 }]}
+              style={[styles.btn, { backgroundColor: colors.primaryFill, opacity: starting ? 0.6 : 1 }]}
             >
               <Text style={styles.btnText}>{starting ? 'Ativando…' : 'Ativar trial grátis de 14 dias'}</Text>
             </Pressable>

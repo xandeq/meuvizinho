@@ -39,7 +39,7 @@ export default function EditListingScreen() {
   if (!listing) {
     return (
       <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.secondary} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }

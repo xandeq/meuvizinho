@@ -90,7 +90,7 @@ export default function NewGroupScreen() {
                   style={[
                     styles.chip,
                     { borderColor: colors.border, backgroundColor: colors.card },
-                    isActive && { backgroundColor: colors.secondary, borderColor: colors.secondary },
+                    isActive && { backgroundColor: colors.secondaryFill, borderColor: colors.secondary },
                   ]}
                 >
                   <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>{c}</Text>
@@ -113,7 +113,7 @@ export default function NewGroupScreen() {
                 style={[
                   styles.chip,
                   { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { backgroundColor: colors.secondary, borderColor: colors.secondary },
+                  isActive && { backgroundColor: colors.secondaryFill, borderColor: colors.secondary },
                 ]}
               >
                 <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>
@@ -131,7 +131,7 @@ export default function NewGroupScreen() {
         style={[
           styles.createBtn,
           shadow.emerald,
-          { backgroundColor: colors.secondary, borderRadius: radius.md },
+          { backgroundColor: colors.secondaryFill, borderRadius: radius.md },
           submitting && { opacity: 0.6, shadowOpacity: 0, elevation: 0 },
         ]}
       >

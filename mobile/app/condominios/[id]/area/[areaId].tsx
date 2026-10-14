@@ -171,8 +171,8 @@ export default function AreaReservaScreen() {
       style={({ pressed }) => [
         styles.slot,
         {
-          backgroundColor: selected ? colors.primary : s.disabled ? colors.muted : colors.card,
-          borderColor: selected ? colors.primary : colors.border,
+          backgroundColor: selected ? colors.primaryFill : s.disabled ? colors.muted : colors.card,
+          borderColor: selected ? colors.primaryFill : colors.border,
           opacity: pressed ? 0.7 : 1,
         },
       ]}
@@ -201,8 +201,8 @@ export default function AreaReservaScreen() {
         <Text style={[styles.name, { color: colors.fg }]}>{area.name}</Text>
         {area.description ? <Text style={[styles.desc, { color: colors.mutedFg }]}>{area.description}</Text> : null}
         <View style={styles.chips}>
-          <View style={[styles.chip, { backgroundColor: (area.requiresApproval ? colors.accent : colors.secondary) + '15' }]}>
-            <Text style={[styles.chipText, { color: area.requiresApproval ? colors.accent : colors.secondary }]}>
+          <View style={[styles.chip, { backgroundColor: (area.requiresApproval ? colors.accent : colors.primary) + '15' }]}>
+            <Text style={[styles.chipText, { color: area.requiresApproval ? colors.accent : colors.primary }]}>
               {area.requiresApproval ? 'Sujeita a aprovação do síndico' : 'Confirmação imediata'}
             </Text>
           </View>
@@ -272,8 +272,8 @@ export default function AreaReservaScreen() {
               style={({ pressed }) => [
                 styles.day,
                 {
-                  backgroundColor: selected ? colors.primary : colors.card,
-                  borderColor: selected ? colors.primary : colors.border,
+                  backgroundColor: selected ? colors.primaryFill : colors.card,
+                  borderColor: selected ? colors.primaryFill : colors.border,
                   opacity: pressed ? 0.7 : 1,
                 },
               ]}

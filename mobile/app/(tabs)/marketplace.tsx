@@ -17,14 +17,19 @@ import type { CategoryDto } from '../../src/lib/api/marketplace.types';
 import { ListingCard } from '../../src/components/marketplace/ListingCard';
 import { FilterChips } from '../../src/components/marketplace/FilterChips';
 import { EmptyState } from '../../src/components/EmptyState';
+import { ScreenHeader } from '../../src/components/ScreenHeader';
+import { GridSkeleton } from '../../src/components/Skeleton';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
+import { useBairroName } from '../../src/lib/useBairroName';
+import { SearchField } from '../../src/components/SearchField';
 
 export default function MarketplaceScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
+  const bairroName = useBairroName();
   const bairroId = user?.bairroId ?? 0;
   const isVerified = !!user?.isVerified;
 
@@ -65,11 +70,9 @@ export default function MarketplaceScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <View style={styles.searchBar}>
-        <TextInput
-          style={[styles.searchInput, { backgroundColor: colors.muted, borderColor: colors.border, color: colors.fg }]}
-          placeholder="Buscar no bairro"
-          placeholderTextColor={colors.mutedFg}
+      <ScreenHeader title="Mercado" place={bairroName} />
+      <SearchField
+          placeholder="Buscar anúncios no bairro"
           value={search}
           onChangeText={setSearch}
           onSubmitEditing={() => {
@@ -79,9 +82,7 @@ export default function MarketplaceScreen() {
               router.push({ pathname: '/marketplace/search', params: { q: search } });
             }
           }}
-          returnKeyType="search"
         />
-      </View>
       <FilterChips categories={categories} />
       <FlatList
         data={listings}
@@ -100,7 +101,7 @@ export default function MarketplaceScreen() {
         onEndReached={() => hasMore && loadNextPage(bairroId)}
         onEndReachedThreshold={0.5}
         ListEmptyComponent={
-          loading ? null : (
+          loading ? <GridSkeleton /> : (
             <EmptyState
               icon="storefront-outline"
               title="Nenhum anúncio no seu bairro ainda"
@@ -113,13 +114,15 @@ export default function MarketplaceScreen() {
           )
         }
         ListFooterComponent={
-          loading ? <ActivityIndicator style={{ margin: 16 }} color={colors.primary} /> : null
+          loading && listings.length > 0 ? <ActivityIndicator style={{ margin: 16 }} color={colors.primary} /> : null
         }
       />
       {isVerified && (
         <Pressable
-          style={[styles.fab, shadow.blue, { backgroundColor: colors.primary }]}
+          style={[styles.fab, shadow.blue, { backgroundColor: colors.primaryFill }]}
           onPress={() => router.push('/marketplace/new')}
+          accessibilityRole="button"
+          accessibilityLabel="Novo anúncio"
         >
           <Ionicons name="add" size={18} color="#fff" style={{ marginRight: 4 }} />
           <Text style={styles.fabText}>Novo anúncio</Text>
@@ -131,15 +134,6 @@ export default function MarketplaceScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  searchBar: { paddingHorizontal: 12, paddingTop: 12, paddingBottom: 4 },
-  searchInput: {
-    borderRadius: radius.sm,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    fontFamily: fontFamily.regular,
-    fontSize: 14,
-  },
   grid: { padding: 6, paddingBottom: 100 },
   fab: {
     flexDirection: 'row',

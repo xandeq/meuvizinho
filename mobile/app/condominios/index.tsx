@@ -10,6 +10,8 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { Button } from '../../src/components/Button';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
+import { ListSkeleton } from '../../src/components/Skeleton';
+import { SearchField } from '../../src/components/SearchField';
 
 const STATUS_COLOR: Record<CondominiumStatus, 'mutedFg' | 'accent' | 'secondary'> = {
   Unclaimed: 'mutedFg',
@@ -88,20 +90,16 @@ export default function CondominiumsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <TextInput
-        style={[styles.search, { backgroundColor: colors.muted, color: colors.fg, borderRadius: radius.sm }]}
-        placeholder="Buscar condomínio..."
-        placeholderTextColor={colors.mutedFg}
-        value={search}
-        onChangeText={setSearch}
-      />
+      <View style={{ marginTop: 12, marginBottom: 4 }}>
+        <SearchField value={search} onChangeText={setSearch} placeholder="Buscar condomínio pelo nome" />
+      </View>
       <FlatList
         data={condos}
         keyExtractor={(c) => String(c.id)}
         contentContainerStyle={{ padding: 16, paddingBottom: 100, gap: 12, flexGrow: 1 }}
         ListEmptyComponent={
           loading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} />
+            <ListSkeleton rows={4} />
           ) : (
             <EmptyState
               icon="business-outline"
@@ -142,7 +140,7 @@ export default function CondominiumsScreen() {
 
       {isVerified && (
         <Pressable
-          style={[styles.fab, shadow.ambientHigh, { backgroundColor: colors.primary, bottom: 24 + insets.bottom }]}
+          style={[styles.fab, shadow.ambientHigh, { backgroundColor: colors.primaryFill, bottom: 24 + insets.bottom }]}
           onPress={() => setShowCreate(true)}
         >
           <Ionicons name="add" size={22} color="#fff" style={{ marginRight: 6 }} />
@@ -185,7 +183,6 @@ export default function CondominiumsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  search: { marginHorizontal: 16, marginTop: 12, marginBottom: 4, paddingHorizontal: 12, paddingVertical: 10, fontFamily: fontFamily.regular, fontSize: 14 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   icon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1 },

@@ -6,6 +6,7 @@ import { getMyReservations, cancelReservation } from '../../../src/lib/api/condo
 import { RESERVATION_STATUS_LABELS, type AreaReservation } from '../../../src/lib/api/condo.types';
 import { formatRange } from '../../../src/features/condominium/reservation-slots';
 import { EmptyState } from '../../../src/components/EmptyState';
+import { ListSkeleton } from '../../../src/components/Skeleton';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 
@@ -78,8 +79,8 @@ export default function MinhasReservasScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator color={colors.primary} />
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ListSkeleton rows={4} />
       </View>
     );
   }

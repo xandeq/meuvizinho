@@ -126,11 +126,11 @@ export default function GroupDetailScreen() {
         style={[
           styles.rsvpBtn,
           { borderColor: colors.border, borderRadius: radius.sm },
-          item.myRsvp && { backgroundColor: colors.secondaryLight, borderColor: colors.secondary },
+          item.myRsvp && { backgroundColor: colors.primaryLight, borderColor: colors.primary },
         ]}
         onPress={() => handleRsvp(item)}
       >
-        <Text style={[styles.rsvpText, { color: colors.mutedFg }, item.myRsvp && { color: colors.secondary, fontFamily: fontFamily.semibold }]}>
+        <Text style={[styles.rsvpText, { color: colors.mutedFg }, item.myRsvp && { color: colors.primary, fontFamily: fontFamily.semibold }]}>
           {item.myRsvp ? 'Confirmado' : 'Confirmar presença'}
         </Text>
       </TouchableOpacity>
@@ -155,9 +155,9 @@ export default function GroupDetailScreen() {
               <TouchableOpacity
                 key={tab}
                 onPress={() => setActiveTab(tab)}
-                style={[styles.tab, isActive && { borderBottomWidth: 2, borderBottomColor: colors.secondary }]}
+                style={[styles.tab, isActive && { borderBottomWidth: 2, borderBottomColor: colors.primary }]}
               >
-                <Text style={[styles.tabText, { color: colors.mutedFg }, isActive && { color: colors.secondary, fontFamily: fontFamily.semibold }]}>
+                <Text style={[styles.tabText, { color: colors.mutedFg }, isActive && { color: colors.primary, fontFamily: fontFamily.semibold }]}>
                   {tab === 'feed' ? 'Feed' : 'Eventos'}
                 </Text>
               </TouchableOpacity>
@@ -167,7 +167,7 @@ export default function GroupDetailScreen() {
 
         {activeTab === 'feed' ? (
           <>
-            {loading ? <ActivityIndicator color={colors.secondary} style={{ marginTop: 40 }} /> : (
+            {loading ? <ActivityIndicator color={colors.primary} style={{ marginTop: 40 }} /> : (
               <FlatList
                 data={posts}
                 keyExtractor={(p) => String(p.id)}
@@ -197,7 +197,7 @@ export default function GroupDetailScreen() {
               <TouchableOpacity
                 onPress={handlePost}
                 disabled={submitting || !composerText.trim()}
-                style={[styles.sendBtn, { backgroundColor: colors.secondary, borderRadius: radius.sm }]}
+                style={[styles.sendBtn, { backgroundColor: colors.secondaryFill, borderRadius: radius.sm }]}
               >
                 <Text style={styles.sendBtnText}>{submitting ? '...' : 'Enviar'}</Text>
               </TouchableOpacity>

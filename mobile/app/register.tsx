@@ -54,7 +54,7 @@ export default function Register() {
             <View style={[
               styles.checkbox,
               { borderRadius: radius.xs, borderColor: colors.primary },
-              value && { backgroundColor: colors.primary },
+              value && { backgroundColor: colors.primaryFill },
             ]} />
             <Text style={[styles.checkboxText, { color: colors.fg }]}>Aceito a política de privacidade</Text>
           </Pressable>

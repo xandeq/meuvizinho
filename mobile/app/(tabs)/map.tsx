@@ -89,7 +89,7 @@ export default function MapScreen() {
               style={[
                 styles.filterBtn,
                 { borderColor: colors.border },
-                filter === value && { backgroundColor: colors.primary, borderColor: colors.primary },
+                filter === value && { backgroundColor: colors.primaryFill, borderColor: colors.primary },
               ]}
             >
               <Text style={[styles.filterText, { color: colors.mutedFg }, filter === value && { color: '#fff' }]}>

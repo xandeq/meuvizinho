@@ -108,9 +108,9 @@ export default function CondominiumDetailScreen() {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 80 }}>
-      <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+      <View style={[styles.hero, { backgroundColor: colors.primaryFill }]}>
         <Ionicons name="business" size={28} color="#fff" style={{ marginBottom: 8 }} />
-        <Text style={styles.heroTitle}>{condo.name}</Text>
+        <Text style={styles.heroTitle} numberOfLines={3}>{condo.name}</Text>
         {condo.addressLine && <Text style={styles.heroSub}>{condo.addressLine}</Text>}
         {canUse && (
           <View style={styles.heroChip}>
@@ -227,7 +227,7 @@ export default function CondominiumDetailScreen() {
       ) : (
         condo.groups.map((g) => (
           <View key={g.id} style={[styles.groupRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Ionicons name="logo-whatsapp" size={18} color={colors.secondary} />
+            <Ionicons name="logo-whatsapp" size={18} color="#25D366" />
             <Text style={[styles.groupName, { color: colors.fg }]} numberOfLines={1}>{g.name}</Text>
             <Text style={[styles.groupKind, { color: colors.mutedFg }]}>{WHATSAPP_KIND_LABELS[g.kind]}</Text>
           </View>

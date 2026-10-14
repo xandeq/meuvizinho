@@ -18,7 +18,7 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary',
   const isSecondary = variant === 'secondary';
   const isDanger = variant === 'danger';
 
-  const bg = isOutline ? 'transparent' : isDanger ? colors.danger : isSecondary ? colors.secondary : colors.primary;
+  const bg = isOutline ? 'transparent' : isDanger ? colors.dangerFill : isSecondary ? colors.secondaryFill : colors.primaryFill;
   const textColor = isOutline ? colors.primary : '#FFFFFF';
   const elevationShadow = isOutline || isDanger ? {} : isSecondary ? shadow.emerald : shadow.blue;
 
