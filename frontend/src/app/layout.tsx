@@ -25,41 +25,79 @@ const apiOrigin = (() => {
   }
 })();
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinhoapp.com.br";
+
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#org`,
+      name: "Meu Vizinho",
+      url: SITE_URL,
+      logo: `${SITE_URL}/icons/icon-512x512.png`,
+    },
+    {
+      "@type": "MobileApplication",
+      name: "Meu Vizinho",
+      operatingSystem: "Android",
+      applicationCategory: "SocialNetworkingApplication",
+      inLanguage: "pt-BR",
+      description:
+        "App do bairro e do condomínio com vizinhos de endereço verificado: feed local, comunicados e reservas do síndico, alertas de segurança e mercado.",
+      downloadUrl: "https://play.google.com/store/apps/details?id=com.meuvizinho.app",
+      installUrl: "https://play.google.com/store/apps/details?id=com.meuvizinho.app",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "BRL" },
+      publisher: { "@id": `${SITE_URL}/#org` },
+    },
+  ],
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinho.com.br"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinhoapp.com.br"
   ),
   title: {
-    default: "Meu Vizinho — Conecte-se com seus vizinhos",
+    default: "Meu Vizinho: app do bairro e do condomínio",
     template: "%s | Meu Vizinho",
   },
   description:
-    "Rede social de bairro: diretório verificado de grupos WhatsApp, condomínios com síndico reivindicável, marketplace e feed local para vizinhos verificados.",
+    "App do bairro e do condomínio: feed com vizinhos de endereço verificado, comunicados e reservas do síndico, alertas de segurança e mercado local. Grátis, sem algoritmo e sem anúncio.",
+  keywords: [
+    "app de bairro",
+    "app para condomínio",
+    "app para síndico",
+    "comunicados do condomínio",
+    "reserva de salão de festas",
+    "alerta de segurança no bairro",
+    "vizinhos verificados",
+    "grupo de WhatsApp do prédio",
+  ],
   applicationName: "Meu Vizinho",
   authors: [{ name: "Meu Vizinho" }],
   openGraph: {
     type: "website",
     locale: "pt_BR",
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinho.com.br",
+    url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinhoapp.com.br",
     siteName: "Meu Vizinho",
-    title: "Meu Vizinho — Sua comunidade de bairro conectada",
+    title: "Meu Vizinho: seu bairro, conectado de verdade",
     description:
-      "Diretório verificado de grupos WhatsApp, condomínios com síndico reivindicável, marketplace e feed local entre vizinhos verificados.",
+      "App do bairro e do condomínio: feed com vizinhos de endereço verificado, comunicados e reservas do síndico, alertas de segurança e mercado local. Grátis, sem algoritmo e sem anúncio.",
     images: [
       {
-        url: "/icons/icon-512x512.png",
-        width: 512,
-        height: 512,
-        alt: "Meu Vizinho",
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "Meu Vizinho: feed do bairro, condomínio e síndico, alertas e mercado, com vizinhos de endereço verificado",
       },
     ],
   },
   twitter: {
-    card: "summary",
-    title: "Meu Vizinho — Sua comunidade de bairro conectada",
+    card: "summary_large_image",
+    title: "Meu Vizinho: seu bairro, conectado de verdade",
     description:
-      "Diretório verificado de grupos WhatsApp, condomínios com síndico reivindicável, marketplace e feed local entre vizinhos verificados.",
-    images: ["/icons/icon-512x512.png"],
+      "App do bairro e do condomínio: feed com vizinhos de endereço verificado, comunicados e reservas do síndico, alertas de segurança e mercado local. Grátis, sem algoritmo e sem anúncio.",
+    images: ["/og-default.png"],
   },
   robots: {
     index: true,
@@ -107,6 +145,11 @@ export default function RootLayout({
         )}
       </head>
       <body className="min-h-full flex flex-col font-sans bg-bg text-fg">
+        {/* Dados estruturados do app (Play Store) para busca. Sem nota/avaliação inventada. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+        />
         <Providers>{children}</Providers>
         <ServiceWorkerRegistration />
       </body>
