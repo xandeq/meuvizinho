@@ -151,7 +151,7 @@ export default function ListingDetailScreen() {
           </View>
         )}
         {!isOwner && (
-          <Pressable
+          <Pressable accessibilityRole="button"
             onPress={handleToggleFavorite}
             hitSlop={8}
             style={[styles.favoriteFab, shadow.ambientMid, { backgroundColor: colors.card }]}
@@ -249,7 +249,7 @@ export default function ListingDetailScreen() {
         )}
 
         {!isOwner && (
-          <Pressable onPress={() => setReportOpen(true)} style={styles.reportRow} hitSlop={8}>
+          <Pressable accessibilityRole="button" onPress={() => setReportOpen(true)} style={styles.reportRow} hitSlop={8}>
             <Ionicons name="flag-outline" size={14} color={colors.danger} />
             <Text style={[styles.reportLink, { color: colors.danger }]}>Denunciar anúncio</Text>
           </Pressable>

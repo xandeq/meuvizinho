@@ -85,11 +85,16 @@ export function PhotoPicker({ photos, onChange, max = 6 }: Props) {
             )}
             <View style={styles.thumbActions}>
               {idx > 0 && (
-                <Pressable onPress={() => moveUp(idx)} style={styles.iconBtn}>
+                <Pressable onPress={() => moveUp(idx)} style={styles.iconBtn} accessibilityRole="button" accessibilityLabel="Mover foto para cima">
                   <Ionicons name="arrow-up" size={13} color="#fff" />
                 </Pressable>
               )}
-              <Pressable onPress={() => removeAt(idx)} style={[styles.iconBtn, { backgroundColor: 'rgba(220,38,38,0.9)' }]}>
+              <Pressable
+                onPress={() => removeAt(idx)}
+                style={[styles.iconBtn, { backgroundColor: 'rgba(220,38,38,0.9)' }]}
+                accessibilityRole="button"
+                accessibilityLabel="Remover foto"
+              >
                 <Ionicons name="close" size={13} color="#fff" />
               </Pressable>
             </View>

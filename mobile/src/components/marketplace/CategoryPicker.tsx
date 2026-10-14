@@ -31,7 +31,7 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
           <Text style={[styles.title, { color: colors.fg }]}>
             {selectedCategory ? selectedCategory.displayName : 'Escolha a categoria'}
           </Text>
-          <Pressable onPress={handleClose} hitSlop={12}>
+          <Pressable accessibilityRole="button" onPress={handleClose} hitSlop={12}>
             <Ionicons name="close" size={24} color={colors.mutedFg} />
           </Pressable>
         </View>
@@ -40,7 +40,7 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
             ? categories
                 .filter((c) => c.enabled)
                 .map((cat) => (
-                  <Pressable
+                  <Pressable accessibilityRole="button"
                     key={cat.code}
                     style={[styles.chip, { backgroundColor: colors.muted, borderColor: colors.border, borderRadius: radius.md }]}
                     onPress={() => setSelectedCategory(cat)}
@@ -49,7 +49,7 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
                   </Pressable>
                 ))
             : selectedCategory.subcategories.map((sub) => (
-                <Pressable
+                <Pressable accessibilityRole="button"
                   key={sub.code}
                   style={[styles.chip, { backgroundColor: colors.muted, borderColor: colors.border, borderRadius: radius.md }]}
                   onPress={() => {
@@ -62,7 +62,7 @@ export function CategoryPicker({ visible, categories, onSelect, onClose }: Props
               ))}
         </ScrollView>
         {selectedCategory && (
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.backBtn, { borderTopColor: colors.border }]}
             onPress={() => setSelectedCategory(null)}
           >

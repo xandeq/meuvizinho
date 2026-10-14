@@ -43,7 +43,7 @@ export default function ConversationListScreen() {
         <RefreshControl refreshing={false} onRefresh={loadConversations} tintColor={colors.primary} />
       }
       renderItem={({ item }) => (
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={[styles.row, { borderBottomColor: colors.border }]}
           onPress={() => router.push({ pathname: '/chat/[id]', params: { id: item.id } })}
         >

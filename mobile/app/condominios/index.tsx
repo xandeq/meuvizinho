@@ -111,7 +111,7 @@ export default function CondominiumsScreen() {
         renderItem={({ item }) => {
           const statusColor = colors[STATUS_COLOR[item.status]];
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={() => router.push({ pathname: '/condominios/[id]', params: { id: item.id } })}
               style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.lg }]}
             >
@@ -139,7 +139,7 @@ export default function CondominiumsScreen() {
       />
 
       {isVerified && (
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={[styles.fab, shadow.ambientHigh, { backgroundColor: colors.primaryFill, bottom: 24 + insets.bottom }]}
           onPress={() => setShowCreate(true)}
         >
@@ -149,12 +149,18 @@ export default function CondominiumsScreen() {
       )}
 
       <Modal visible={showCreate} animationType="slide" transparent onRequestClose={() => setShowCreate(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setShowCreate(false)} />
+        <Pressable style={styles.backdrop} onPress={() => setShowCreate(false)} accessibilityRole="button" accessibilityLabel="Fechar" />
         <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, paddingBottom: 20 + insets.bottom }]}>
           <View style={[styles.handle, { backgroundColor: colors.border }]} />
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetTitle, { color: colors.fg }]}>Cadastrar condomínio</Text>
-            <Pressable onPress={() => setShowCreate(false)} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
+            <Pressable
+              onPress={() => setShowCreate(false)}
+              hitSlop={8}
+              style={[styles.closeBtn, { backgroundColor: colors.muted }]}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+            >
               <Ionicons name="close" size={18} color={colors.mutedFg} />
             </Pressable>
           </View>

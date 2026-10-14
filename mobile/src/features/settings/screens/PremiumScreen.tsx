@@ -94,7 +94,7 @@ export default function PremiumScreen() {
       {!loading && status && !isPremium && (
         <View style={{ gap: 10 }}>
           {status.isEligibleForTrial && (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={startTrial}
               disabled={starting}
               style={[styles.btn, { backgroundColor: colors.primaryFill, opacity: starting ? 0.6 : 1 }]}
@@ -103,7 +103,7 @@ export default function PremiumScreen() {
             </Pressable>
           )}
           {CHECKOUT_URL ? (
-            <Pressable
+            <Pressable accessibilityRole="button"
               onPress={() => Linking.openURL(CHECKOUT_URL)}
               style={[styles.btn, styles.btnOutline, { borderColor: colors.primary }]}
             >
