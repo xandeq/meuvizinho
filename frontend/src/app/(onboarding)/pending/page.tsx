@@ -24,7 +24,7 @@ export default function PendingPage() {
 
   return (
     <AuthLayout
-      title="Aguardando verificacao"
+      title="Aguardando verificação"
       subtitle="Recebemos seu comprovante"
       illustration="/illustrations/marketplace-local.webp"
     >
@@ -40,7 +40,7 @@ export default function PendingPage() {
             </div>
             <p className="text-fg font-medium">
               Documento em analise. Nossa equipe esta revisando seu
-              comprovante. Esta pagina atualiza automaticamente.
+              comprovante. Esta página atualiza automaticamente.
             </p>
           </Card>
         )}

@@ -38,7 +38,7 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
         );
         setPost(data);
       } catch {
-        setError("Post nao encontrado");
+        setError("Post não encontrado");
       } finally {
         setLoading(false);
       }
@@ -83,7 +83,7 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-danger font-semibold">
-          {error ?? "Post nao encontrado"}
+          {error ?? "Post não encontrado"}
         </p>
         <Link
           href="/login/"

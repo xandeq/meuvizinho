@@ -71,7 +71,7 @@ export default function ProofUploadPage() {
         </p>
         {address && (
           <div className="rounded-md bg-muted p-3 text-sm font-medium">
-            <p className="text-fg/70">Endereco a verificar:</p>
+            <p className="text-fg/70">Endereço a verificar:</p>
             <p className="font-bold text-fg">
               {address.logradouro || "(sem logradouro)"} — {address.bairro}
             </p>

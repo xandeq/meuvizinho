@@ -48,7 +48,7 @@ export default function ListingPreviewClient({
         );
         setListing(data);
       } catch {
-        setError("Anuncio nao encontrado");
+        setError("Anúncio não encontrado");
       } finally {
         setLoading(false);
       }
@@ -92,7 +92,7 @@ export default function ListingPreviewClient({
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-danger font-semibold">
-          {error ?? "Anuncio nao encontrado"}
+          {error ?? "Anúncio não encontrado"}
         </p>
         <Link
           href="/login/"
@@ -159,12 +159,12 @@ export default function ListingPreviewClient({
                 </p>
               </div>
               {listing.status === "sold" && (
-                <span role="status" aria-label="Anuncio vendido" className="bg-danger text-white font-extrabold px-3 py-1 rounded shrink-0">
+                <span role="status" aria-label="Anúncio vendido" className="bg-danger text-white font-extrabold px-3 py-1 rounded shrink-0">
                   VENDIDO
                 </span>
               )}
               {listing.status === "expired" && (
-                <span role="status" aria-label="Anuncio expirado" className="bg-muted-fg text-white font-extrabold px-3 py-1 rounded shrink-0">
+                <span role="status" aria-label="Anúncio expirado" className="bg-muted-fg text-white font-extrabold px-3 py-1 rounded shrink-0">
                   EXPIRADO
                 </span>
               )}
@@ -205,7 +205,7 @@ export default function ListingPreviewClient({
               Entre no Meu Vizinho para comprar e vender com vizinhos
             </h2>
             <p className="text-sm text-fg/70">
-              Converse com o vendedor e feche negocios com seguranca.
+              Converse com o vendedor e feche negócios com segurança.
             </p>
             <div className="flex justify-center gap-3">
               <Link

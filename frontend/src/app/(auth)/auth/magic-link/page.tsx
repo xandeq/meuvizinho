@@ -17,7 +17,7 @@ function MagicLinkForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
     urlError === "invalid"
-      ? "Link invalido ou expirado. Tente novamente."
+      ? "Link inválido ou expirado. Tente novamente."
       : null
   );
 
