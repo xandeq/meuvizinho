@@ -7,6 +7,9 @@ import type {
   AvailabilityBlock,
   AnnouncementSummary,
   AnnouncementDetail,
+  IncidentDto,
+  IncidentCategory,
+  IncidentStatus,
 } from './condo.types';
 
 // Lado do morador: vínculo, comunicados e reservas. A gestão do síndico
@@ -80,4 +83,39 @@ export async function getMyReservations(condominiumId: number): Promise<AreaRese
 
 export async function cancelReservation(condominiumId: number, reservationId: number): Promise<void> {
   await apiClient.post(`${base(condominiumId)}/reservations/${reservationId}/cancel`);
+}
+
+// ─── Ocorrências ─────────────────────────────────────────────────────────────
+
+export async function createIncident(
+  condominiumId: number,
+  body: { category: IncidentCategory; title: string; description: string; location?: string }
+): Promise<IncidentDto> {
+  const { data } = await apiClient.post<IncidentDto>(`${base(condominiumId)}/incidents`, body);
+  return data;
+}
+
+export async function getMyIncidents(condominiumId: number): Promise<IncidentDto[]> {
+  const { data } = await apiClient.get<IncidentDto[]>(`${base(condominiumId)}/incidents/mine`);
+  return data;
+}
+
+// Gestão (síndico/admin): todas as ocorrências do condomínio.
+export async function getAllIncidents(condominiumId: number): Promise<IncidentDto[]> {
+  const { data } = await apiClient.get<IncidentDto[]>(`${base(condominiumId)}/incidents`);
+  return data;
+}
+
+export async function getIncident(condominiumId: number, incidentId: number): Promise<IncidentDto> {
+  const { data } = await apiClient.get<IncidentDto>(`${base(condominiumId)}/incidents/${incidentId}`);
+  return data;
+}
+
+export async function updateIncidentStatus(
+  condominiumId: number,
+  incidentId: number,
+  body: { status: IncidentStatus; responseNote?: string }
+): Promise<IncidentDto> {
+  const { data } = await apiClient.post<IncidentDto>(`${base(condominiumId)}/incidents/${incidentId}/status`, body);
+  return data;
 }

@@ -74,6 +74,7 @@ public class AppDbContext : DbContext
 
     // Wave T — Comunicados oficiais do síndico
     public DbSet<CondominiumAnnouncement> Announcements => Set<CondominiumAnnouncement>();
+    public DbSet<CondominiumIncident> CondominiumIncidents => Set<CondominiumIncident>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -809,6 +810,27 @@ public class AppDbContext : DbContext
                 .IsDescending(false, true, true)
                 .HasFilter("[DeletedAt] IS NULL");
             entity.HasIndex(e => new { e.CondominiumId, e.PublishedAt });
+        });
+
+        // ─── Wave U: CondominiumIncident (ocorrências morador → síndico) ───
+        modelBuilder.Entity<CondominiumIncident>(entity =>
+        {
+            entity.ToTable("CondominiumIncidents");
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).UseIdentityColumn();
+            entity.Property(e => e.Category).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(20);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(120);
+            entity.Property(e => e.Description).IsRequired().HasMaxLength(2000);
+            entity.Property(e => e.Location).HasMaxLength(120);
+            entity.Property(e => e.ResponseNote).HasMaxLength(1000);
+            entity.HasOne(e => e.Condominium).WithMany(c => c.Incidents).HasForeignKey(e => e.CondominiumId).OnDelete(DeleteBehavior.Cascade);
+            // Restrict nos dois FKs de usuário: evita cascade multi-path (igual comunicados).
+            entity.HasOne(e => e.Reporter).WithMany().HasForeignKey(e => e.ReporterUserId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.RespondedBy).WithMany().HasForeignKey(e => e.RespondedByUserId).OnDelete(DeleteBehavior.Restrict);
+            // Painel do síndico (por status, recentes) e "minhas ocorrências".
+            entity.HasIndex(e => new { e.CondominiumId, e.Status, e.CreatedAt });
+            entity.HasIndex(e => new { e.ReporterUserId, e.CreatedAt });
         });
     }
 

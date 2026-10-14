@@ -101,3 +101,42 @@ export const RESERVATION_STATUS_LABELS: Record<AreaReservationStatus, string> = 
   Rejected: 'Recusada',
   Cancelled: 'Cancelada',
 };
+
+// ─── Ocorrências (morador → síndico) ─────────────────────────────────────────
+
+export type IncidentCategory = 'Manutencao' | 'Limpeza' | 'Seguranca' | 'Barulho' | 'AreaComum' | 'Outros';
+export type IncidentStatus = 'Aberta' | 'EmAndamento' | 'Resolvida' | 'Recusada';
+
+export interface IncidentDto {
+  id: number;
+  condominiumId: number;
+  category: IncidentCategory;
+  title: string;
+  description: string;
+  location: string | null;
+  status: IncidentStatus;
+  responseNote: string | null;
+  respondedByName: string | null;
+  respondedAt: string | null;
+  reporterName: string | null;
+  reporterVerified: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  closedAt: string | null;
+}
+
+export const INCIDENT_CATEGORIES: { code: IncidentCategory; label: string; icon: string }[] = [
+  { code: 'Manutencao', label: 'Manutenção', icon: 'construct-outline' },
+  { code: 'Limpeza', label: 'Limpeza', icon: 'sparkles-outline' },
+  { code: 'Seguranca', label: 'Segurança', icon: 'shield-outline' },
+  { code: 'Barulho', label: 'Barulho', icon: 'volume-high-outline' },
+  { code: 'AreaComum', label: 'Área comum', icon: 'business-outline' },
+  { code: 'Outros', label: 'Outros', icon: 'ellipsis-horizontal-circle-outline' },
+];
+
+export const INCIDENT_STATUS_LABELS: Record<IncidentStatus, string> = {
+  Aberta: 'Aberta',
+  EmAndamento: 'Em andamento',
+  Resolvida: 'Resolvida',
+  Recusada: 'Recusada',
+};

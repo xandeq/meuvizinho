@@ -102,6 +102,7 @@ export default function CondominiumDetailScreen() {
 
   const tiles: { icon: IconName; title: string; sub: string; href: Href }[] = [
     { icon: 'megaphone-outline', title: 'Comunicados', sub: 'Avisos oficiais do síndico', href: `/condominios/${condoId}/comunicados` },
+    { icon: 'construct-outline', title: 'Ocorrências', sub: 'Avise o síndico e acompanhe a resposta', href: `/condominios/${condoId}/ocorrencias` },
     { icon: 'calendar-outline', title: 'Reservar área comum', sub: 'Salão, churrasqueira e mais', href: `/condominios/${condoId}/areas` },
     { icon: 'bookmark-outline', title: 'Minhas reservas', sub: 'Acompanhe e cancele', href: `/condominios/${condoId}/reservas` },
   ];

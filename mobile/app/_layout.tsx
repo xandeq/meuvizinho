@@ -105,6 +105,9 @@ function RootNavigator() {
         <Stack.Screen name="condominios/[id]/areas" options={{ title: 'Áreas comuns' }} />
         <Stack.Screen name="condominios/[id]/area/[areaId]" options={{ title: 'Reservar' }} />
         <Stack.Screen name="condominios/[id]/reservas" options={{ title: 'Minhas reservas' }} />
+        <Stack.Screen name="condominios/[id]/ocorrencias" options={{ title: 'Ocorrências' }} />
+        <Stack.Screen name="condominios/[id]/ocorrencia/nova" options={{ title: 'Nova ocorrência' }} />
+        <Stack.Screen name="condominios/[id]/ocorrencia/[incidentId]" options={{ title: 'Ocorrência' }} />
         <Stack.Screen name="alertas/index" options={{ title: 'Alertas de Segurança' }} />
         <Stack.Screen name="alertas/new" options={{ title: 'Reportar ocorrência' }} />
       </Stack>
