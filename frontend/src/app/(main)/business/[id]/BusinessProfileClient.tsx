@@ -289,7 +289,7 @@ export default function BusinessProfileClient({ userId }: Props) {
             <div className="flex items-start gap-2 flex-wrap">
               <h1 className="text-2xl font-extrabold text-fg leading-tight">{displayTitle}</h1>
               {data.isVerified && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-semibold mt-1 shrink-0">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-light text-primary-hover text-xs font-semibold mt-1 shrink-0">
                   <CheckIcon />
                   Verificado
                 </span>

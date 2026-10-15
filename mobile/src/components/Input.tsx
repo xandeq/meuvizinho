@@ -29,6 +29,8 @@ export function Input({ label, error, hint, onFocus, onBlur, secureTextEntry, ..
             focused && { borderColor: colors.primary },
             error && { borderColor: colors.danger, backgroundColor: colors.dangerLight },
             secret && { paddingRight: 52 },
+            // Multilinha (ex.: Bio) tinha altura fixa de 52 e cortava o texto ao meio.
+            rest.multiline && styles.multiline,
           ]}
           placeholderTextColor={colors.mutedFg}
           autoCapitalize="none"
@@ -70,6 +72,7 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.regular,
     fontSize: 16,
   },
+  multiline: { height: undefined, minHeight: 96, maxHeight: 180, paddingTop: 12, paddingBottom: 12, textAlignVertical: 'top' },
   eye: { position: 'absolute', right: 0, top: 0, bottom: 0, width: 52, alignItems: 'center', justifyContent: 'center' },
   error: { marginTop: 6, fontFamily: fontFamily.semibold, fontSize: 13 },
   hint: { marginTop: 6, fontFamily: fontFamily.regular, fontSize: 13 },

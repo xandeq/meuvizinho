@@ -251,7 +251,7 @@ export default function ComunicadosClient() {
                   <p className="text-sm text-muted-fg line-clamp-2 mt-1">{a.bodyPreview}</p>
                 </div>
                 {a.isImportant && (
-                  <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">
+                  <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">
                     Importante
                   </span>
                 )}

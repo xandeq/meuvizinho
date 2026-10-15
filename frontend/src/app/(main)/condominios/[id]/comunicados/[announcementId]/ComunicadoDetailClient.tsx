@@ -143,7 +143,7 @@ export default function ComunicadoDetailClient() {
                 <h1 className="text-2xl font-extrabold text-fg leading-tight">{announcement.title}</h1>
               </div>
               {announcement.isImportant && (
-                <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">
+                <span className="inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">
                   Importante
                 </span>
               )}

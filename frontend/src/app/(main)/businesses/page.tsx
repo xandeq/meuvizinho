@@ -241,7 +241,7 @@ export default function BusinessesPage() {
                       {name}
                     </p>
                     {biz.isVerified && (
-                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold mt-0.5">
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-primary-light text-primary-hover text-[10px] font-semibold mt-0.5">
                         <CheckIcon />
                         Verificado
                       </span>

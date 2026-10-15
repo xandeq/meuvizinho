@@ -25,7 +25,7 @@ function IconGooglePlay() {
 function GooglePlayButton({ tone = "dark" }: { tone?: "dark" | "light" }) {
   const toneCls =
     tone === "dark"
-      ? "bg-white/10 text-white border-white/25 hover:bg-white/15 hover:border-white/50"
+      ? "bg-black/15 text-white border-white/30 hover:bg-black/25 hover:border-white/50"
       : "bg-white text-slate-900 border-white hover:scale-[1.03]";
   return (
     <a
@@ -36,7 +36,7 @@ function GooglePlayButton({ tone = "dark" }: { tone?: "dark" | "light" }) {
     >
       <IconGooglePlay />
       <span className="flex flex-col leading-tight text-left">
-        <span className="text-[11px] font-medium opacity-70">Disponível no</span>
+        <span className="text-[11px] font-semibold">Disponível no</span>
         <span className="text-base font-bold">Google Play</span>
       </span>
     </a>
@@ -495,7 +495,7 @@ export default function LandingPage() {
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {["Furto", "Pessoa suspeita", "Incêndio", "Acidente"].map((k) => (
-                  <span key={k} className="text-xs font-semibold rounded-full px-3 py-1 bg-danger-light text-danger">
+                  <span key={k} className="text-xs font-semibold rounded-full px-3 py-1 bg-danger-light text-red-700 dark:text-red-300">
                     {k}
                   </span>
                 ))}
@@ -652,7 +652,7 @@ export default function LandingPage() {
 
           {/* Visual — WhatsApp directory mockup */}
           <div className="flex flex-col gap-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-1">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/70 mb-1">
               Exemplo de como fica o diretório
             </p>
             {[
@@ -672,7 +672,7 @@ export default function LandingPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-white text-sm truncate">{name}</p>
-                  <p className="text-xs text-white/40 mt-0.5">{members}</p>
+                  <p className="text-xs text-white/70 mt-0.5">{members}</p>
                 </div>
                 <span className="text-xs bg-white/10 text-white/60 rounded-full px-2.5 py-1 font-medium shrink-0">
                   {tag}
@@ -857,7 +857,7 @@ export default function LandingPage() {
                   <span className="text-emerald-600"><IconBadgeCheck /></span>
                   Vizinha verificada
                 </span>
-                <span className="inline-flex items-center gap-2 bg-primary/10 text-primary
+                <span className="inline-flex items-center gap-2 bg-primary-light text-primary-hover
                                   rounded-full px-4 py-2 text-sm font-semibold w-fit">
                   <span className="text-primary"><IconMapPin /></span>
                   Praia da Costa · 3 anos no bairro
@@ -881,7 +881,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-amber-600 mb-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-amber-700 mb-3">
                 Marketplace
               </p>
               <h2 className="text-4xl md:text-5xl font-extrabold text-fg tracking-tight">
@@ -899,7 +899,7 @@ export default function LandingPage() {
           </div>
 
           {/* Exemplos do Mercado (ilustrativos) */}
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-800/70 mb-3">Exemplo de anúncios</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-amber-800 mb-3">Exemplo de anúncios</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <FakeListingCard title="Bicicleta aro 26 conservada" price="R$&nbsp;380" category="Esporte" art="bike" verified />
             <FakeListingCard title="Mesa de escritório cor carvalho" price="R$&nbsp;250" category="Móveis" art="desk" verified />
@@ -1007,7 +1007,7 @@ export default function LandingPage() {
             </Link>
           </nav>
 
-          <p className="text-sm text-white/40 font-medium">
+          <p className="text-sm text-white/70 font-medium">
             © {new Date().getFullYear()} Meu Vizinho
           </p>
         </div>

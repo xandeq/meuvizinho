@@ -162,15 +162,13 @@ export default function MainHeader() {
   const loadUnread = useChatStore((s) => s.loadUnread);
   const unreadTotal = useChatStore((s) => s.unreadTotal);
   const [scrolled, setScrolled] = useState(false);
-  const more = useMenu();
-  const account = useMenu();
+  const { open: moreOpen, setOpen: setMoreOpen, ref: moreRef } = useMenu();
+  const { open: accountOpen, setOpen: setAccountOpen, ref: accountRef } = useMenu();
   const initials = (user?.displayName || user?.email || "?")
     .split(/[\s@.]+/).filter((w) => /^\p{L}/u.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
 
   // Fecha os menus ao trocar de página.
-  const closeMore = more.setOpen;
-  const closeAccount = account.setOpen;
-  useEffect(() => { closeMore(false); closeAccount(false); }, [pathname, closeMore, closeAccount]);
+  useEffect(() => { setMoreOpen(false); setAccountOpen(false); }, [pathname, setMoreOpen, setAccountOpen]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -244,25 +242,25 @@ export default function MainHeader() {
             );
           })}
 
-          <div className="relative" ref={more.ref}>
+          <div className="relative" ref={moreRef}>
             <button
               type="button"
               aria-haspopup="menu"
-              aria-expanded={more.open}
-              onClick={() => more.setOpen((o) => !o)}
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((o) => !o)}
               className={[
                 "flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200",
-                more.open || [...moreItems, adminNavItem].some((i) => pathname?.startsWith(i.href.replace(/\/$/, "")))
+                moreOpen || [...moreItems, adminNavItem].some((i) => pathname?.startsWith(i.href.replace(/\/$/, "")))
                   ? "bg-card text-fg"
                   : "text-muted-fg hover:text-fg hover:bg-card/60",
               ].join(" ")}
             >
               Mais
-              <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${more.open ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            {more.open && (
+            {moreOpen && (
               <div role="menu" className="absolute right-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-card border border-border shadow-lg animate-fade-up z-50">
                 {moreItems.map((item) => (
                   <Link key={item.href} href={item.href} role="menuitem" className={menuItemClass}>
@@ -289,18 +287,18 @@ export default function MainHeader() {
           {isAuthenticated && <NotificationBell />}
           <ThemeToggle />
           {isAuthenticated && (
-            <div className="relative" ref={account.ref}>
+            <div className="relative" ref={accountRef}>
               <button
                 type="button"
                 aria-haspopup="menu"
-                aria-expanded={account.open}
+                aria-expanded={accountOpen}
                 aria-label={`${initials}, sua conta`}
-                onClick={() => account.setOpen((o) => !o)}
+                onClick={() => setAccountOpen((o) => !o)}
                 className="w-9 h-9 rounded-full bg-primary text-white text-xs font-extrabold grid place-items-center ring-2 ring-transparent hover:ring-primary/30 focus-visible:outline-none focus-visible:ring-primary/50 transition-all"
               >
                 {initials}
               </button>
-              {account.open && (
+              {accountOpen && (
                 <div role="menu" className="absolute right-0 top-full mt-2 w-60 p-1.5 rounded-2xl bg-card border border-border shadow-lg animate-fade-up z-50">
                   <div className="px-3 py-2.5">
                     <p className="text-sm font-bold text-fg truncate">{user?.displayName || "Sua conta"}</p>

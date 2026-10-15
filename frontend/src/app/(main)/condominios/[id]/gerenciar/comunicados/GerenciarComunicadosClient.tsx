@@ -368,13 +368,13 @@ export default function GerenciarComunicadosClient() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {a.isImportant && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">Importante</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">Importante</span>
                   )}
                   {a.isExpired && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-muted text-muted-fg">Expirado</span>
                   )}
                   {a.deletedAt && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">Excluído</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">Excluído</span>
                   )}
                 </div>
               </div>
