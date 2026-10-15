@@ -216,6 +216,8 @@ public class GroupsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+        // O site mandava page=0: Skip(-20) estoura no SQL Server e a aba Membros dava 500.
+        page = Math.Max(1, page);
 
         if (string.Equals(status, "pending", StringComparison.OrdinalIgnoreCase))
         {
@@ -818,29 +820,28 @@ public class GroupsController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
+        // Mesma regra dos posts: evento de grupo é conteúdo do grupo, só membro vê.
+        if (!await IsActiveMemberAsync(id, userId.Value, ct)) return Forbid();
+
+        // Evento que já acabou some da lista (sem fim definido, conta 3h depois do início).
+        var cutoff = DateTime.UtcNow;
         var events = await _db.GroupEvents
             .AsNoTracking()
-            .Where(e => e.GroupId == id && e.DeletedAt == null)
+            .Where(e => e.GroupId == id && e.DeletedAt == null
+                && (e.EndsAt ?? e.StartsAt.AddHours(3)) >= cutoff)
             .OrderBy(e => e.StartsAt)
-            .Select(e => new
-            {
-                e.Id,
-                e.Title,
-                e.Description,
-                e.Location,
-                e.StartsAt,
-                e.EndsAt,
-                e.ReminderAt,
-                AttendingCount = e.Rsvps.Count(r => r.IsAttending),
-                MyRsvp = e.Rsvps
-                    .Where(r => r.UserId == userId)
-                    .Select(r => (bool?)r.IsAttending)
-                    .FirstOrDefault()
-            })
+            .Select(e => new GroupEventDto(
+                e.Id, e.GroupId, e.Title, e.Description, e.Location, e.StartsAt, e.EndsAt, e.ReminderAt,
+                e.Rsvps.Count(r => r.IsAttending),
+                e.Rsvps.Where(r => r.UserId == userId).Select(r => (bool?)r.IsAttending).FirstOrDefault()))
             .ToListAsync(ct);
 
         return Ok(events);
     }
+
+    private Task<bool> IsActiveMemberAsync(int groupId, Guid userId, CancellationToken ct) =>
+        _db.GroupMembers.AsNoTracking()
+            .AnyAsync(m => m.GroupId == groupId && m.UserId == userId && m.Status == GroupMemberStatus.Active, ct);
 
     // GRP-007 — create event
     [HttpPost("{id:int}/events")]
@@ -883,7 +884,9 @@ public class GroupsController : ControllerBase
         // scope is disposed. Only the leaf-level Expo push send inside stays fire-and-forget.
         await _notifications.NotifyGroupEventCreatedAsync(id, userId.Value, ev.Title, ev.Id, ct);
 
-        return Created($"/api/v1/groups/{id}/events/{ev.Id}", new { ev.Id });
+        // Devolve o evento inteiro: o site punha só {id} na lista e o card aparecia sem título e com "Invalid Date".
+        return Created($"/api/v1/groups/{id}/events/{ev.Id}",
+            new GroupEventDto(ev.Id, ev.GroupId, ev.Title, ev.Description, ev.Location, ev.StartsAt, ev.EndsAt, ev.ReminderAt, 0, null));
     }
 
     // GRP-007 — upsert RSVP
@@ -892,6 +895,12 @@ public class GroupsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+
+        // Antes aceitava qualquer eventId em qualquer grupo, de quem nem era membro.
+        var eventExists = await _db.GroupEvents.AsNoTracking()
+            .AnyAsync(e => e.Id == eventId && e.GroupId == id && e.DeletedAt == null, ct);
+        if (!eventExists) return NotFound();
+        if (!await IsActiveMemberAsync(id, userId.Value, ct)) return Forbid();
 
         var existing = await _db.GroupEventRsvps
             .FirstOrDefaultAsync(r => r.EventId == eventId && r.UserId == userId.Value, ct);
@@ -913,7 +922,8 @@ public class GroupsController : ControllerBase
         }
 
         await _db.SaveChangesAsync(ct);
-        return Ok(new { req.IsAttending });
+        var attendingCount = await _db.GroupEventRsvps.CountAsync(r => r.EventId == eventId && r.IsAttending, ct);
+        return Ok(new { req.IsAttending, AttendingCount = attendingCount });
     }
 
     // ─── Wave O: Group Polls (enquetes) ──────────────────────────────────────
@@ -1199,3 +1209,8 @@ public record CreateGroupPollRequest(string Question, List<string>? Options, Dat
 public record GroupPollVoteRequest(int OptionId);
 
 public record RsvpRequest(bool IsAttending);
+
+public record GroupEventDto(
+    int Id, int GroupId, string Title, string? Description, string? Location,
+    DateTime StartsAt, DateTime? EndsAt, DateTime? ReminderAt,
+    int AttendingCount, bool? MyRsvp);

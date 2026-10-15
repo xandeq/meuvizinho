@@ -142,6 +142,7 @@ export default function GroupClient() {
         setMembers(d.items);
         setMembersTotal(d.total);
       })
+      .catch(() => { setMembers([]); setMembersTotal(0); })
       .finally(() => setMembersLoading(false));
   }, [activeTab, groupId]);
 
@@ -1052,17 +1053,14 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
   }, [groupId]);
 
   const handleRsvp = (ev: GroupEvent) => {
+    // A API devolve "attendingCount"; o site lia "rsvpCount" e mostrava "undefined confirmados".
     rsvpEvent(groupId, ev.id, !ev.myRsvp)
-      .then(() =>
+      .then((res) =>
         setEvents((evs) =>
-          evs.map((e) =>
-            e.id === ev.id
-              ? { ...e, myRsvp: !e.myRsvp, rsvpCount: e.rsvpCount + (!e.myRsvp ? 1 : -1) }
-              : e
-          )
+          evs.map((e) => (e.id === ev.id ? { ...e, myRsvp: res.isAttending, attendingCount: res.attendingCount } : e))
         )
       )
-      .catch(console.error);
+      .catch(() => setEventsError('Não foi possível confirmar presença. Tente de novo.'));
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -1078,7 +1076,7 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
         startsAt: new Date(newStartsAt).toISOString(),
         location: newLocation.trim() || undefined,
       });
-      setEvents((prev) => [created, ...prev]);
+      setEvents((prev) => [...prev, created].sort((a, b) => a.startsAt.localeCompare(b.startsAt)));
       setShowCreate(false);
       setNewTitle('');
       setNewStartsAt('');
@@ -1221,7 +1219,7 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
           <p className="font-medium text-fg">{ev.title}</p>
           {ev.location && <p className="text-sm text-muted-fg">{ev.location}</p>}
           <p className="text-sm text-muted-fg">{new Date(ev.startsAt).toLocaleString('pt-BR')}</p>
-          <p className="text-xs text-muted-fg">{ev.rsvpCount} confirmados</p>
+          <p className="text-xs text-muted-fg">{ev.attendingCount === 1 ? '1 confirmado' : `${ev.attendingCount} confirmados`}</p>
           {(joinPolicy !== 'Closed' || isMember) && (
             <button
               type="button"

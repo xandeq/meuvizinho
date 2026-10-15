@@ -52,8 +52,9 @@ export async function createGroupEvent(groupId: number, body: Partial<GroupEvent
   return data;
 }
 
-export async function rsvpEvent(groupId: number, eventId: number, isAttending: boolean): Promise<void> {
-  await api.post(`/api/v1/groups/${groupId}/events/${eventId}/rsvp`, { isAttending });
+export async function rsvpEvent(groupId: number, eventId: number, isAttending: boolean): Promise<{ isAttending: boolean; attendingCount: number }> {
+  const { data } = await api.post<{ isAttending: boolean; attendingCount: number }>(`/api/v1/groups/${groupId}/events/${eventId}/rsvp`, { isAttending });
+  return data;
 }
 
 export interface GroupMember {
@@ -64,7 +65,7 @@ export interface GroupMember {
   joinedAt: string;
 }
 
-export async function getGroupMembers(groupId: number, page = 0, pageSize = 20) {
+export async function getGroupMembers(groupId: number, page = 1, pageSize = 20) {
   const res = await api.get<{ items: GroupMember[]; total: number }>(
     `/api/v1/groups/${groupId}/members`,
     { params: { page, pageSize } }

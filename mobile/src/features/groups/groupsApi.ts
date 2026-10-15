@@ -35,7 +35,7 @@ export interface GroupEvent {
   location: string | null;
   startsAt: string;
   endsAt: string | null;
-  rsvpCount: number;
+  attendingCount: number;
   myRsvp: boolean | null;
 }
 
@@ -86,6 +86,7 @@ export async function createGroupEvent(groupId: number, body: { title: string; s
   return data;
 }
 
-export async function rsvpEvent(groupId: number, eventId: number, isAttending: boolean): Promise<void> {
-  await apiClient.post(`/api/v1/groups/${groupId}/events/${eventId}/rsvp`, { isAttending });
+export async function rsvpEvent(groupId: number, eventId: number, isAttending: boolean): Promise<{ isAttending: boolean; attendingCount: number }> {
+  const { data } = await apiClient.post<{ isAttending: boolean; attendingCount: number }>(`/api/v1/groups/${groupId}/events/${eventId}/rsvp`, { isAttending });
+  return data;
 }

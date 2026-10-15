@@ -34,6 +34,7 @@ export default function GroupDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState<GroupEvent[]>([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [eventsError, setEventsError] = useState(false);
 
   // Load group + initial posts
   useEffect(() => {
@@ -52,7 +53,11 @@ export default function GroupDetailScreen() {
   // Load events when switching to events tab
   useEffect(() => {
     if (activeTab === 'events' && !eventsLoaded) {
-      getGroupEvents(groupId).then((evs) => { setEvents(evs); setEventsLoaded(true); });
+      // Antes não tinha catch: em erro a aba ficava em "Nenhum evento criado", sem aviso.
+      setEventsError(false);
+      getGroupEvents(groupId)
+        .then((evs) => { setEvents(evs); setEventsLoaded(true); })
+        .catch(() => setEventsError(true));
     }
   }, [activeTab, eventsLoaded, groupId]);
 
@@ -159,8 +164,16 @@ export default function GroupDetailScreen() {
 
   const handleRsvp = async (ev: GroupEvent) => {
     const next = !ev.myRsvp;
-    setEvents((evs) => evs.map((e) => e.id === ev.id ? { ...e, myRsvp: next, rsvpCount: e.rsvpCount + (next ? 1 : -1) } : e));
-    await rsvpEvent(groupId, ev.id, next);
+    // A API devolve "attendingCount"; o app lia "rsvpCount" e mostrava "undefined confirmados".
+    const optimistic = Math.max(0, ev.attendingCount + (next ? 1 : -1));
+    setEvents((evs) => evs.map((e) => e.id === ev.id ? { ...e, myRsvp: next, attendingCount: optimistic } : e));
+    try {
+      const res = await rsvpEvent(groupId, ev.id, next);
+      setEvents((evs) => evs.map((e) => e.id === ev.id ? { ...e, attendingCount: res.attendingCount } : e));
+    } catch {
+      setEvents((evs) => evs.map((e) => e.id === ev.id ? { ...e, myRsvp: ev.myRsvp, attendingCount: ev.attendingCount } : e));
+      Alert.alert('Não foi possível confirmar', 'Verifique sua conexão e tente de novo.');
+    }
   };
 
   const renderPost = useCallback(({ item }: { item: GroupPost }) => (
@@ -184,7 +197,7 @@ export default function GroupDetailScreen() {
       <Text style={[styles.eventTitle, { color: colors.fg }]}>{item.title}</Text>
       {item.location && <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.location}</Text>}
       <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{new Date(item.startsAt).toLocaleString('pt-BR')}</Text>
-      <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.rsvpCount} confirmados</Text>
+      <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.attendingCount === 1 ? '1 confirmado' : `${item.attendingCount} confirmados`}</Text>
       <TouchableOpacity accessibilityRole="button"
         style={[
           styles.rsvpBtn,
@@ -317,11 +330,24 @@ export default function GroupDetailScreen() {
             renderItem={renderEvent}
             contentContainerStyle={{ padding: 16, gap: 12 }}
             ListEmptyComponent={
-              <EmptyState
-                icon="calendar-outline"
-                title="Nenhum evento criado"
-                subtitle="Organize um encontro ou atividade para o grupo."
-              />
+              eventsError ? (
+                <EmptyState
+                  icon="cloud-offline-outline"
+                  title="Não foi possível carregar os eventos"
+                  subtitle="Verifique sua conexão e tente de novo."
+                  actionLabel="Tentar de novo"
+                  actionIcon="refresh"
+                  onAction={() => setEventsLoaded(false)}
+                />
+              ) : !eventsLoaded ? (
+                <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />
+              ) : (
+                <EmptyState
+                  icon="calendar-outline"
+                  title="Nenhum evento marcado"
+                  subtitle="Organize um encontro ou atividade para o grupo."
+                />
+              )
             }
           />
         )}

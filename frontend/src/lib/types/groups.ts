@@ -44,7 +44,7 @@ export interface GroupEvent {
   location: string | null;
   startsAt: string;
   endsAt: string | null;
-  rsvpCount: number;
+  attendingCount: number;
   myRsvp: boolean | null;
 }
 
