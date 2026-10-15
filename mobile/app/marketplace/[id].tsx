@@ -25,6 +25,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import WhatsAppShareButton from '../../src/features/share/components/WhatsAppShareButton';
 import { getListingShareUrl } from '../../src/features/share/utils/share';
+import { goBackOr } from '../../src/lib/navigation';
 
 const priceFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -106,7 +107,7 @@ export default function ListingDetailScreen() {
         onPress: async () => {
           try {
             await marketplaceApi.remove(listing.id);
-            router.back();
+            goBackOr(router, '/(tabs)/marketplace');
           } catch {
             Alert.alert('Erro', 'Falha ao remover.');
           }

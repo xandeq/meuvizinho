@@ -165,6 +165,10 @@ public class CommonAreaReservationTests
 
         result.Should().BeOfType<CreatedResult>();
         (await db.AreaReservations.SingleAsync()).Status.Should().Be(AreaReservationStatus.Pending);
+
+        // Site e app exibem o horário reservado a partir desta resposta.
+        var json = System.Text.Json.JsonSerializer.Serialize(((CreatedResult)result).Value);
+        json.Should().Contain("\"StartUtc\"").And.Contain("\"EndUtc\"").And.Contain("\"Status\":\"Pending\"");
     }
 
     [Fact]

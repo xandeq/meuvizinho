@@ -38,6 +38,8 @@ export default function CondominiumsPage() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  // Antes, falha da API caía em "Nenhum condomínio ainda — cadastre o seu" e induzia cadastro duplicado.
+  const [loadError, setLoadError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState('');
   const [addressLine, setAddressLine] = useState('');
@@ -54,21 +56,25 @@ export default function CondominiumsPage() {
   const load = () => {
     if (!user?.bairroId) return;
     setLoading(true);
+    setLoadError(false);
     getCondominiums(user.bairroId, { search: debouncedSearch || undefined })
       .then(setCondos)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
     if (!user?.bairroId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setLoading(false);
       return;
     }
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setLoading(true);
+    setLoadError(false);
     getCondominiums(user.bairroId, { search: debouncedSearch || undefined })
       .then(setCondos)
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
   }, [user?.bairroId, debouncedSearch]);
 
@@ -147,6 +153,12 @@ export default function CondominiumsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
         </div>
+      ) : loadError ? (
+        <EmptyState
+          title="Não foi possível carregar os condomínios"
+          description="Verifique sua conexão e tente de novo."
+          action={{ label: 'Tentar de novo', onClick: load }}
+        />
       ) : condos.length === 0 ? (
         <EmptyState
           title="Nenhum condomínio ainda"

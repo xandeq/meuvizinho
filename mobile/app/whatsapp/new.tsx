@@ -7,6 +7,7 @@ import { WHATSAPP_KIND_LABELS, type WhatsAppGroupKind } from '../../src/lib/api/
 import { Button } from '../../src/components/Button';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../src/theme/tokens';
+import { goBackOr } from '../../src/lib/navigation';
 
 const KINDS = Object.keys(WHATSAPP_KIND_LABELS) as WhatsAppGroupKind[];
 
@@ -40,7 +41,7 @@ export default function NewWhatsAppGroupScreen() {
         description: description.trim() || undefined,
       });
       Alert.alert('Enviado', 'Seu grupo foi enviado para análise e aparecerá no diretório assim que for verificado.');
-      router.back();
+      goBackOr(router, '/whatsapp');
     } catch (err: any) {
       Alert.alert('Erro', err?.response?.data?.error || 'Não foi possível enviar o grupo.');
     } finally {

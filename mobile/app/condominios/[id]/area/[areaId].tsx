@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, TextInput } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -40,6 +40,9 @@ export default function AreaReservaScreen() {
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<AreaReservation | null>(null);
+  // A confirmação fica no topo; quem enviou lá embaixo não a via e ficava sem saber se deu certo.
+  const scrollRef = useRef<ScrollView>(null);
+  const successY = useRef(0);
 
   const loadAvailability = useCallback(() => {
     const from = new Date();
@@ -193,6 +196,7 @@ export default function AreaReservaScreen() {
 
   return (
     <ScrollView
+      ref={scrollRef}
       style={{ backgroundColor: colors.bg }}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
@@ -232,6 +236,10 @@ export default function AreaReservaScreen() {
 
       {created && (
         <View
+          onLayout={(e) => {
+            successY.current = e.nativeEvent.layout.y;
+            scrollRef.current?.scrollTo({ y: Math.max(0, successY.current - 16), animated: true });
+          }}
           style={[
             styles.success,
             {

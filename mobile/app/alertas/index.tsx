@@ -121,7 +121,7 @@ export default function AlertasScreen() {
       <FlatList
         data={alerts}
         keyExtractor={(a) => String(a.id)}
-        contentContainerStyle={{ padding: 16, gap: 12, flexGrow: 1 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 104, gap: 12, flexGrow: 1 }} // espaço p/ o botão Reportar não cobrir o último alerta
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor={colors.danger} />}
         ListEmptyComponent={
           loading ? (
