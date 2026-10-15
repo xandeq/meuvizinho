@@ -10,6 +10,7 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import { ListSkeleton } from '../../src/components/Skeleton';
+import { VerificationGate } from '../../src/components/VerificationGate';
 
 const KIND_FILTERS: { code: WhatsAppGroupKind | ''; label: string }[] = [
   { code: '', label: 'Todos' },
@@ -62,11 +63,7 @@ export default function WhatsAppGroupsScreen() {
   if (!bairroId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <EmptyState
-          icon="shield-checkmark-outline"
-          title="Complete sua verificação"
-          subtitle="Confirme seu endereço para ver os grupos de WhatsApp do seu bairro."
-        />
+        <VerificationGate what="os grupos de WhatsApp do seu bairro" />
       </View>
     );
   }

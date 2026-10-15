@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Image } from 'react-native';
+import { View, Text, StyleSheet, Alert, Image, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import { Button } from './Button';
 import { useTheme } from '../theme/ThemeContext';
 import { fontFamily, radius } from '../theme/tokens';
 
@@ -37,6 +37,7 @@ function guessNameFromUri(uri: string, fallback: string): string {
 export function ProofPicker({ onFile }: Props) {
   const { colors } = useTheme();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [picked, setPicked] = useState<{ name: string; size: number } | null>(null);
 
   const handleAsset = async (
     uri: string,
@@ -49,6 +50,7 @@ export function ProofPicker({ onFile }: Props) {
       return;
     }
     setPreviewUri(mime.startsWith('image/') ? uri : null);
+    setPicked({ name, size: fileSize ?? 0 });
     onFile({ uri, name, type: mime, size: fileSize ?? 0 });
   };
 
@@ -109,22 +111,74 @@ export function ProofPicker({ onFile }: Props) {
     );
   };
 
+  // Antes: três botões grandes sempre à vista e a prévia aparecia lá embaixo, cortada, com o
+  // "Enviar" fora da tela. Agora: opções compactas e, depois de escolher, o cartão do arquivo.
+  if (picked) {
+    return (
+      <View style={[styles.pickedCard, { backgroundColor: colors.card, borderColor: colors.border, borderRadius: radius.md }]}>
+        {previewUri ? (
+          <Image source={{ uri: previewUri }} style={[styles.thumb, { backgroundColor: colors.muted }]} accessibilityIgnoresInvertColors />
+        ) : (
+          <View style={[styles.thumb, styles.docThumb, { backgroundColor: colors.primaryLight }]}>
+            <Ionicons name="document-text" size={28} color={colors.primary} />
+          </View>
+        )}
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.pickedTitle, { color: colors.fg }]}>Comprovante escolhido</Text>
+          <Text style={[styles.pickedMeta, { color: colors.mutedFg }]} numberOfLines={1}>
+            {picked.name}{picked.size ? ` · ${Math.max(1, Math.round(picked.size / 1024))} KB` : ''}
+          </Text>
+        </View>
+        <Pressable
+          onPress={() => { setPicked(null); setPreviewUri(null); }}
+          accessibilityRole="button"
+          accessibilityLabel="Trocar comprovante"
+          hitSlop={10}
+        >
+          <Text style={[styles.change, { color: colors.primary }]}>Trocar</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const options: { label: string; icon: keyof typeof Ionicons.glyphMap; onPress: () => void; a11y: string }[] = [
+    { label: 'Galeria', icon: 'images-outline', onPress: pickFromLibrary, a11y: 'Escolher foto da galeria' },
+    { label: 'Câmera', icon: 'camera-outline', onPress: takePhoto, a11y: 'Tirar foto do comprovante' },
+    { label: 'PDF', icon: 'document-text-outline', onPress: pickPdf, a11y: 'Enviar PDF' },
+  ];
   return (
     <View>
-      <Button title="Escolher foto" icon="images" variant="outline" onPress={pickFromLibrary} />
-      <View style={{ height: 12 }} />
-      <Button title="Tirar foto" icon="camera" variant="outline" onPress={takePhoto} />
-      <View style={{ height: 12 }} />
-      <Button title="Enviar PDF" icon="document-text" variant="outline" onPress={pickPdf} />
-      {previewUri && (
-        <Image source={{ uri: previewUri }} style={[styles.preview, { backgroundColor: colors.muted, borderRadius: radius.sm }]} />
-      )}
-      <Text style={[styles.hint, { color: colors.mutedFg }]}>Tamanho máximo: 5 MB</Text>
+      <View style={styles.options}>
+        {options.map((o) => (
+          <Pressable
+            key={o.label}
+            onPress={o.onPress}
+            accessibilityRole="button"
+            accessibilityLabel={o.a11y}
+            style={({ pressed }) => [
+              styles.option,
+              { borderColor: colors.primaryFill, backgroundColor: colors.card, borderRadius: radius.md, opacity: pressed ? 0.85 : 1 },
+            ]}
+          >
+            <Ionicons name={o.icon} size={26} color={colors.primary} />
+            <Text style={[styles.optionText, { color: colors.fg }]}>{o.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <Text style={[styles.hint, { color: colors.mutedFg }]}>Foto nítida do documento inteiro. Máximo 5 MB.</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  preview: { width: '100%', height: 240, marginTop: 16 },
-  hint: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 8 },
+  options: { flexDirection: 'row', gap: 10 },
+  option: { flex: 1, minHeight: 88, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center', gap: 6 },
+  optionText: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  hint: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 10 },
+  pickedCard: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderWidth: 1 },
+  thumb: { width: 64, height: 84, borderRadius: 8 },
+  docThumb: { alignItems: 'center', justifyContent: 'center' },
+  pickedTitle: { fontFamily: fontFamily.semibold, fontSize: 15 },
+  pickedMeta: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 2 },
+  change: { fontFamily: fontFamily.semibold, fontSize: 15 },
 });

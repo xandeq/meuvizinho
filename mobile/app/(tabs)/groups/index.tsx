@@ -14,6 +14,7 @@ import { ListSkeleton } from '../../../src/components/Skeleton';
 import { useBairroName } from '../../../src/lib/useBairroName';
 import { SearchField } from '../../../src/components/SearchField';
 import { goBackOr } from '../../../src/lib/navigation';
+import { VerificationGate } from '../../../src/components/VerificationGate';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -173,11 +174,7 @@ onBack={() => goBackOr(router, '/(tabs)/feed')}         title="Grupos"
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
         <ScreenHeader title="Grupos" />
-        <EmptyState
-          icon="shield-checkmark-outline"
-          title="Complete sua verificação"
-          subtitle="Confirme seu endereço para ver os grupos do seu bairro."
-        />
+        <VerificationGate what="os grupos do seu bairro" />
       </View>
     );
   }

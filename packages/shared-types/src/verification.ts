@@ -30,6 +30,7 @@ export interface ProfileDto {
   photoUrl: string | null;
   bio: string | null;
   bairroNome: string | null;
+  bairroId?: number | null;
   isVerified: boolean;
   isBusinessAccount: boolean;
   businessName: string | null;

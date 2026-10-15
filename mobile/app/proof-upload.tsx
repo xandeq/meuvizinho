@@ -7,7 +7,7 @@ import { ProofPicker, type PickedFile } from '../src/components/ProofPicker';
 import { verificationApi } from '../src/lib/api';
 import { useOnboardingStore } from '../src/lib/onboarding-store';
 import { useTheme } from '../src/theme/ThemeContext';
-import { fontFamily, radius, shadow } from '../src/theme/tokens';
+import { fontFamily } from '../src/theme/tokens';
 import { StepIndicator } from '../src/components/StepIndicator';
 
 export default function ProofUpload() {
@@ -63,14 +63,6 @@ export default function ProofUpload() {
         placeholder="Ex.: 123, apto 45"
       />
       <ProofPicker onFile={setFile} />
-      {file && (
-        <View style={[styles.fileCard, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.sm }]}>
-          <Text style={[styles.fileName, { color: colors.fg }]}>{file.name}</Text>
-          <Text style={[styles.fileMeta, { color: colors.mutedFg }]}>
-            {(file.size / 1024).toFixed(0)} KB • {file.type}
-          </Text>
-        </View>
-      )}
       <View style={{ height: 16 }} />
       <Button title="Enviar" icon="cloud-upload" onPress={submit} disabled={!file} loading={submitting} />
     </ScrollView>
