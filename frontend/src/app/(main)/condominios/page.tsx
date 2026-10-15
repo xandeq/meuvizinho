@@ -99,7 +99,7 @@ export default function CondominiumsPage() {
 
   return (
     <div className="space-y-6 animate-slide-up">
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-primary"><BuildingIcon /></span>

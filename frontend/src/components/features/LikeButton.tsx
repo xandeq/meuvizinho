@@ -74,7 +74,6 @@ export default function LikeButton({
       onClick={handleClick}
       disabled={busy}
       aria-pressed={liked}
-      aria-label={liked ? "Descurtir" : "Curtir"}
       className={[
         "flex items-center gap-1.5 px-3 py-1.5 rounded-xl",
         "text-xs font-semibold transition-all duration-200 active:scale-90",
@@ -87,7 +86,9 @@ export default function LikeButton({
         .join(" ")}
     >
       <HeartIcon filled={liked} />
+      <span className="sr-only">{liked ? "Descurtir" : "Curtir"}, </span>
       <span>{count}</span>
+      <span className="sr-only"> {count === 1 ? "curtida" : "curtidas"}</span>
     </button>
   );
 }

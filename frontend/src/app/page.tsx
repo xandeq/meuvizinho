@@ -94,7 +94,7 @@ function HeroPhone() {
           </div>
           <div className="space-y-2.5 px-3 pb-6">
             <MiniPost
-              initials="PL" name="Patrícia Lima" tag="Pergunta" tagCls="text-[#D97706]" time="12 min"
+              initials="PL" name="Patrícia Lima" tag="Pergunta" tagCls="text-[#B45309]" time="12 min"
               body="Alguém indica um eletricista de confiança aqui perto? Preciso pra amanhã."
             />
             <MiniPost

@@ -10,10 +10,12 @@ public class OffensiveWordFilter : IOffensiveWordFilter
 {
     private static readonly string[] Wordlist = new[]
     {
-        "idiota", "imbecil", "burro", "otario", "lixo", "filho da puta", "fdp",
+        // Fora da lista (falsos positivos num app de bairro): "lixo" (coleta), "macaco" (do carro),
+        // "racista" (quem denuncia racismo), "aborto" e "feia" (uso neutro comum).
+        "idiota", "imbecil", "burro", "otario", "filho da puta", "fdp",
         "puta", "merda", "caralho", "porra", "cu", "viado", "retardado", "retardada",
-        "racista", "preto safado", "macaco", "nigger", "nazi", "nazista", "hitler",
-        "bicha", "sapatao", "gorda nojenta", "feia", "mongoloide", "aborto",
+        "preto safado", "nigger", "nazi", "nazista", "hitler",
+        "bicha", "sapatao", "gorda nojenta", "mongoloide",
         "vagabunda", "corno"
     };
 

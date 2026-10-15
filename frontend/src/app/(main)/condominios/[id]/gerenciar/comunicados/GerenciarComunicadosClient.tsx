@@ -251,7 +251,7 @@ export default function GerenciarComunicadosClient() {
         Comunicados
       </Link>
 
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-extrabold text-fg leading-tight">Gerenciar comunicados</h1>
           <p className="text-muted-fg font-medium text-sm">{condo.name}</p>

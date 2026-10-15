@@ -48,18 +48,18 @@ export default function PostCard({ post }: { post: Post }) {
       <footer className="flex items-center gap-1 text-sm font-semibold text-muted-fg border-t border-border/50 pt-3 -mx-1">
         <button
           type="button"
-          aria-label="Curtir"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-danger-light hover:text-danger transition-all duration-200 active:scale-95"
         >
           <HeartIcon />
+          <span className="sr-only">Curtir, </span>
           <span>{post.likeCount}</span>
         </button>
         <button
           type="button"
-          aria-label="Comentarios"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl hover:bg-primary-light hover:text-primary transition-all duration-200 active:scale-95"
         >
           <CommentIcon />
+          <span className="sr-only">Comentários, </span>
           <span>{post.commentCount}</span>
         </button>
         <div className="ml-auto">

@@ -242,7 +242,7 @@ export default function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={`Notificações${unread > 0 ? ` — ${unread} não lidas` : ""}`}
+        aria-label={`Notificações${unread > 0 ? `: ${displayCount} não lidas` : ""}`}
         className="relative w-9 h-9 flex items-center justify-center rounded-xl text-muted-fg hover:text-fg hover:bg-muted transition-all duration-200"
       >
         <BellIcon />

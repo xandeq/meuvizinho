@@ -158,7 +158,7 @@ export default function ComunicadosClient() {
         {condo.name}
       </Link>
 
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-primary"><MegaphoneIcon /></span>

@@ -114,14 +114,14 @@ export default function WhatsAppDirectoryPage() {
   return (
     <div className="space-y-6 animate-slide-up">
       {/* Header */}
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-secondary"><WhatsAppIcon /></span>
             <h1 className="text-3xl font-extrabold text-fg leading-tight">Grupos de WhatsApp</h1>
           </div>
           <p className="text-muted-fg font-medium">
-            Os grupos do seu bairro, condomínio e prédio — verificados, em um lugar só.
+            Os grupos do seu bairro, condomínio e prédio, verificados e num lugar só.
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">

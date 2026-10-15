@@ -124,6 +124,7 @@ export default function Avatar({
             s.img,
             s.text,
           ].join(" ")}
+          role="img"
           aria-label={name ?? "Vizinho"}
         >
           {initials(name)}
@@ -140,6 +141,7 @@ export default function Avatar({
 
       {verified && (
         <span
+          role="img"
           aria-label="Vizinho verificado"
           className={[
             "absolute rounded-full bg-secondary border-card",
@@ -154,6 +156,7 @@ export default function Avatar({
 
       {online && !verified && (
         <span
+          role="img"
           aria-label="Online"
           className={[
             "absolute rounded-full bg-emerald-400 border-2 border-card",
