@@ -68,11 +68,12 @@ export async function getAreaAvailability(
   areaId: number,
   params: { from: string; to: string },
 ): Promise<AvailabilityBlock[]> {
-  const { data } = await api.get<AvailabilityBlock[]>(
+  // A API devolve { from, to, busy }; antes o cliente tratava como array e a tela de reserva quebrava.
+  const { data } = await api.get<{ busy?: AvailabilityBlock[] } | AvailabilityBlock[]>(
     `/api/v1/condominiums/${condominiumId}/common-areas/${areaId}/availability`,
     { params },
   );
-  return data;
+  return Array.isArray(data) ? data : data.busy ?? [];
 }
 
 // ─── Reservas ────────────────────────────────────────────────────────────────

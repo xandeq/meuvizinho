@@ -14,6 +14,7 @@ import { marketplaceApi } from '../../../src/lib/api/marketplace';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../../src/theme/tokens';
 import type { ListingDto } from '../../../src/lib/api/marketplace.types';
+import { goBackOr } from '../../../src/lib/navigation';
 
 export default function EditListingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -53,7 +54,7 @@ export default function EditListingScreen() {
         price: Number(price),
       });
       Alert.alert('Salvo', 'Anúncio atualizado.');
-      router.back();
+      goBackOr(router, `/marketplace/${listingId}`);
     } catch (err: any) {
       Alert.alert('Erro', err?.response?.data?.error || 'Falha ao salvar.');
     } finally {

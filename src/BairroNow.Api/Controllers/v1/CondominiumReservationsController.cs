@@ -132,7 +132,7 @@ public class CondominiumReservationsController : ControllerBase
             {
                 r.Id,
                 r.UserId,
-                ResidentName = r.User != null ? r.User.DisplayName : null,
+                UserName = r.User != null ? r.User.DisplayName : null,
                 ResidentVerified = r.User != null && r.User.IsVerified,
                 r.Unit,
                 Status = r.Status.ToString(),
@@ -539,7 +539,20 @@ public class CondominiumReservationsController : ControllerBase
             await _notifications.NotifyReservationPendingAsync(access.Condo.SindicoUserId.Value, userId.Value, id, area.Name, ct);
 
         return Created($"/api/v1/condominiums/{id}/reservations/{reservation.Id}",
-            new { reservation.Id, Status = reservation.Status.ToString() });
+            // Site e app mostram o horário na confirmação; antes só ia { id, status } ("Invalid Date").
+            new
+            {
+                reservation.Id,
+                reservation.CommonAreaId,
+                CommonAreaName = area.Name,
+                CondominiumId = id,
+                reservation.Title,
+                reservation.GuestsCount,
+                reservation.StartUtc,
+                reservation.EndUtc,
+                Status = reservation.Status.ToString(),
+                reservation.CreatedAt
+            });
     }
 
     // GET /api/v1/condominiums/{id}/reservations/mine — as próprias reservas.
@@ -574,7 +587,7 @@ public class CondominiumReservationsController : ControllerBase
             {
                 r.Id,
                 r.CommonAreaId,
-                AreaName = r.CommonArea != null ? r.CommonArea.Name : null,
+                CommonAreaName = r.CommonArea != null ? r.CommonArea.Name : null,
                 r.Title,
                 r.GuestsCount,
                 r.StartUtc,
@@ -664,9 +677,9 @@ public class CondominiumReservationsController : ControllerBase
             {
                 r.Id,
                 r.CommonAreaId,
-                AreaName = r.CommonArea != null ? r.CommonArea.Name : null,
+                CommonAreaName = r.CommonArea != null ? r.CommonArea.Name : null,
                 r.UserId,
-                ResidentName = r.User != null ? r.User.DisplayName : null,
+                UserName = r.User != null ? r.User.DisplayName : null,
                 r.Title,
                 r.GuestsCount,
                 r.StartUtc,
@@ -702,13 +715,14 @@ public class CondominiumReservationsController : ControllerBase
             {
                 r.Id,
                 r.CommonAreaId,
-                AreaName = r.CommonArea != null ? r.CommonArea.Name : null,
+                CommonAreaName = r.CommonArea != null ? r.CommonArea.Name : null,
                 r.UserId,
-                ResidentName = r.User != null ? r.User.DisplayName : null,
+                UserName = r.User != null ? r.User.DisplayName : null,
                 r.Title,
                 r.GuestsCount,
                 r.StartUtc,
                 r.EndUtc,
+                Status = r.Status.ToString(),
                 r.CreatedAt
             })
             .ToListAsync(ct);
