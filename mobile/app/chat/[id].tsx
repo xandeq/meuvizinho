@@ -15,16 +15,33 @@ import { useAuthStore } from '../../src/lib/auth-store';
 import { MessageBubble } from '../../src/components/chat/MessageBubble';
 import { MessageComposer } from '../../src/components/chat/MessageComposer';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { Stack } from 'expo-router';
+import { fontFamily } from '../../src/theme/tokens';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
 
+
+const NO_MESSAGES: never[] = [];
 export default function ChatScreen() {
   const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const conversationId = Number(id);
   const currentUserId = useAuthStore((s) => s.user?.id);
 
-  const messages = useChatStore(
-    (s) => s.messagesByConversation[conversationId] ?? []
-  );
+  // Fallback estável: `?? []` criava um array novo a cada render e o useSyncExternalStore
+  // entrava em loop ("Maximum update depth exceeded"), derrubando o app ao abrir o chat.
+  const messages = useChatStore((s) => s.messagesByConversation[conversationId] ?? NO_MESSAGES);
+  const conversation = useChatStore((s) => s.conversations.find((c) => c.id === conversationId));
+  // Teclado: o campo de mensagem ficava inteiro atrás dele (edge-to-edge no Android).
+  // O Stack já recua a barra de navegação, então desconta para não dobrar o espaço.
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
+  const keyboardPad = Math.max(0, keyboardHeight - insets.bottom);
+  const loadConversations = useChatStore((s) => s.loadConversations);
+  // Vindo do anúncio, a conversa recém-criada ainda não está no store: carrega para ter o título.
+  useEffect(() => {
+    if (conversationId && !conversation) loadConversations().catch(() => {});
+  }, [conversationId, conversation, loadConversations]);
   const loadMessages = useChatStore((s) => s.loadMessages);
   const loadMoreMessages = useChatStore((s) => s.loadMoreMessages);
   const setActive = useChatStore((s) => s.setActiveConversationId);
@@ -77,10 +94,27 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: colors.bg }]}
+      style={[styles.container, { backgroundColor: colors.bg, paddingBottom: keyboardPad }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={80}
     >
+      <Stack.Screen
+        options={{
+          title: conversation?.otherUserDisplayName ?? 'Chat',
+          headerTitle: () => (
+            <View>
+              <Text style={{ fontFamily: fontFamily.bold, fontSize: 17, color: colors.fg }} numberOfLines={1}>
+                {conversation?.otherUserDisplayName ?? 'Chat'}
+              </Text>
+              {conversation?.listingTitle ? (
+                <Text style={{ fontFamily: fontFamily.regular, fontSize: 12, color: colors.mutedFg }} numberOfLines={1}>
+                  {conversation.listingTitle}
+                </Text>
+              ) : null}
+            </View>
+          ),
+        }}
+      />
       <FlatList
         data={[...messages].reverse()}
         keyExtractor={(m) => String(m.id)}

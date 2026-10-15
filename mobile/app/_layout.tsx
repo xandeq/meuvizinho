@@ -15,6 +15,7 @@ import {
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { fontFamily } from '../src/theme/tokens';
 import { usePushNotifications } from '../src/lib/usePushNotifications';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function ThemeToggleButton() {
   const { isDark, toggleTheme, colors } = useTheme();
@@ -69,6 +70,8 @@ function useSessionExpiredRedirect() {
 
 function RootNavigator() {
   const { isDark, colors } = useTheme();
+  // Edge-to-edge: sem recuo, o fim de toda tela da pilha ficava sob a barra de gestos.
+  const insets = useSafeAreaInsets();
   usePushNotifications();
   useSessionExpiredRedirect();
 
@@ -81,7 +84,7 @@ function RootNavigator() {
           headerTintColor: colors.fg,
           headerTitleStyle: { fontFamily: fontFamily.bold },
           headerRight: () => <ThemeToggleButton />,
-          contentStyle: { backgroundColor: colors.bg },
+          contentStyle: { backgroundColor: colors.bg, paddingBottom: insets.bottom },
         }}
       >
         {/* Auth screens */}
@@ -94,7 +97,7 @@ function RootNavigator() {
         <Stack.Screen name="magic-link" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
         {/* Authenticated -- tabs with persistent bottom nav */}
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
         {/* Profile (outside tabs) */}
         <Stack.Screen name="profile" options={{ title: 'Meu perfil', headerRight: () => <ProfileHeaderRight /> }} />
         {/* Settings */}
@@ -107,7 +110,7 @@ function RootNavigator() {
         <Stack.Screen name="marketplace/edit/[id]" options={{ title: 'Editar anúncio' }} />
         <Stack.Screen name="marketplace/search" options={{ title: 'Buscar' }} />
         <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
-        <Stack.Screen name="post/[id]" options={{ title: 'Comentários' }} />
+        <Stack.Screen name="post/[id]" options={{ title: 'Comentários', contentStyle: { backgroundColor: colors.bg } }} />
         {/* Comunidade: grupos WhatsApp, condomínios/síndico, alertas de segurança */}
         <Stack.Screen name="whatsapp/index" options={{ title: 'Grupos de WhatsApp' }} />
         <Stack.Screen name="whatsapp/new" options={{ title: 'Indicar grupo' }} />

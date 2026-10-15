@@ -36,13 +36,16 @@ export interface ChatRoomProps {
   conversation?: ConversationDto | null;
 }
 
+
+const NO_MESSAGES: never[] = [];
 export default function ChatRoom({
   conversationId,
   conversation,
 }: ChatRoomProps) {
   const user = useAuthStore((s) => s.user);
   const messages = useChatStore(
-    (s) => s.messagesByConversation[conversationId] ?? []
+    // Fallback estável: `?? []` novo a cada render fazia o store re-renderizar em loop.
+    (s) => s.messagesByConversation[conversationId] ?? NO_MESSAGES
   );
   const setMessages = useChatStore((s) => s.setMessages);
   const prependHistory = useChatStore((s) => s.prependHistory);

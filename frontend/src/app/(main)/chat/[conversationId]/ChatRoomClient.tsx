@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useRouteId } from "@/lib/useRouteId";
 import ChatRoom from "@/components/features/chat/ChatRoom";
 import { useChatStore } from "@/stores/chat-store";
 import EmptyState from "@/components/ui/EmptyState";
 
 export default function ChatRoomClient() {
-  const params = useParams<{ conversationId: string }>();
-  const conversationId = Number(params?.conversationId);
+  const resolvedId = useRouteId("chat", "conversationId");
+  const conversationId = resolvedId ?? 0;
   const conversations = useChatStore((s) => s.conversations);
   const loadConversations = useChatStore((s) => s.loadConversations);
   const connect = useChatStore((s) => s.connect);
@@ -21,7 +21,8 @@ export default function ChatRoomClient() {
   const conversation =
     conversations.find((c) => c.id === conversationId) ?? null;
 
-  if (!conversationId || Number.isNaN(conversationId)) {
+  if (resolvedId === null) return null;
+  if (!conversationId) {
     return <EmptyState title="Conversa inválida" description="Este link de conversa não existe." />;
   }
 
