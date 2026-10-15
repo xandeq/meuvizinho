@@ -50,7 +50,7 @@ public class AuthService : IAuthService
     public async Task<(AuthResponse? Response, string? Error)> RegisterAsync(RegisterRequest request, string ipAddress, CancellationToken ct = default)
     {
         if (await _db.Users.AnyAsync(u => u.Email == request.Email.ToLowerInvariant(), ct))
-            return (null, "E-mail ja cadastrado.");
+            return (null, "E-mail já cadastrado.");
 
         var user = new User
         {

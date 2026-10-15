@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
 using BairroNow.Api.Models.DTOs;
 using BairroNow.Api.Services;
 
@@ -17,17 +18,31 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly IConfiguration _configuration;
+    private readonly IValidator<RegisterRequest> _registerValidator;
+    private readonly IValidator<ResetPasswordRequest> _resetValidator;
 
-    public AuthController(IAuthService authService, IConfiguration configuration)
+    public AuthController(
+        IAuthService authService,
+        IConfiguration configuration,
+        IValidator<RegisterRequest> registerValidator,
+        IValidator<ResetPasswordRequest> resetValidator)
     {
         _authService = authService;
         _configuration = configuration;
+        _registerValidator = registerValidator;
+        _resetValidator = resetValidator;
     }
 
     [HttpPost("register")]
     [EnableRateLimiting("public")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request, CancellationToken ct)
     {
+        // O validador existia mas nunca rodava: o servidor aceitava qualquer senha
+        // e registrava o aceite da política mesmo com acceptedPrivacyPolicy=false.
+        var validation = await _registerValidator.ValidateAsync(request, ct);
+        if (!validation.IsValid)
+            return ValidationError(validation);
+
         var (response, error) = await _authService.RegisterAsync(request, GetIpAddress(), ct);
         if (error != null)
             return Conflict(new { error });
@@ -218,21 +233,35 @@ public class AuthController : ControllerBase
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken ct)
     {
         await _authService.ForgotPasswordAsync(request.Email, ct);
-        return Ok(new { message = "Se o e-mail existir, enviaremos um link de recuperacao." });
+        return Ok(new { message = "Se o e-mail existir, enviaremos um link de recuperação." });
     }
 
     [HttpPost("reset-password")]
     [EnableRateLimiting("public")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request, CancellationToken ct)
     {
+        var validation = await _resetValidator.ValidateAsync(request, ct);
+        if (!validation.IsValid)
+            return ValidationError(validation);
+
         var result = await _authService.ResetPasswordAsync(request.Token, request.Email, request.NewPassword, ct);
         if (!result)
-            return BadRequest(new { error = "Token invalido ou expirado." });
+            return BadRequest(new { error = "Token inválido ou expirado." });
 
         return Ok(new { message = "Senha alterada com sucesso." });
     }
 
     // ── Private helpers ──
+
+    /// <summary>400 no formato que site e app já leem ({ error }), mais os erros por campo.</summary>
+    private BadRequestObjectResult ValidationError(FluentValidation.Results.ValidationResult validation) =>
+        BadRequest(new
+        {
+            error = validation.Errors[0].ErrorMessage,
+            errors = validation.Errors
+                .GroupBy(e => char.ToLowerInvariant(e.PropertyName[0]) + e.PropertyName[1..])
+                .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray()),
+        });
 
     private string GenerateTotpTempToken(Guid userId)
     {

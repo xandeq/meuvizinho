@@ -69,7 +69,7 @@ public class AuthServiceTests : IDisposable
         var (response, error) = await _service.RegisterAsync(request, "127.0.0.1");
 
         Assert.Null(response);
-        Assert.Contains("ja cadastrado", error);
+        Assert.Contains("já cadastrado", error);
     }
 
     [Fact]

@@ -8,10 +8,10 @@ public class LoginRequestValidator : AbstractValidator<LoginRequest>
     public LoginRequestValidator()
     {
         RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("E-mail obrigatorio.")
-            .EmailAddress().WithMessage("E-mail invalido.");
+            .NotEmpty().WithMessage("E-mail obrigatório.")
+            .EmailAddress().WithMessage("E-mail inválido.");
 
         RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Senha obrigatoria.");
+            .NotEmpty().WithMessage("Senha obrigatória.");
     }
 }

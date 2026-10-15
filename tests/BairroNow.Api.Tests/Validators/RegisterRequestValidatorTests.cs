@@ -23,7 +23,7 @@ public class RegisterRequestValidatorTests
     {
         var result = _validator.TestValidate(ValidRequest() with { Email = "" });
         result.ShouldHaveValidationErrorFor(x => x.Email)
-            .WithErrorMessage("E-mail obrigatorio.");
+            .WithErrorMessage("E-mail obrigatório.");
     }
 
     [Fact]
@@ -31,7 +31,7 @@ public class RegisterRequestValidatorTests
     {
         var result = _validator.TestValidate(ValidRequest() with { Email = "notanemail" });
         result.ShouldHaveValidationErrorFor(x => x.Email)
-            .WithErrorMessage("E-mail invalido.");
+            .WithErrorMessage("E-mail inválido.");
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class RegisterRequestValidatorTests
         var request = ValidRequest() with { Password = "Short1!", ConfirmPassword = "Short1!" };
         var result = _validator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.Password)
-            .WithErrorMessage("Senha deve ter no minimo 8 caracteres.");
+            .WithErrorMessage("Senha deve ter no mínimo 8 caracteres.");
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public class RegisterRequestValidatorTests
         var request = ValidRequest() with { Password = "lowercase1!", ConfirmPassword = "lowercase1!" };
         var result = _validator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.Password)
-            .WithErrorMessage("Senha deve conter pelo menos uma letra maiuscula.");
+            .WithErrorMessage("Senha deve conter pelo menos uma letra maiúscula.");
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class RegisterRequestValidatorTests
         var request = ValidRequest() with { Password = "Lowercase!", ConfirmPassword = "Lowercase!" };
         var result = _validator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.Password)
-            .WithErrorMessage("Senha deve conter pelo menos um numero.");
+            .WithErrorMessage("Senha deve conter pelo menos um número.");
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class RegisterRequestValidatorTests
         var request = ValidRequest() with { ConfirmPassword = "Different1!" };
         var result = _validator.TestValidate(request);
         result.ShouldHaveValidationErrorFor(x => x.ConfirmPassword)
-            .WithErrorMessage("As senhas nao coincidem.");
+            .WithErrorMessage("As senhas não coincidem.");
     }
 
     [Fact]
@@ -84,6 +84,6 @@ public class RegisterRequestValidatorTests
     {
         var result = _validator.TestValidate(ValidRequest() with { AcceptedPrivacyPolicy = false });
         result.ShouldHaveValidationErrorFor(x => x.AcceptedPrivacyPolicy)
-            .WithErrorMessage("Voce deve aceitar a politica de privacidade.");
+            .WithErrorMessage("Você deve aceitar a política de privacidade.");
     }
 }
