@@ -24,7 +24,9 @@ export default function OcorrenciasScreen() {
   const isAdmin = useAuthStore((s) => !!s.user?.isAdmin);
 
   const [canManage, setCanManage] = useState(false);
-  const [scope, setScope] = useState<Scope>('mine');
+  // null = automático: síndico abre em 'Todas' (antes caía em 'Minhas', vazia).
+  const [scopeChoice, setScope] = useState<Scope | null>(null);
+  const scope: Scope = scopeChoice ?? (canManage ? 'all' : 'mine');
   const [items, setItems] = useState<IncidentDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,7 +40,7 @@ export default function OcorrenciasScreen() {
         const condo = await getCondominium(condoId);
         const manage = condo.isMySindico || isAdmin;
         setCanManage(manage);
-        const effective: Scope = manage ? scope : 'mine';
+        const effective: Scope = manage ? scopeChoice ?? 'all' : 'mine';
         setItems(effective === 'all' ? await getAllIncidents(condoId) : await getMyIncidents(condoId));
       } catch (e: any) {
         setError(
@@ -51,7 +53,7 @@ export default function OcorrenciasScreen() {
         setRefreshing(false);
       }
     },
-    [condoId, isAdmin, scope]
+    [condoId, isAdmin, scopeChoice]
   );
 
   // Recarrega ao voltar da tela de nova ocorrência ou do detalhe.
