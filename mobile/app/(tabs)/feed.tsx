@@ -124,7 +124,7 @@ export default function FeedScreen() {
       <FeedComposer
         visible={composerOpen}
         onClose={() => setComposerOpen(false)}
-        onSubmit={(cat: PostCategory, body: string) => createPost(cat, body)}
+        onSubmit={(cat, body, images) => createPost(cat, body, images)}
       />
     </View>
   );
