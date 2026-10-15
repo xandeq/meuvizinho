@@ -56,7 +56,18 @@ export default function Profile() {
     setSaving(true);
     setSaved(false);
     try {
-      const p = await profileApi.updateMe({ displayName, bio, isBusinessAccount: profile?.isBusinessAccount ?? false });
+      // Manda de volta os dados de negócio: o PUT substitui tudo e o app apagava o que foi
+      // preenchido no site (nome, categoria, telefone...) a cada vez que salvava o nome.
+      const p = await profileApi.updateMe({
+        displayName,
+        bio,
+        isBusinessAccount: profile?.isBusinessAccount ?? false,
+        businessName: profile?.businessName ?? undefined,
+        businessCategory: profile?.businessCategory ?? undefined,
+        businessDescription: profile?.businessDescription ?? undefined,
+        businessPhone: profile?.businessPhone ?? undefined,
+        businessWebsite: profile?.businessWebsite ?? undefined,
+      });
       setProfile(p);
       // Confirmação inline no lugar de um alerta modal.
       setSaved(true);

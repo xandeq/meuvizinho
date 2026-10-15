@@ -77,6 +77,14 @@ public class AuthService : IAuthService
     public async Task<(AuthResponse? Response, string? RefreshToken, bool RequiresTotp, Guid? TotpUserId, string? Error)> LoginAsync(LoginRequest request, string ipAddress, CancellationToken ct = default)
     {
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email.ToLowerInvariant(), ct);
+        // Conta com exclusão pendente fica IsActive=false e some do filtro global. O e-mail de exclusão
+        // promete "faça login antes do prazo para cancelar", mas o login respondia "senha incorreta".
+        var cancelsDeletion = false;
+        if (user == null)
+        {
+            user = await FindPendingDeletionAsync(request.Email, ct);
+            cancelsDeletion = user != null;
+        }
         if (user == null)
             return (null, null, false, null, "E-mail ou senha incorretos.");
 
@@ -101,6 +109,7 @@ public class AuthService : IAuthService
         // Success: reset failed attempts
         user.FailedLoginAttempts = 0;
         user.LockoutEnd = null;
+        if (cancelsDeletion) CancelPendingDeletion(user);
 
         // TOTP gate: admin users with TOTP enabled must complete a second step.
         // Return early without issuing tokens — the controller will generate a short-lived
@@ -273,6 +282,17 @@ public class AuthService : IAuthService
     {
         var normalizedEmail = email.ToLowerInvariant();
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
+        if (user == null)
+        {
+            // Mesmo caso do login por senha: entrar com o Google dentro do prazo cancela a exclusão,
+            // em vez de tentar criar outra conta com o mesmo e-mail.
+            user = await FindPendingDeletionAsync(normalizedEmail, ct);
+            if (user != null)
+            {
+                CancelPendingDeletion(user);
+                await _db.SaveChangesAsync(ct);
+            }
+        }
 
         if (user != null)
         {
@@ -332,6 +352,24 @@ public class AuthService : IAuthService
             _logger.LogError(ex, "Google mobile sign-in failed");
             return (null, null, "Erro ao verificar token Google.");
         }
+    }
+
+    private const int DeletionGraceDays = 30;
+
+    private Task<User?> FindPendingDeletionAsync(string email, CancellationToken ct)
+    {
+        var normalized = email.ToLowerInvariant();
+        var cutoff = DateTime.UtcNow.AddDays(-DeletionGraceDays);
+        return _db.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u =>
+            u.Email == normalized && !u.IsActive && u.DeletedAt == null
+            && u.DeleteRequestedAt != null && u.DeleteRequestedAt > cutoff, ct);
+    }
+
+    private void CancelPendingDeletion(User user)
+    {
+        user.DeleteRequestedAt = null;
+        user.IsActive = true;
+        _logger.LogInformation("Deletion cancelled by sign-in for user {UserId}", user.Id);
     }
 
     // ── Phase 6: Magic Link ──

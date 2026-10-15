@@ -35,7 +35,7 @@ public class AccountController : ControllerBase
         var user = await db.Users.FindAsync(new object[] { userId.Value }, ct);
         if (user?.LastExportAt != null && user.LastExportAt > DateTime.UtcNow.AddHours(-24))
         {
-            return StatusCode(429, new { error = "Exportacao permitida apenas uma vez a cada 24 horas." });
+            return StatusCode(429, new { error = "Exportação permitida apenas uma vez a cada 24 horas." });
         }
 
         var data = await _accountService.BuildExportAsync(userId.Value, ct);
@@ -60,7 +60,7 @@ public class AccountController : ControllerBase
 
         return Ok(new
         {
-            message = "Conta marcada para exclusao. Voce tem 30 dias para cancelar.",
+            message = "Conta marcada para exclusão. Para cancelar, entre de novo em até 30 dias.",
             deletionDate = deletionDate.ToString("yyyy-MM-dd")
         });
     }
@@ -77,9 +77,9 @@ public class AccountController : ControllerBase
 
         var cancelled = await _accountService.CancelDeletionAsync(userId.Value, ct);
         if (!cancelled)
-            return BadRequest(new { error = "Nao foi possivel cancelar. O periodo de carencia pode ter expirado." });
+            return BadRequest(new { error = "Não foi possível cancelar. O período de carência pode ter expirado." });
 
-        return Ok(new { message = "Exclusao cancelada. Sua conta esta ativa novamente." });
+        return Ok(new { message = "Exclusão cancelada. Sua conta está ativa novamente." });
     }
 
     /// <summary>
@@ -100,11 +100,11 @@ public class AccountController : ControllerBase
         }
         catch (InvalidOperationException ex) when (ex.Message == "ALREADY_DELETED")
         {
-            return Conflict(new { error = "Conta ja foi excluida." });
+            return Conflict(new { error = "Conta já foi excluída." });
         }
         catch (InvalidOperationException)
         {
-            return NotFound(new { error = "Conta nao encontrada." });
+            return NotFound(new { error = "Conta não encontrada." });
         }
         catch (UnauthorizedAccessException ex) when (ex.Message == "PASSWORD_REQUIRED")
         {
