@@ -30,7 +30,7 @@ export function ListingCard({ listing, onPress }: Props) {
       ]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${listing.title}, ${priceFormatter.format(listing.price)}${isSold ? ', vendido' : ''}`}
+      accessibilityLabel={`${listing.title}, ${listing.price === 0 ? 'doação' : priceFormatter.format(listing.price)}${isSold ? ', vendido' : ''}`}
     >
       <View style={[styles.imageWrap, { backgroundColor: colors.muted }]}>
         {cover ? (
@@ -50,7 +50,7 @@ export function ListingCard({ listing, onPress }: Props) {
         <Text style={[styles.title, { color: colors.fg }]} numberOfLines={2}>
           {listing.title}
         </Text>
-        <Text style={[styles.price, { color: colors.fg }]}>{priceFormatter.format(listing.price)}</Text>
+        <Text style={[styles.price, { color: listing.price === 0 ? colors.secondary : colors.fg }]}>{listing.price === 0 ? 'Doação' : priceFormatter.format(listing.price)}</Text>
         <View style={styles.sellerRow}>
           <VerifiedBadge verified={listing.sellerIsVerified} compact />
         </View>

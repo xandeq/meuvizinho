@@ -4,32 +4,33 @@ const features = [
   {
     icon: (
       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </svg>
+    ),
+    title: "Alertas de segurança",
+    desc: "O bairro avisado na hora, confirmado por vizinhos",
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <path d="M9 22v-4h6v4M8 6h.01M16 6h.01M12 6h.01M12 10h.01M12 14h.01M16 10h.01M16 14h.01M8 10h.01M8 14h.01" />
+      </svg>
+    ),
+    title: "Seu condomínio",
+    desc: "Comunicados, reservas e ocorrências",
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
         <line x1="3" y1="6" x2="21" y2="6" />
         <path d="M16 10a4 4 0 0 1-8 0" />
       </svg>
     ),
     title: "Marketplace local",
-    desc: "Compre e venda perto de você",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-    title: "Chat com vizinhos",
-    desc: "Mensagens diretas e em grupos",
-  },
-  {
-    icon: (
-      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-        <circle cx="12" cy="10" r="3" />
-      </svg>
-    ),
-    title: "Eventos e notícias",
-    desc: "Tudo que acontece no bairro",
+    desc: "Compre, venda e doe perto de você",
   },
 ];
 
@@ -48,12 +49,7 @@ export default function AuthBrandPanel({
   headline = (
     <>
       Seu bairro,<br />
-      <span
-        className="text-transparent bg-clip-text animate-gradient-text"
-        style={{
-          backgroundImage: "linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #bfdbfe 100%)",
-        }}
-      >
+      <span className="text-[#93C5FD]">
         conectado de verdade.
       </span>
     </>
@@ -109,17 +105,6 @@ export default function AuthBrandPanel({
           </defs>
           <rect width="100%" height="100%" fill="url(#grid-auth)" />
         </svg>
-
-        {/* Floating house marks */}
-        <svg className="absolute top-[18%] right-[10%] w-14 h-14 opacity-[0.09] animate-float" style={{ animationDuration: "8s", animationDelay: "0.5s" }} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-        <svg className="absolute top-[57%] right-[7%] w-9 h-9 opacity-[0.06] animate-float" style={{ animationDuration: "10s", animationDelay: "2s" }} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
-        <svg className="absolute top-[72%] left-[6%] w-11 h-11 opacity-[0.05] animate-float" style={{ animationDuration: "6s", animationDelay: "4s" }} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
-        </svg>
       </div>
 
       {/* Logo */}
@@ -149,7 +134,7 @@ export default function AuthBrandPanel({
             {headline}
           </h2>
 
-          <p className="text-sm text-white/65 leading-relaxed max-w-[34ch]">
+          <p className="text-sm text-white/75 leading-relaxed max-w-[34ch]">
             {subhead}
           </p>
         </div>
@@ -166,7 +151,7 @@ export default function AuthBrandPanel({
               </div>
               <div>
                 <p className="text-sm font-semibold text-white leading-tight">{f.title}</p>
-                <p className="text-xs text-white/55 mt-0.5">{f.desc}</p>
+                <p className="text-xs text-white/70 mt-0.5">{f.desc}</p>
               </div>
             </div>
           ))}
@@ -185,7 +170,7 @@ export default function AuthBrandPanel({
               ].join(" ")}
             >
               <p className="text-xl font-extrabold text-white tracking-tight">{s.value}</p>
-              <p className="text-[10.5px] text-white/50 mt-0.5 font-medium leading-tight">{s.label}</p>
+              <p className="text-[11.5px] text-white/75 mt-1 font-medium leading-snug">{s.label}</p>
             </div>
           ))}
         </div>

@@ -22,9 +22,9 @@ const KIND_FILTERS: { code: string; label: string }[] = [
 
 const KIND_COLORS: Record<SecurityAlertKind, string> = {
   Furto: 'bg-danger/10 text-danger',
-  Suspeito: 'bg-accent/15 text-accent',
-  Incendio: 'bg-accent/15 text-accent',
-  Acidente: 'bg-primary/10 text-primary',
+  Suspeito: 'bg-accent-light text-accent',
+  Incendio: 'bg-accent-light text-accent',
+  Acidente: 'bg-primary-light text-primary-hover',
   Outros: 'bg-muted text-muted-fg',
 };
 
@@ -102,7 +102,7 @@ export default function AlertasPage() {
   return (
     <div className="space-y-6 animate-slide-up">
       {/* Header */}
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-danger"><AlertIcon /></span>

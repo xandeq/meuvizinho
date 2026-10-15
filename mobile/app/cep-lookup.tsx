@@ -8,6 +8,7 @@ import { useOnboardingStore } from '../src/lib/onboarding-store';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../src/theme/tokens';
 import type { CepLookupResult } from '@bairronow/shared-types';
+import { StepIndicator } from '../src/components/StepIndicator';
 
 export default function CepLookup() {
   const router = useRouter();
@@ -32,6 +33,7 @@ export default function CepLookup() {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
+      <StepIndicator step={1} />
       <Text style={[styles.title, { color: colors.fg }]}>Seu endereço</Text>
       <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Para conectar você ao seu bairro</Text>
       <View style={{ height: 24 }} />

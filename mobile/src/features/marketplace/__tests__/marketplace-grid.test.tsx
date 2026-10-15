@@ -180,9 +180,10 @@ describe('Marketplace — Validator (createListingSchema)', () => {
     expect(result.success).toBe(true);
   });
 
-  it('rejects price of 0 — D-02 no "a combinar"', () => {
+  // D-02 revisto: 0 é doação explícita (exibida como "Doação"), não "a combinar".
+  it('accepts price 0 as a donation', () => {
     const result = createListingSchema.safeParse({ ...baseData, price: 0 });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it('rejects negative price', () => {

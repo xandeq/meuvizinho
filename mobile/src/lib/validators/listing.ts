@@ -14,7 +14,7 @@ export const createListingSchema = z.object({
     .max(500, 'Máximo 500 caracteres'),
   price: z
     .number({ message: 'Preço obrigatório' })
-    .positive('Preço deve ser maior que zero')
+    .min(0, 'Preço não pode ser negativo')
     .max(9_999_999, 'Valor muito alto'),
   categoryCode: z.string().min(1, 'Selecione uma categoria'),
   subcategoryCode: z.string().min(1, 'Selecione uma subcategoria'),

@@ -404,7 +404,7 @@ export default function ProfilePage() {
 
             {profile.isBusinessAccount && (
               <div className="pt-2 space-y-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-accent/15 text-accent">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-accent-light text-accent">
                   <StoreIcon />
                   Negocio local
                 </span>

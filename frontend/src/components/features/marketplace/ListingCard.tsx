@@ -133,7 +133,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           {listing.title}
         </h3>
         <p className="text-primary font-extrabold text-xl tracking-tight">
-          {BRL.format(listing.price)}
+          {listing.price === 0 ? <span className="text-secondary">Doação</span> : BRL.format(listing.price)}
         </p>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">

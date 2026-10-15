@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Artefatos locais da loja (AABs, prints, scripts com credencial de QA): nunca versionar
+/store-assets/

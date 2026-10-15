@@ -36,6 +36,8 @@ export default function SettingsScreen() {
             await authApi.logout();
           } catch {}
           logout();
+          // Limpa a pilha: sem isso a tela inicial ficava com 'voltar' para as Configurações.
+          if (router.canDismiss()) router.dismissAll();
           router.replace('/');
         },
       },

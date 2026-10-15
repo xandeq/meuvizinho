@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
 import type { PostDto, PostCategory } from '../../lib/api/feed';
+import { toCategory } from '../../lib/postCategory';
 
 const CATEGORY_LABELS: Record<PostCategory, string> = {
   0: 'Dica',
@@ -108,9 +109,10 @@ function PostImage({ uri, width, height }: { uri: string; width: number; height:
 interface PostCardProps {
   post: PostDto;
   onLike: (postId: number) => void;
+  onOpenComments?: (postId: number) => void;
 }
 
-export function PostCard({ post, onLike }: PostCardProps) {
+export function PostCard({ post, onLike, onOpenComments }: PostCardProps) {
   const { colors } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
@@ -125,10 +127,11 @@ export function PostCard({ post, onLike }: PostCardProps) {
     3: colors.primary,
     4: colors.mutedFg,
   };
-  // post.category pode vir fora do range 0-4 em dados de teste/legados.
-  const catColor = categoryColor[post.category] ?? colors.mutedFg;
-  const catLabel = CATEGORY_LABELS[post.category] ?? CATEGORY_LABELS[4];
-  const catIcon = CATEGORY_ICONS[post.category] ?? CATEGORY_ICONS[4];
+  // A API manda o nome ("Dica"); o tipo do app era só número, e tudo virava "Geral".
+  const cat = toCategory(post.category);
+  const catColor = categoryColor[cat];
+  const catLabel = CATEGORY_LABELS[cat];
+  const catIcon = CATEGORY_ICONS[cat];
 
   const images = [...post.images].sort((a, b) => a.order - b.order);
   const innerWidth = screenWidth - CARD_MARGIN * 2 - CARD_PADDING * 2;
@@ -207,14 +210,21 @@ export function PostCard({ post, onLike }: PostCardProps) {
             {post.likeCount > 0 ? post.likeCount : 'Curtir'}
           </Text>
         </Pressable>
-        <View style={s.actionBtn}>
+        {/* Antes era só texto: no app não dava para ler nem responder comentários. */}
+        <Pressable
+          style={({ pressed }) => [s.actionBtn, { opacity: pressed ? 0.6 : 1 }]}
+          onPress={onOpenComments ? () => onOpenComments(post.id) : undefined}
+          disabled={!onOpenComments}
+          accessibilityRole="button"
+          accessibilityLabel={post.commentCount > 0 ? `${post.commentCount} ${post.commentCount === 1 ? 'comentário' : 'comentários'}, abrir` : 'Comentar'}
+        >
           <Ionicons name="chatbubble-outline" size={19} color={colors.mutedFg} />
           <Text style={[s.actionText, { color: colors.mutedFg }]}>
             {post.commentCount > 0
               ? `${post.commentCount} ${post.commentCount === 1 ? 'comentário' : 'comentários'}`
-              : 'Sem comentários'}
+              : 'Comentar'}
           </Text>
-        </View>
+        </Pressable>
       </View>
     </View>
   );

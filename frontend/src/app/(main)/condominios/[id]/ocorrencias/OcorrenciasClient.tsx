@@ -166,7 +166,8 @@ export default function OcorrenciasClient() {
   const [condo, setCondo] = useState<CondominiumDetail | null>(null);
   const [residency, setResidency] = useState<MyResidentInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [scope, setScope] = useState<'mine' | 'all'>('mine');
+  // null = automático: síndico abre em 'Todas' (antes caía em 'Minhas', vazia).
+  const [scopeChoice, setScope] = useState<'mine' | 'all' | null>(null);
   const [items, setItems] = useState<IncidentDto[]>([]);
   const [listError, setListError] = useState<string | null>(null);
 
@@ -187,6 +188,7 @@ export default function OcorrenciasClient() {
   }, [condoId]);
 
   const isManager = !!condo?.isMySindico || !!user?.isAdmin;
+  const scope: 'mine' | 'all' = scopeChoice ?? (isManager ? 'all' : 'mine');
   const canUse = residency?.status === 'Approved' || isManager;
 
   const loadList = useCallback(() => {
@@ -251,7 +253,7 @@ export default function OcorrenciasClient() {
         {condo.name}
       </Link>
 
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-primary"><ToolIcon /></span>

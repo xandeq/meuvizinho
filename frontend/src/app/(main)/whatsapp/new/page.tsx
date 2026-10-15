@@ -68,7 +68,7 @@ export default function NewWhatsAppGroupPage() {
   if (done) {
     return (
       <div className="max-w-xl mx-auto space-y-6 animate-slide-up text-center py-10">
-        <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary/15 text-secondary flex items-center justify-center">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-secondary-light text-secondary flex items-center justify-center">
           <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>

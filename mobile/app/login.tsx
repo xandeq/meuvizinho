@@ -14,6 +14,7 @@ import { useAuthStore } from '../src/lib/auth-store';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../src/theme/tokens';
+import { apiErrorMessage } from '../src/lib/apiError';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -61,7 +62,7 @@ export default function Login() {
       login(data.accessToken, data.user);
       router.replace('/feed');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao entrar com Google');
+      Alert.alert('Erro', apiErrorMessage(e, 'Falha ao entrar com Google'));
     } finally {
       setGoogleLoading(false);
     }
@@ -80,7 +81,7 @@ export default function Login() {
       login(res.accessToken, res.user);
       router.replace('/feed');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao entrar');
+      Alert.alert('Erro', apiErrorMessage(e, 'Falha ao entrar'));
     } finally {
       setLoading(false);
     }
@@ -96,7 +97,7 @@ export default function Login() {
       login(data.accessToken, data.user);
       router.replace('/feed');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Código inválido');
+      Alert.alert('Erro', apiErrorMessage(e, 'Código inválido'));
     } finally {
       setTotpLoading(false);
     }

@@ -130,7 +130,7 @@ export default function CreateListingScreen() {
       />
       {errors.description && <Text style={[styles.error, { color: colors.danger }]}>{errors.description.message}</Text>}
 
-      <Text style={[styles.label, { color: colors.fg }]}>Preço (R$)</Text>
+      <Text style={[styles.label, { color: colors.fg }]}>Preço (R$) · para doar, deixe 0</Text>
       <Controller
         control={control}
         name="price"

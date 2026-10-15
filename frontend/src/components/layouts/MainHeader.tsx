@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/auth";
@@ -8,10 +8,11 @@ import { useChatStore } from "@/stores/chat-store";
 import ThemeToggle from "@/components/ThemeToggle";
 import NotificationBell from "@/components/features/NotificationBell";
 
+// Os 5 destinos principais são os mesmos no site, na barra mobile e no app.
 const navItems = [
   {
     href: "/feed/",
-    label: "Feed",
+    label: "Bairro",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -20,13 +21,34 @@ const navItems = [
     ),
   },
   {
+    href: "/condominios/",
+    label: "Condomínio",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01" />
+      </svg>
+    ),
+  },
+  {
     href: "/marketplace/",
-    label: "Marketplace",
+    label: "Mercado",
     icon: (
       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
         <line x1="3" y1="6" x2="21" y2="6" />
         <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+  },
+  {
+    href: "/alertas/",
+    label: "Alertas",
+    icon: (
+      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
     ),
   },
@@ -40,6 +62,10 @@ const navItems = [
       </svg>
     ),
   },
+];
+
+// Secundários: menu "Mais" (antes eram 12 itens soltos e o menu estourava a tela).
+const moreItems = [
   {
     href: "/groups/",
     label: "Grupos",
@@ -94,39 +120,35 @@ const navItems = [
       </svg>
     ),
   },
-  {
-    href: "/alertas/",
-    label: "Alertas",
-    icon: (
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-        <line x1="12" y1="9" x2="12" y2="13" />
-        <line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    ),
-  },
-  {
-    href: "/profile/",
-    label: "Perfil",
-    icon: (
-      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-        <circle cx="12" cy="7" r="4" />
-      </svg>
-    ),
-  },
 ];
 
 const adminNavItem = {
   href: "/admin/moderation/",
-  label: "Admin",
-  adminOnly: true,
+  label: "Moderação",
   icon: (
     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   ),
 };
+
+/** Popover simples: fecha com clique fora, Esc e ao navegar. */
+function useMenu() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  return { open, setOpen, ref };
+}
+
+const menuItemClass =
+  "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-fg hover:bg-muted focus-visible:outline-none focus-visible:bg-muted transition-colors";
 
 export default function MainHeader() {
   const router = useRouter();
@@ -140,6 +162,13 @@ export default function MainHeader() {
   const loadUnread = useChatStore((s) => s.loadUnread);
   const unreadTotal = useChatStore((s) => s.unreadTotal);
   const [scrolled, setScrolled] = useState(false);
+  const { open: moreOpen, setOpen: setMoreOpen, ref: moreRef } = useMenu();
+  const { open: accountOpen, setOpen: setAccountOpen, ref: accountRef } = useMenu();
+  const initials = (user?.displayName || user?.email || "?")
+    .split(/[\s@.]+/).filter((w) => /^\p{L}/u.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+
+  // Fecha os menus ao trocar de página.
+  useEffect(() => { setMoreOpen(false); setAccountOpen(false); }, [pathname, setMoreOpen, setAccountOpen]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -187,24 +216,23 @@ export default function MainHeader() {
         </Link>
 
         {/* Nav */}
-        <nav className="hidden md:flex items-center gap-1 bg-muted rounded-2xl p-1">
-          {[...navItems, ...(isAdmin ? [adminNavItem] : [])].map((item) => {
+        <nav aria-label="Principal" className="hidden md:flex items-center gap-1 bg-muted rounded-2xl p-1">
+          {navItems.map((item) => {
             const active = pathname?.startsWith(item.href.replace(/\/$/, ""));
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
+                aria-label={item.label}
                 className={[
                   "relative flex items-center gap-1.5 px-3 py-2 rounded-xl",
                   "text-sm font-semibold transition-all duration-200",
-                  active
-                    ? "bg-card text-primary shadow-xs"
-                    : "text-muted-fg hover:text-fg hover:bg-card/60",
-                  "adminOnly" in item && item.adminOnly ? "text-amber-600 hover:text-amber-700" : "",
+                  active ? "bg-card text-primary shadow-xs" : "text-muted-fg hover:text-fg hover:bg-card/60",
                 ].join(" ")}
               >
                 {item.icon}
-                <span>{item.label}</span>
+                <span className="hidden lg:inline">{item.label}</span>
                 {"badge" in item && item.badge && unreadTotal > 0 && (
                   <span className="absolute -top-1 -right-1 bg-danger text-white text-[9px] font-extrabold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 animate-badge-pop">
                     {unreadTotal > 99 ? "99+" : unreadTotal}
@@ -213,23 +241,89 @@ export default function MainHeader() {
               </Link>
             );
           })}
+
+          <div className="relative" ref={moreRef}>
+            <button
+              type="button"
+              aria-haspopup="menu"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((o) => !o)}
+              className={[
+                "flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-200",
+                moreOpen || [...moreItems, adminNavItem].some((i) => pathname?.startsWith(i.href.replace(/\/$/, "")))
+                  ? "bg-card text-fg"
+                  : "text-muted-fg hover:text-fg hover:bg-card/60",
+              ].join(" ")}
+            >
+              Mais
+              <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${moreOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {moreOpen && (
+              <div role="menu" className="absolute right-0 top-full mt-2 w-56 p-1.5 rounded-2xl bg-card border border-border shadow-lg animate-fade-up z-50">
+                {moreItems.map((item) => (
+                  <Link key={item.href} href={item.href} role="menuitem" className={menuItemClass}>
+                    <span className="text-muted-fg">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+                {isAdmin && (
+                  <>
+                    <div className="my-1 h-px bg-border" />
+                    <Link href={adminNavItem.href} role="menuitem" className={menuItemClass}>
+                      <span className="text-amber-700">{adminNavItem.icon}</span>
+                      {adminNavItem.label}
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
           {isAuthenticated && <NotificationBell />}
           <ThemeToggle />
-          <button
-            onClick={handleLogout}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-muted-fg hover:text-danger hover:bg-danger-light transition-all duration-200"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-            Sair
-          </button>
+          {isAuthenticated && (
+            <div className="relative" ref={accountRef}>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={accountOpen}
+                aria-label={`${initials}, sua conta`}
+                onClick={() => setAccountOpen((o) => !o)}
+                className="w-9 h-9 rounded-full bg-primary text-white text-xs font-extrabold grid place-items-center ring-2 ring-transparent hover:ring-primary/30 focus-visible:outline-none focus-visible:ring-primary/50 transition-all"
+              >
+                {initials}
+              </button>
+              {accountOpen && (
+                <div role="menu" className="absolute right-0 top-full mt-2 w-60 p-1.5 rounded-2xl bg-card border border-border shadow-lg animate-fade-up z-50">
+                  <div className="px-3 py-2.5">
+                    <p className="text-sm font-bold text-fg truncate">{user?.displayName || "Sua conta"}</p>
+                    <p className="text-xs text-muted-fg truncate">{user?.email}</p>
+                  </div>
+                  <div className="my-1 h-px bg-border" />
+                  <Link href="/profile/" role="menuitem" className={menuItemClass}>Meu perfil</Link>
+                  {/* No celular a barra de baixo só tem os 5 principais: o resto fica aqui. */}
+                  <div className="md:hidden">
+                    <div className="my-1 h-px bg-border" />
+                    {[...moreItems, ...(isAdmin ? [adminNavItem] : [])].map((item) => (
+                      <Link key={item.href} href={item.href} role="menuitem" className={menuItemClass}>
+                        <span className="text-muted-fg">{item.icon}</span>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="my-1 h-px bg-border" />
+                  <button type="button" role="menuitem" onClick={handleLogout} className={`${menuItemClass} w-full text-danger hover:bg-danger-light`}>
+                    Sair da conta
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

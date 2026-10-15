@@ -3,11 +3,30 @@ import { z } from 'zod';
 export * from './feed';
 
 export const emailSchema = z.string().email('E-mail inválido');
-export const passwordSchema = z.string().min(8, 'Senha deve ter no mínimo 8 caracteres');
+
+/**
+ * Regra de senha do cadastro e da redefinição, igual à da API
+ * (src/BairroNow.Api/Validators/PasswordRules.cs). Site e app mostram cada item
+ * ao vivo enquanto a pessoa digita, em vez de só revelar a regra no erro.
+ */
+export const PASSWORD_RULES = [
+  { id: 'length', label: '8 ou mais caracteres', test: (s: string) => s.length >= 8 },
+  { id: 'upper', label: 'Uma letra maiúscula', test: (s: string) => /[A-Z]/.test(s) },
+  { id: 'digit', label: 'Um número', test: (s: string) => /[0-9]/.test(s) },
+  { id: 'symbol', label: 'Um símbolo (!@#)', test: (s: string) => /[^A-Za-z0-9]/.test(s) },
+] as const;
+
+export const passwordSchema = z
+  .string()
+  .min(8, 'Senha deve ter no mínimo 8 caracteres')
+  .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
+  .regex(/[0-9]/, 'Senha deve conter pelo menos um número')
+  .regex(/[^A-Za-z0-9]/, 'Senha deve conter pelo menos um caractere especial');
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: passwordSchema,
+  // Login não reaplica a regra de força: só exige que a senha foi digitada.
+  password: z.string().min(1, 'Digite sua senha'),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 

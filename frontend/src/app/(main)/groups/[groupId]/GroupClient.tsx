@@ -904,7 +904,7 @@ function GroupPollsTab({
                     {poll.isClosed ? 'Encerrada' : 'Expirada'}
                   </span>
                 ) : (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary/15 text-secondary">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-secondary-light text-secondary">
                     Aberta
                   </span>
                 )}

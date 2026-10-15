@@ -31,8 +31,8 @@ const TAB_CONFIG: Record<string, { label: string; icon: keyof typeof Ionicons.gl
   feed: { label: 'Bairro', icon: 'home-outline', iconFocused: 'home' },
   marketplace: { label: 'Mercado', icon: 'storefront-outline', iconFocused: 'storefront' },
   chat: { label: 'Chat', icon: 'chatbubble-outline', iconFocused: 'chatbubble' },
-  map: { label: 'Mapa', icon: 'map-outline', iconFocused: 'map' },
-  'groups/index': { label: 'Grupos', icon: 'people-outline', iconFocused: 'people' },
+  condominio: { label: 'Condomínio', icon: 'business-outline', iconFocused: 'business' },
+  alertas: { label: 'Alertas', icon: 'warning-outline', iconFocused: 'warning' },
 };
 
 function getTabKey(routeName: string) {

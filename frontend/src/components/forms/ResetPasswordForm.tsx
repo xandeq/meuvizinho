@@ -6,22 +6,17 @@ import { z } from "zod";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { passwordSchema } from "@bairronow/shared-validators";
 import api from "@/lib/api";
-import FormField from "@/components/ui/FormField";
 import Button from "@/components/ui/Button";
+import PasswordField from "@/components/forms/PasswordField";
+import PasswordChecklist from "@/components/forms/PasswordChecklist";
 
+// Mesma regra do cadastro e da API.
 const schema = z
   .object({
-    newPassword: z
-      .string()
-      .min(8, "Senha deve ter no minimo 8 caracteres")
-      .regex(/[A-Z]/, "Senha deve conter pelo menos uma letra maiuscula")
-      .regex(/[0-9]/, "Senha deve conter pelo menos um número")
-      .regex(
-        /[^A-Za-z0-9]/,
-        "Senha deve conter pelo menos um caractere especial"
-      ),
-    confirmPassword: z.string(),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "Repita a senha"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
     message: "As senhas não coincidem",
@@ -41,8 +36,10 @@ export default function ResetPasswordForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const newPassword = watch("newPassword") ?? "";
 
   const onSubmit = async (data: FormData) => {
     setServerError(null);
@@ -58,7 +55,7 @@ export default function ResetPasswordForm() {
       const error = err as { response?: { data?: { error?: string } } };
       setServerError(
         error.response?.data?.error ||
-          "Erro ao redefinir senha. Tente novamente."
+          "Não foi possível redefinir a senha. Tente de novo."
       );
     } finally {
       setIsLoading(false);
@@ -67,38 +64,42 @@ export default function ResetPasswordForm() {
 
   if (success) {
     return (
-      <div className="text-center space-y-4">
-        <p className="text-secondary font-semibold">
-          Senha redefinida com sucesso!
-        </p>
+      <div className="text-center space-y-4 animate-fade-up" role="status">
+        <p className="font-bold text-fg text-lg">Senha redefinida</p>
+        <p className="text-sm text-muted-fg">Use a nova senha para entrar.</p>
         <Link
           href="/login/"
-          className="inline-block text-primary font-semibold hover:text-primary-hover"
+          className="inline-flex h-11 items-center px-5 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover transition-colors"
         >
-          Fazer login
+          Entrar
         </Link>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <FormField
-        label="Nova senha"
-        type="password"
-        error={errors.newPassword?.message}
-        {...register("newPassword")}
-      />
-      <FormField
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+      <div className="space-y-2">
+        <PasswordField
+          label="Nova senha"
+          autoComplete="new-password"
+          error={errors.newPassword?.message}
+          {...register("newPassword")}
+        />
+        <PasswordChecklist value={newPassword} />
+      </div>
+      <PasswordField
         label="Confirmar nova senha"
-        type="password"
+        autoComplete="new-password"
         error={errors.confirmPassword?.message}
         {...register("confirmPassword")}
       />
       {serverError && (
-        <p className="text-sm text-danger font-semibold">{serverError}</p>
+        <div role="alert" className="rounded-xl border border-danger/30 bg-danger-light px-4 py-3 text-sm text-danger font-medium">
+          {serverError}
+        </div>
       )}
-      <Button type="submit" loading={isLoading} fullWidth>
+      <Button type="submit" loading={isLoading} fullWidth size="lg">
         Redefinir senha
       </Button>
     </form>

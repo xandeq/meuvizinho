@@ -5,6 +5,7 @@ import { apiClient } from '../../../lib/api';
 import { useAuthStore } from '../../../lib/auth-store';
 import { useTheme } from '../../../theme/ThemeContext';
 import { fontFamily, radius } from '../../../theme/tokens';
+import { apiErrorMessage } from '../../../lib/apiError';
 
 export default function LgpdScreen() {
   const { colors } = useTheme();
@@ -30,7 +31,7 @@ export default function LgpdScreen() {
       if (e?.response?.status === 429) {
         Alert.alert('Aguarde', 'Aguarde 24 horas entre exportações.');
       } else {
-        Alert.alert('Erro', e?.response?.data?.error || 'Falha ao exportar dados');
+        Alert.alert('Erro', apiErrorMessage(e, 'Falha ao exportar dados'));
       }
     } finally {
       setExporting(false);
@@ -56,7 +57,7 @@ export default function LgpdScreen() {
                 'Seus dados serão anonimizados em 30 dias. Você pode cancelar a exclusão até lá.',
               );
             } catch (e: any) {
-              Alert.alert('Erro', e?.response?.data?.error || 'Falha ao solicitar exclusão');
+              Alert.alert('Erro', apiErrorMessage(e, 'Falha ao solicitar exclusão'));
             } finally {
               setDeleting(false);
             }
@@ -73,7 +74,7 @@ export default function LgpdScreen() {
       setDeleteRequested(false);
       Alert.alert('Exclusão cancelada', 'Sua conta foi restaurada.');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao cancelar exclusão');
+      Alert.alert('Erro', apiErrorMessage(e, 'Falha ao cancelar exclusão'));
     } finally {
       setCanceling(false);
     }

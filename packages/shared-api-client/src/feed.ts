@@ -38,10 +38,13 @@ export function createFeedClient(client: AxiosInstance) {
     getPost: async (
       id: number
     ): Promise<PostDto & { comments: CommentDto[] }> => {
-      const { data } = await client.get<PostDto & { comments: CommentDto[] }>(
-        `/api/v1/posts/${id}`
-      );
-      return data;
+      // A API responde { post, comments }; a página de detalhe tratava a resposta como o
+      // próprio post e quebrava ("Algo deu errado") ao ler post.author.id.
+      const { data } = await client.get<
+        { post: PostDto; comments: CommentDto[] } | (PostDto & { comments: CommentDto[] })
+      >(`/api/v1/posts/${id}`);
+      if ('post' in data && data.post) return { ...data.post, comments: data.comments ?? [] };
+      return data as PostDto & { comments: CommentDto[] };
     },
 
     createPost: async (form: FormData): Promise<PostDto> => {

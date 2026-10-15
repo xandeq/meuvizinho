@@ -11,7 +11,7 @@ export const listingSchema = z.object({
     .max(500, "Máximo 500 caracteres"),
   price: z
     .number({ message: "Preço obrigatório" })
-    .positive("Preço deve ser maior que zero")
+    .min(0, "Preço não pode ser negativo")
     .max(999_999, "Preço muito alto"),
   categoryCode: z.enum(CATEGORY_CODES as [string, ...string[]], {
     message: "Categoria inválida",

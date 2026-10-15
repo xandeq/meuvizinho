@@ -10,11 +10,13 @@ import {
   Platform,
   ActivityIndicator,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius } from '../../theme/tokens';
 import type { PostCategory } from '../../lib/api/feed';
+import { useKeyboardHeight } from '../../lib/useKeyboardHeight';
 
 const CATEGORIES: { value: PostCategory; label: string }[] = [
   { value: 4, label: 'Geral' },
@@ -37,12 +39,23 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleClose = () => {
-    if (submitting) return;
+  const keyboardHeight = useKeyboardHeight();
+
+  const discard = () => {
     setBody('');
     setCategory(4);
     setError(null);
     onClose();
+  };
+
+  // Voltar/fundo/X apagavam o texto sem perguntar.
+  const handleClose = () => {
+    if (submitting) return;
+    if (!body.trim()) return discard();
+    Alert.alert('Descartar o post?', 'O texto que você escreveu será perdido.', [
+      { text: 'Continuar escrevendo', style: 'cancel' },
+      { text: 'Descartar', style: 'destructive', onPress: discard },
+    ]);
   };
 
   const handleSubmit = async () => {
@@ -67,8 +80,8 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
     <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
       <Pressable style={s.backdrop} onPress={handleClose} accessibilityRole="button" accessibilityLabel="Fechar" />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={s.sheetWrapper}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={[s.sheetWrapper, Platform.OS === 'android' && { bottom: keyboardHeight }]}
       >
         <View style={s.sheet}>
           {/* Handle */}

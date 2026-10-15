@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
           label="Views totais"
           value={data.totalViews.toLocaleString("pt-BR")}
           icon={<EyeIcon />}
-          iconBg="bg-primary/10 text-primary"
+          iconBg="bg-primary-light text-primary-hover"
         />
         <KpiCard
           label="Esta semana"
@@ -232,7 +232,7 @@ export default function AnalyticsPage() {
               : "sem avaliações"
           }
           icon={<StarFilledIcon />}
-          iconBg="bg-accent/15 text-accent"
+          iconBg="bg-accent-light text-accent"
         />
         <KpiCard
           label="Views 30 dias"

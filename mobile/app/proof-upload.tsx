@@ -8,6 +8,7 @@ import { verificationApi } from '../src/lib/api';
 import { useOnboardingStore } from '../src/lib/onboarding-store';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../src/theme/tokens';
+import { StepIndicator } from '../src/components/StepIndicator';
 
 export default function ProofUpload() {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function ProofUpload() {
 
   return (
     <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.bg }]}>
+      <StepIndicator step={2} />
       <Text style={[styles.title, { color: colors.fg }]}>Comprovante de residência</Text>
       <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Conta de luz, água, internet ou similar</Text>
       <View style={{ height: 24 }} />

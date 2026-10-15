@@ -1,5 +1,6 @@
 // Wave P + master merged 2026-06-29
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Models.Enums;
 
@@ -75,6 +76,22 @@ public class AppDbContext : DbContext
     // Wave T — Comunicados oficiais do síndico
     public DbSet<CondominiumAnnouncement> Announcements => Set<CondominiumAnnouncement>();
     public DbSet<CondominiumIncident> CondominiumIncidents => Set<CondominiumIncident>();
+
+    // Todas as datas são gravadas em UTC, mas o SQL Server devolve Kind=Unspecified e o JSON
+    // saía sem 'Z': app e site liam como hora local e erravam em 3h ("há 4 h" num post de 7 h).
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();
+        configurationBuilder.Properties<DateTime?>().HaveConversion<NullableUtcDateTimeConverter>();
+    }
+
+    private sealed class UtcDateTimeConverter() : ValueConverter<DateTime, DateTime>(
+        v => v.Kind == DateTimeKind.Local ? v.ToUniversalTime() : v,
+        v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
+
+    private sealed class NullableUtcDateTimeConverter() : ValueConverter<DateTime?, DateTime?>(
+        v => v.HasValue && v.Value.Kind == DateTimeKind.Local ? v.Value.ToUniversalTime() : v,
+        v => v.HasValue ? DateTime.SpecifyKind(v.Value, DateTimeKind.Utc) : v);
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

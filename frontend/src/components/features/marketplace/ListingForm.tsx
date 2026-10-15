@@ -110,6 +110,7 @@ export default function ListingForm({
         <label className="block text-sm font-bold text-fg mb-1">
           Preço (R$)
         </label>
+        <p className="text-xs text-muted-fg mb-1.5">Para doar, deixe 0.</p>
         <input
           type="number"
           step="0.01"

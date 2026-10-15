@@ -15,8 +15,8 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
 const STATUS_BADGE: Record<AreaReservationStatus, string> = {
-  Pending: 'bg-accent/15 text-accent',
-  Approved: 'bg-secondary/15 text-secondary',
+  Pending: 'bg-accent-light text-accent',
+  Approved: 'bg-secondary-light text-secondary',
   Rejected: 'bg-danger/10 text-danger',
   Cancelled: 'bg-muted text-muted-fg',
 };
@@ -229,8 +229,8 @@ export default function GerenciarReservasClient() {
 
         <div className="flex flex-wrap gap-2 items-end bg-card border border-border/50 rounded-2xl p-3">
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Área</label>
-            <select
+            <label htmlFor="f-area" className="text-xs font-medium text-muted-fg mb-1 block">Área</label>
+            <select id="f-area"
               value={filterAreaId}
               onChange={(e) => setFilterAreaId(e.target.value)}
               className="px-3 py-2 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary text-sm font-medium"
@@ -240,8 +240,8 @@ export default function GerenciarReservasClient() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Status</label>
-            <select
+            <label htmlFor="f-status" className="text-xs font-medium text-muted-fg mb-1 block">Status</label>
+            <select id="f-status"
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
               className="px-3 py-2 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary text-sm font-medium"
@@ -250,12 +250,12 @@ export default function GerenciarReservasClient() {
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">De</label>
-            <input type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} className="px-3 py-2 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary text-sm font-medium" />
+            <label htmlFor="f-from" className="text-xs font-medium text-muted-fg mb-1 block">De</label>
+            <input id="f-from" type="date" value={filterFrom} onChange={(e) => setFilterFrom(e.target.value)} className="px-3 py-2 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary text-sm font-medium" />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Até</label>
-            <input type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} className="px-3 py-2 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary text-sm font-medium" />
+            <label htmlFor="f-to" className="text-xs font-medium text-muted-fg mb-1 block">Até</label>
+            <input id="f-to" type="date" value={filterTo} onChange={(e) => setFilterTo(e.target.value)} className="px-3 py-2 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary text-sm font-medium" />
           </div>
           <Button variant="secondary" size="sm" onClick={loadAgenda}>Filtrar</Button>
         </div>

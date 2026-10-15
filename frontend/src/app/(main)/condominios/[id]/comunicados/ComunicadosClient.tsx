@@ -158,7 +158,7 @@ export default function ComunicadosClient() {
         {condo.name}
       </Link>
 
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-primary"><MegaphoneIcon /></span>
@@ -251,7 +251,7 @@ export default function ComunicadosClient() {
                   <p className="text-sm text-muted-fg line-clamp-2 mt-1">{a.bodyPreview}</p>
                 </div>
                 {a.isImportant && (
-                  <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">
+                  <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">
                     Importante
                   </span>
                 )}

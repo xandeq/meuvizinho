@@ -12,6 +12,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import { ListSkeleton } from '../../src/components/Skeleton';
 import { SearchField } from '../../src/components/SearchField';
+import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
 
 const STATUS_COLOR: Record<CondominiumStatus, 'mutedFg' | 'accent' | 'secondary'> = {
   Unclaimed: 'mutedFg',
@@ -23,6 +24,7 @@ export default function CondominiumsScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const user = useAuthStore((s) => s.user);
   const isVerified = !!user?.isVerified;
   const bairroId = user?.bairroId ?? 0;
@@ -150,7 +152,7 @@ export default function CondominiumsScreen() {
 
       <Modal visible={showCreate} animationType="slide" transparent onRequestClose={() => setShowCreate(false)}>
         <Pressable style={styles.backdrop} onPress={() => setShowCreate(false)} accessibilityRole="button" accessibilityLabel="Fechar" />
-        <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, paddingBottom: 20 + insets.bottom }]}>
+        <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, paddingBottom: 20 + insets.bottom, bottom: keyboardHeight }]}>
           <View style={[styles.handle, { backgroundColor: colors.border }]} />
           <View style={styles.sheetHeader}>
             <Text style={[styles.sheetTitle, { color: colors.fg }]}>Cadastrar condomínio</Text>

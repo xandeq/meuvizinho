@@ -251,7 +251,7 @@ export default function GerenciarComunicadosClient() {
         Comunicados
       </Link>
 
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-extrabold text-fg leading-tight">Gerenciar comunicados</h1>
           <p className="text-muted-fg font-medium text-sm">{condo.name}</p>
@@ -368,13 +368,13 @@ export default function GerenciarComunicadosClient() {
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {a.isImportant && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">Importante</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">Importante</span>
                   )}
                   {a.isExpired && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-muted text-muted-fg">Expirado</span>
                   )}
                   {a.deletedAt && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger/10 text-danger">Excluído</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-danger-light text-red-700 dark:text-red-300">Excluído</span>
                   )}
                 </div>
               </div>

@@ -17,11 +17,15 @@ export default function TabsLayout() {
         sceneStyle: { paddingTop: insets.top, backgroundColor: colors.bg },
       }}
     >
+      {/* Mesmos 5 destinos do site (menu do topo e barra mobile). */}
       <Tabs.Screen name="feed" options={{ title: 'Bairro' }} />
+      <Tabs.Screen name="condominio" options={{ title: 'Condomínio' }} />
       <Tabs.Screen name="marketplace" options={{ title: 'Mercado' }} />
+      <Tabs.Screen name="alertas" options={{ title: 'Alertas' }} />
       <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
-      <Tabs.Screen name="map" options={{ title: 'Mapa' }} />
-      <Tabs.Screen name="groups/index" options={{ title: 'Grupos' }} />
+      {/* Mapa e Grupos saem da barra: atalhos no cabeçalho do Bairro. */}
+      <Tabs.Screen name="map" options={{ href: null }} />
+      <Tabs.Screen name="groups/index" options={{ href: null }} />
       {/* Nested group routes live under the tab bar but must not become tabs. */}
       <Tabs.Screen name="groups/new" options={{ href: null }} />
       <Tabs.Screen name="groups/[groupId]" options={{ href: null }} />

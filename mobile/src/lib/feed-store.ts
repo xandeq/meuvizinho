@@ -17,6 +17,7 @@ interface FeedState {
   refresh: (bairroId: number) => Promise<void>;
   createPost: (category: PostCategory, body: string) => Promise<void>;
   toggleLike: (postId: number) => Promise<void>;
+  bumpComments: (postId: number) => void;
   reset: () => void;
 }
 
@@ -97,5 +98,7 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     }
   },
 
+  bumpComments: (postId) =>
+    set((st) => ({ posts: st.posts.map((p) => (p.id === postId ? { ...p, commentCount: p.commentCount + 1 } : p)) })),
   reset: () => set({ posts: [], cursor: null, hasMore: true, loading: false, refreshing: false }),
 }));

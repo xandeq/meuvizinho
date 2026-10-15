@@ -24,8 +24,9 @@ describe("listingSchema", () => {
     ).toThrow();
   });
 
-  it("rejects price <= 0", () => {
-    expect(() => listingSchema.parse({ ...valid, price: 0 })).toThrow();
+  // D-02 revisto: 0 é doação explícita (exibida como "Doação"); negativo continua inválido.
+  it("accepts price 0 as donation and rejects negative", () => {
+    expect(() => listingSchema.parse({ ...valid, price: 0 })).not.toThrow();
     expect(() => listingSchema.parse({ ...valid, price: -10 })).toThrow();
   });
 

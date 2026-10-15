@@ -116,7 +116,7 @@ export default function AreasComunsClient() {
         {condo.name}
       </Link>
 
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-primary"><DoorIcon /></span>
@@ -208,7 +208,7 @@ export default function AreasComunsClient() {
                     </div>
                     <p className="font-bold text-fg leading-tight group-hover:text-primary transition-colors line-clamp-1">{a.name}</p>
                   </div>
-                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${a.requiresApproval ? 'bg-accent/15 text-accent' : 'bg-secondary/15 text-secondary'}`}>
+                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${a.requiresApproval ? 'bg-accent-light text-accent' : 'bg-secondary-light text-secondary'}`}>
                     {a.requiresApproval ? 'Aprovação do síndico' : 'Reserva automática'}
                   </span>
                 </div>

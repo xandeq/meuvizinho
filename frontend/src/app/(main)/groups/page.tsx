@@ -9,13 +9,13 @@ import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
 
 const CATEGORY_COLORS: Record<GroupCategory, string> = {
-  Esportes:   'bg-secondary/15 text-secondary',
-  Animais:    'bg-accent/15 text-accent',
-  Pais:       'bg-secondary/15 text-secondary',
+  Esportes:   'bg-secondary-light text-secondary',
+  Animais:    'bg-accent-light text-accent',
+  Pais:       'bg-secondary-light text-secondary',
   Seguranca:  'bg-danger/10 text-danger',
-  Jardinagem: 'bg-secondary/15 text-secondary',
-  Negocios:   'bg-primary/10 text-primary',
-  Cultura:    'bg-accent/15 text-accent',
+  Jardinagem: 'bg-secondary-light text-secondary',
+  Negocios:   'bg-primary-light text-primary-hover',
+  Cultura:    'bg-accent-light text-accent',
   Outros:     'bg-muted text-muted-fg',
 };
 
@@ -79,7 +79,7 @@ export default function GroupsPage() {
   return (
     <div className="space-y-6 animate-slide-up">
       {/* Header */}
-      <header className="flex items-end justify-between gap-4">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <span className="text-primary"><GroupsIcon /></span>

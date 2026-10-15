@@ -10,7 +10,7 @@ public class CreateListingRequestValidator : AbstractValidator<CreateListingRequ
     {
         RuleFor(x => x.Title).NotEmpty().Length(3, 120);
         RuleFor(x => x.Description).NotEmpty().Length(10, 500);
-        RuleFor(x => x.Price).GreaterThan(0).LessThanOrEqualTo(999999);
+        RuleFor(x => x.Price).GreaterThanOrEqualTo(0).LessThanOrEqualTo(999999); // 0 = doação
         RuleFor(x => x.CategoryCode)
             .NotEmpty()
             .Must(Categories.IsValidCategoryCode).WithMessage("Categoria inválida.");
@@ -25,7 +25,7 @@ public class UpdateListingRequestValidator : AbstractValidator<UpdateListingRequ
     {
         When(x => x.Title != null, () => RuleFor(x => x.Title!).Length(3, 120));
         When(x => x.Description != null, () => RuleFor(x => x.Description!).Length(10, 500));
-        When(x => x.Price.HasValue, () => RuleFor(x => x.Price!.Value).GreaterThan(0).LessThanOrEqualTo(999999));
+        When(x => x.Price.HasValue, () => RuleFor(x => x.Price!.Value).GreaterThanOrEqualTo(0).LessThanOrEqualTo(999999));
         When(x => x.CategoryCode != null,
             () => RuleFor(x => x.CategoryCode!).Must(Categories.IsValidCategoryCode).WithMessage("Categoria inválida."));
     }
