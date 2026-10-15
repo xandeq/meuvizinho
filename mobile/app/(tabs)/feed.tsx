@@ -74,7 +74,8 @@ export default function FeedScreen() {
             place={bairroName}
             actions={
               <>
-                <HeaderIconButton icon="shield-outline" label="Alertas de segurança" onPress={() => router.push('/alertas')} />
+                <HeaderIconButton icon="map-outline" label="Mapa do bairro" onPress={() => router.push('/map')} />
+                <HeaderIconButton icon="people-outline" label="Grupos" onPress={() => router.push('/groups')} />
                 {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}
                 <HeaderIconButton icon="person-outline" label="Meu perfil" onPress={() => router.push('/profile')} />
               </>

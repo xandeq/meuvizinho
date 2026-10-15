@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
 import type { PostDto, PostCategory } from '../../lib/api/feed';
+import { toCategory } from '../../lib/postCategory';
 
 const CATEGORY_LABELS: Record<PostCategory, string> = {
   0: 'Dica',
@@ -125,10 +126,11 @@ export function PostCard({ post, onLike }: PostCardProps) {
     3: colors.primary,
     4: colors.mutedFg,
   };
-  // post.category pode vir fora do range 0-4 em dados de teste/legados.
-  const catColor = categoryColor[post.category] ?? colors.mutedFg;
-  const catLabel = CATEGORY_LABELS[post.category] ?? CATEGORY_LABELS[4];
-  const catIcon = CATEGORY_ICONS[post.category] ?? CATEGORY_ICONS[4];
+  // A API manda o nome ("Dica"); o tipo do app era só número, e tudo virava "Geral".
+  const cat = toCategory(post.category);
+  const catColor = categoryColor[cat];
+  const catLabel = CATEGORY_LABELS[cat];
+  const catIcon = CATEGORY_ICONS[cat];
 
   const images = [...post.images].sort((a, b) => a.order - b.order);
   const innerWidth = screenWidth - CARD_MARGIN * 2 - CARD_PADDING * 2;

@@ -12,6 +12,7 @@ import { Button } from '../../../../src/components/Button';
 import { EmptyState } from '../../../../src/components/EmptyState';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../../src/theme/tokens';
+import { apiErrorMessage } from '../../../../src/lib/apiError';
 
 const STEP_HINT: Record<IncidentStatus, string> = {
   Aberta: 'Enviada ao síndico',
@@ -55,7 +56,7 @@ export default function OcorrenciaDetalheScreen() {
       setItem(await updateIncidentStatus(condoId, Number(incidentId), { status, responseNote: note.trim() || undefined }));
       setNote('');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Não foi possível atualizar.');
+      Alert.alert('Erro', apiErrorMessage(e, 'Não foi possível atualizar.'));
     } finally {
       setSaving(null);
     }

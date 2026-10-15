@@ -18,8 +18,9 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary',
   const isSecondary = variant === 'secondary';
   const isDanger = variant === 'danger';
 
-  const bg = isOutline ? 'transparent' : isDanger ? colors.dangerFill : isSecondary ? colors.secondaryFill : colors.primaryFill;
-  const textColor = isOutline ? colors.primary : '#FFFFFF';
+  const off = !!disabled && !loading;
+  const bg = off && !isOutline ? colors.muted : isOutline ? 'transparent' : isDanger ? colors.dangerFill : isSecondary ? colors.secondaryFill : colors.primaryFill;
+  const textColor = off ? colors.mutedFg : isOutline ? colors.primary : '#FFFFFF';
   const elevationShadow = isOutline || isDanger ? {} : isSecondary ? shadow.emerald : shadow.blue;
 
   return (
@@ -33,8 +34,9 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary',
         styles.base,
         { backgroundColor: bg, borderRadius: radius.md },
         isOutline && { borderWidth: 2, borderColor: colors.primary },
-        !isOutline && elevationShadow,
-        (loading || disabled) && { opacity: 0.6 },
+        !isOutline && !off && elevationShadow,
+        off && isOutline && { borderColor: colors.border },
+        loading && { opacity: 0.7 },
         pressed && !loading && !disabled && { transform: [{ scale: 0.97 }], opacity: 0.92 },
       ]}
     >

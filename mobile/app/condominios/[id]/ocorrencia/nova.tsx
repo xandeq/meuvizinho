@@ -7,6 +7,7 @@ import { INCIDENT_CATEGORIES, type IncidentCategory } from '../../../../src/lib/
 import { Button } from '../../../../src/components/Button';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../../../src/theme/tokens';
+import { apiErrorMessage } from '../../../../src/lib/apiError';
 
 const TITLE_MIN = 4;
 const DESCRIPTION_MIN = 10;
@@ -39,7 +40,7 @@ export default function NovaOcorrenciaScreen() {
       });
       router.replace(`/condominios/${condoId}/ocorrencia/${created.id}`);
     } catch (e: any) {
-      setError(e?.response?.data?.error || 'Não foi possível enviar. Tente de novo.');
+      setError(apiErrorMessage(e, 'Não foi possível enviar. Tente de novo.'));
     } finally {
       setSending(false);
     }

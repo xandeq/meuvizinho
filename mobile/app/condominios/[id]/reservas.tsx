@@ -9,6 +9,7 @@ import { EmptyState } from '../../../src/components/EmptyState';
 import { ListSkeleton } from '../../../src/components/Skeleton';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
+import { apiErrorMessage } from '../../../src/lib/apiError';
 
 export default function MinhasReservasScreen() {
   const { colors } = useTheme();
@@ -68,7 +69,7 @@ export default function MinhasReservasScreen() {
             await cancelReservation(condoId, r.id);
             load();
           } catch (e: any) {
-            Alert.alert('Erro', e?.response?.data?.error || 'Não foi possível cancelar.');
+            Alert.alert('Erro', apiErrorMessage(e, 'Não foi possível cancelar.'));
           } finally {
             setCancelling(null);
           }

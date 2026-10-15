@@ -484,8 +484,16 @@ try
 
     // Static files for uploaded marketplace + chat images.
     // Cache-Control: public, max-age=31536000, immutable (Research Open Question 2)
+    // Se wwwroot não existe na partida (deploy sem a pasta; ela nasce no 1º upload), o ASP.NET
+    // fixa um provedor vazio e as fotos novas dão 404 até a API reiniciar. Garante a pasta e
+    // serve dela explicitamente (mesmo caminho do FileStorageService.ResolveWebRoot).
+    var webRootPath = string.IsNullOrEmpty(app.Environment.WebRootPath)
+        ? Path.Combine(app.Environment.ContentRootPath, "wwwroot")
+        : app.Environment.WebRootPath;
+    Directory.CreateDirectory(webRootPath);
     app.UseStaticFiles(new StaticFileOptions
     {
+        FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(webRootPath),
         OnPrepareResponse = ctx =>
         {
             var path = ctx.Context.Request.Path.Value ?? string.Empty;

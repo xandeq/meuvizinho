@@ -12,6 +12,7 @@ import { authApi } from '../src/lib/api';
 import { useAuthStore } from '../src/lib/auth-store';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius } from '../src/theme/tokens';
+import { apiErrorMessage } from '../src/lib/apiError';
 
 export default function Register() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function Register() {
       login(res.accessToken, res.user);
       router.replace('/cep-lookup');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao cadastrar');
+      Alert.alert('Erro', apiErrorMessage(e, 'Falha ao cadastrar'));
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { useAuthStore } from '../src/lib/auth-store';
 import { apiClient } from '../src/lib/api';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily } from '../src/theme/tokens';
+import { apiErrorMessage } from '../src/lib/apiError';
 
 export default function AuthCallbackScreen() {
   const router = useRouter();
@@ -28,7 +29,7 @@ export default function AuthCallbackScreen() {
         login(data.accessToken, data.user);
         router.replace('/feed');
       } catch (e: any) {
-        const msg = e?.response?.data?.error || 'Link inválido ou expirado';
+        const msg = apiErrorMessage(e, 'Link inválido ou expirado');
         setError(msg);
         Alert.alert('Erro', msg);
       }

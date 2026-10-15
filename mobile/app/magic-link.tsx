@@ -6,6 +6,7 @@ import { Button } from '../src/components/Button';
 import { apiClient } from '../src/lib/api';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily } from '../src/theme/tokens';
+import { apiErrorMessage } from '../src/lib/apiError';
 
 export default function MagicLinkScreen() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function MagicLinkScreen() {
       await apiClient.post('/api/v1/auth/magic-link/request', { email: email.trim() });
       setSent(true);
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.error || 'Falha ao enviar link');
+      Alert.alert('Erro', apiErrorMessage(e, 'Falha ao enviar link'));
     } finally {
       setLoading(false);
     }
