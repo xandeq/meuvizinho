@@ -43,11 +43,24 @@ public class AuthController : ControllerBase
         if (!validation.IsValid)
             return ValidationError(validation);
 
-        var (response, error) = await _authService.RegisterAsync(request, GetIpAddress(), ct);
+        var (_, error) = await _authService.RegisterAsync(request, GetIpAddress(), ct);
         if (error != null)
             return Conflict(new { error });
 
-        return StatusCode(201, new { message = "Conta criada. Verifique seu e-mail para confirmar." });
+        // Já entra na conta: o app (inclusive a 0.2.0 da loja) espera accessToken/user aqui
+        // e ficava "logado" sem token. Reaproveita o login para emitir também o refresh token.
+        var (session, refreshToken, _, _, loginError) = await _authService.LoginAsync(
+            new LoginRequest(request.Email, request.Password), GetIpAddress(), ct);
+        if (loginError != null || session == null)
+            return StatusCode(201, new { message = "Conta criada. Entre com seu e-mail e senha." });
+
+        SetRefreshTokenCookie(refreshToken!);
+        return StatusCode(201, new
+        {
+            message = "Conta criada. Enviamos um e-mail para confirmar seu endereço.",
+            accessToken = session.AccessToken,
+            user = session.User,
+        });
     }
 
     [HttpPost("login")]

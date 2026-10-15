@@ -3,6 +3,7 @@ using BairroNow.Api.Models.DTOs;
 using BairroNow.Api.Services;
 using BairroNow.Api.Validators;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -36,6 +37,25 @@ public class AuthControllerValidationTests
 
         result.Should().BeOfType<BadRequestObjectResult>();
         _auth.Verify(a => a.RegisterAsync(It.IsAny<RegisterRequest>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Register_Success_ReturnsSession_AndSetsRefreshCookie()
+    {
+        var user = new UserInfo(Guid.NewGuid(), "novo@b.com", null, false, null, false, false);
+        _auth.Setup(a => a.RegisterAsync(It.IsAny<RegisterRequest>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new AuthResponse("tok-reg", user), (string?)null));
+        _auth.Setup(a => a.LoginAsync(It.IsAny<LoginRequest>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((new AuthResponse("tok-login", user), "refresh-1", false, (Guid?)null, (string?)null));
+        var controller = Controller();
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+
+        var result = await controller.Register(new RegisterRequest("novo@b.com", "Forte123!", "Forte123!", true), default);
+
+        var created = result.Should().BeOfType<ObjectResult>().Subject;
+        created.StatusCode.Should().Be(201);
+        created.Value!.GetType().GetProperty("accessToken")!.GetValue(created.Value).Should().Be("tok-login");
+        controller.Response.Headers.SetCookie.ToString().Should().Contain("refreshToken=");
     }
 
     [Fact]
