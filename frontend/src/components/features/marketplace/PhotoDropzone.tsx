@@ -69,7 +69,7 @@ export default function PhotoDropzone({
               ? "Solte as imagens aqui"
               : "Arraste fotos ou clique para escolher"}
           </p>
-          <p className="text-xs text-fg/50 mt-1">
+          <p className="text-xs text-muted-fg mt-1">
             JPG/PNG, máx 5MB cada, até {max} fotos
           </p>
         </div>

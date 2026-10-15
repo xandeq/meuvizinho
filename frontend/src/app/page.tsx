@@ -346,7 +346,8 @@ export default function LandingPage() {
         {/* Decorative circles — low opacity, partially off-screen */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute w-[36rem] h-[36rem] rounded-full bg-primary opacity-[0.12] -top-40 -right-40" />
-          <div className="absolute w-72 h-72 rounded-full bg-accent opacity-[0.12] -bottom-20 left-10" />
+          {/* Era âmbar a 12% sobre o azul-marinho: virava mancha marrom atrás do "Já tem conta?". */}
+          <div className="absolute w-80 h-80 rounded-full bg-primary opacity-[0.08] -bottom-40 -left-32" />
           <div className="absolute w-40 h-40 rotate-45 rounded-lg bg-secondary opacity-[0.08] bottom-1/3 right-1/4" />
         </div>
 

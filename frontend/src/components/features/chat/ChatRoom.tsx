@@ -156,7 +156,7 @@ export default function ChatRoom({
         className="flex-1 overflow-y-auto p-3"
       >
         {loadingMore && (
-          <p className="text-center text-xs text-fg/50 mb-2">
+          <p className="text-center text-xs text-muted-fg mb-2">
             Carregando...
           </p>
         )}

@@ -186,7 +186,7 @@ export default function ListingDetailClient() {
           Publicado em {new Date(listing.createdAt).toLocaleDateString("pt-BR")}
         </p>
         {listing.daysUntilExpiry != null && !isSold && !isExpired && (
-          <p className={`text-sm font-semibold ${listing.daysUntilExpiry <= 3 ? "text-accent" : "text-fg/50"}`}>
+          <p className={`text-sm font-semibold ${listing.daysUntilExpiry <= 3 ? "text-accent" : "text-muted-fg"}`}>
             {listing.daysUntilExpiry === 0
               ? "Expira hoje"
               : `Expira em ${listing.daysUntilExpiry} dia${listing.daysUntilExpiry !== 1 ? "s" : ""}`}

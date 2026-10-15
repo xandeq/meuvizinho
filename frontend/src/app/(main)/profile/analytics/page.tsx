@@ -93,7 +93,7 @@ function KpiCard({
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-xs uppercase font-bold text-fg/50 tracking-wide leading-none">{label}</p>
+        <p className="text-xs uppercase font-bold text-muted-fg tracking-wide leading-none">{label}</p>
         <p className="text-2xl font-extrabold text-fg leading-tight mt-1">{value}</p>
         {sub && <p className="text-xs text-muted-fg mt-0.5">{sub}</p>}
       </div>
