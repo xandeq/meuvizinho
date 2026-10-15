@@ -290,8 +290,9 @@ export default function AreaDetailClient() {
             )}
 
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Data</label>
+              <label htmlFor="areadetail-data" className="text-xs font-medium text-muted-fg mb-1 block">Data</label>
               <input
+                id="areadetail-data"
                 type="date"
                 aria-label="Data"
                 value={date}
@@ -304,8 +305,9 @@ export default function AreaDetailClient() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-medium text-muted-fg mb-1 block">Início</label>
+                <label htmlFor="areadetail-inicio" className="text-xs font-medium text-muted-fg mb-1 block">Início</label>
                 <input
+                  id="areadetail-inicio"
                   type="time"
                   aria-label="Horário de início"
                   value={startTime}
@@ -314,8 +316,9 @@ export default function AreaDetailClient() {
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-fg mb-1 block">Término</label>
+                <label htmlFor="areadetail-termino" className="text-xs font-medium text-muted-fg mb-1 block">Término</label>
                 <input
+                  id="areadetail-termino"
                   type="time"
                   aria-label="Horário de término"
                   value={endTime}
@@ -346,8 +349,9 @@ export default function AreaDetailClient() {
             )}
 
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Motivo (opcional)</label>
+              <label htmlFor="areadetail-motivo-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Motivo (opcional)</label>
               <input
+                id="areadetail-motivo-opcional"
                 value={title}
                 onChange={(e) => setTitle(e.target.value.slice(0, 120))}
                 placeholder="Ex: Aniversário"

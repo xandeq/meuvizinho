@@ -124,8 +124,9 @@ export default function NewAlertaPage() {
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-semibold text-fg mb-1">O que aconteceu?</label>
+          <label htmlFor="page-o-que-aconteceu" className="block text-sm font-semibold text-fg mb-1">O que aconteceu?</label>
           <textarea
+            id="page-o-que-aconteceu"
             {...register('description')}
             rows={4}
             placeholder="Descreva o que você viu ou presenciou..."

@@ -485,10 +485,11 @@ export default function ProfilePage() {
               maxLength={80}
             />
             <div>
-              <label className="block text-sm font-semibold text-fg mb-1">
+              <label htmlFor="page-bio" className="block text-sm font-semibold text-fg mb-1">
                 Bio
               </label>
               <textarea
+                id="page-bio"
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={160}
@@ -548,10 +549,11 @@ export default function ProfilePage() {
                     placeholder="Ex: Alimentacao, Servicos, Comercio"
                   />
                   <div>
-                    <label className="block text-sm font-semibold text-fg mb-1">
+                    <label htmlFor="page-descricao" className="block text-sm font-semibold text-fg mb-1">
                       Descricao
                     </label>
                     <textarea
+                      id="page-descricao"
                       value={businessDescription}
                       onChange={(e) => setBusinessDescription(e.target.value)}
                       maxLength={300}

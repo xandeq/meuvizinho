@@ -132,8 +132,9 @@ export default function VincularClient() {
           <p className="font-bold text-fg">Solicitar vínculo</p>
           {formError && <p className="text-danger text-xs">{formError}</p>}
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Unidade (opcional)</label>
+            <label htmlFor="vincular-unidade-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Unidade (opcional)</label>
             <input
+              id="vincular-unidade-opcional"
               value={unit}
               onChange={(e) => setUnit(e.target.value.slice(0, 60))}
               placeholder="Ex: Bloco B, Apto 302"

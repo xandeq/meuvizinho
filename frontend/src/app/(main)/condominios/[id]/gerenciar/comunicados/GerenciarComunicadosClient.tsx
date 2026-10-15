@@ -90,6 +90,7 @@ export default function GerenciarComunicadosClient() {
   }, [condoId, isManager, includeDeleted]);
 
   const openCreateForm = () => {
+    setSuccess(null);
     setEditingId(null);
     setForm(emptyForm);
     setFormError(null);
@@ -116,6 +117,13 @@ export default function GerenciarComunicadosClient() {
       setBusyId(null);
     }
   };
+
+  const [success, setSuccess] = useState<string | null>(null);
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSuccess(null), 6000);
+    return () => clearTimeout(t);
+  }, [success]);
 
   const closeForm = () => {
     setShowForm(false);
@@ -161,9 +169,12 @@ export default function GerenciarComunicadosClient() {
     setSaving(true);
     setFormError(null);
     try {
-      if (editingId != null) await updateAnnouncement(condoId, editingId, input);
+      const wasEditing = editingId != null;
+      if (wasEditing) await updateAnnouncement(condoId, editingId, input);
       else await createAnnouncement(condoId, input);
       closeForm();
+      // Antes o formulário só fechava, sem dizer se tinha publicado nem se os moradores foram avisados.
+      setSuccess(wasEditing ? 'Alterações salvas.' : 'Comunicado publicado. Os moradores do condomínio foram notificados.');
       loadItems();
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -260,6 +271,11 @@ export default function GerenciarComunicadosClient() {
       </header>
 
       {listError && <p className="text-sm text-danger font-semibold">{listError}</p>}
+      {success && (
+        <p role="status" className="text-sm font-semibold text-secondary bg-secondary/10 border border-secondary/30 rounded-xl px-4 py-3">
+          {success}
+        </p>
+      )}
 
       {showForm && (
         <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-4 space-y-3">
@@ -267,39 +283,42 @@ export default function GerenciarComunicadosClient() {
           {formError && <p className="text-danger text-xs">{formError}</p>}
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Título</label>
+            <label htmlFor="annc-title" className="text-xs font-medium text-muted-fg mb-1 block">Título</label>
             <input
+              id="annc-title"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value.slice(0, TITLE_MAX) }))}
               placeholder="Ex: Manutenção da caixa d'água"
               maxLength={TITLE_MAX}
               className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium"
             />
-            <p className="text-[10px] text-muted-fg mt-1 text-right">{form.title.length}/{TITLE_MAX}</p>
+            <p className="text-xs text-muted-fg mt-1 text-right">{form.title.length}/{TITLE_MAX}</p>
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Mensagem</label>
+            <label htmlFor="annc-body" className="text-xs font-medium text-muted-fg mb-1 block">Mensagem</label>
             <textarea
+              id="annc-body"
               value={form.body}
               onChange={(e) => setForm((f) => ({ ...f, body: e.target.value.slice(0, BODY_MAX) }))}
               rows={6}
               placeholder="Escreva o comunicado completo..."
               className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium resize-y"
             />
-            <p className="text-[10px] text-muted-fg mt-1 text-right">{form.body.length}/{BODY_MAX}</p>
+            <p className="text-xs text-muted-fg mt-1 text-right">{form.body.length}/{BODY_MAX}</p>
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Validade (opcional)</label>
+            <label htmlFor="annc-expires" className="text-xs font-medium text-muted-fg mb-1 block">Validade (opcional)</label>
             <input
+              id="annc-expires"
               type="date"
               value={form.expiresAt}
               min={todayStr()}
               onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
               className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium"
             />
-            <p className="text-[10px] text-muted-fg mt-1">Depois dessa data o comunicado some da lista dos moradores, mas continua no histórico.</p>
+            <p className="text-xs text-muted-fg mt-1">Depois dessa data o comunicado some da lista dos moradores, mas continua no histórico.</p>
           </div>
 
           <div className="flex flex-col gap-2">

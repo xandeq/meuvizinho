@@ -47,16 +47,18 @@ export default function NewGroupPage() {
       <h1 className="text-2xl font-semibold text-fg mb-6">Criar Grupo</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-muted-fg mb-1">Nome</label>
+          <label htmlFor="page-nome" className="block text-sm font-medium text-muted-fg mb-1">Nome</label>
           <input
+            id="page-nome"
             {...register('name')}
             className="w-full border border-border/50 rounded-xl px-3 py-2 text-sm bg-muted focus:bg-card focus:border-primary outline-none"
           />
           {errors.name && <p className="text-danger text-xs mt-1">{errors.name.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-fg mb-1">Descrição</label>
+          <label htmlFor="page-descricao" className="block text-sm font-medium text-muted-fg mb-1">Descrição</label>
           <textarea
+            id="page-descricao"
             {...register('description')}
             rows={3}
             className="w-full border border-border/50 rounded-xl px-3 py-2 text-sm resize-none bg-muted focus:bg-card focus:border-primary outline-none"
@@ -64,8 +66,9 @@ export default function NewGroupPage() {
           {errors.description && <p className="text-danger text-xs mt-1">{errors.description.message}</p>}
         </div>
         <div>
-          <label className="block text-sm font-medium text-muted-fg mb-1">Categoria</label>
+          <label htmlFor="page-categoria" className="block text-sm font-medium text-muted-fg mb-1">Categoria</label>
           <select
+            id="page-categoria"
             {...register('category')}
             className="w-full border border-border/50 rounded-xl px-3 py-2 text-sm bg-muted focus:bg-card focus:border-primary outline-none"
           >

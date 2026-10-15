@@ -206,10 +206,11 @@ export default function PostComposer({ open, onClose }: PostComposerProps) {
 
           {/* Body */}
           <div>
-            <label className="block text-xs font-bold text-muted-fg uppercase tracking-widest mb-2">
+            <label htmlFor="postcomposer-mensagem" className="block text-xs font-bold text-muted-fg uppercase tracking-widest mb-2">
               Mensagem
             </label>
             <textarea
+              id="postcomposer-mensagem"
               {...register("body")}
               rows={5}
               maxLength={2000}

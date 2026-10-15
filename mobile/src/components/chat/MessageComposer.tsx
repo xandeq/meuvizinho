@@ -86,7 +86,7 @@ export function MessageComposer({ conversationId }: Props) {
         style={({ pressed }) => [
           styles.sendBtn,
           shadow.blue,
-          { backgroundColor: colors.secondaryFill },
+          { backgroundColor: colors.primaryFill },
           (!text.trim() || sending) && { backgroundColor: colors.mutedFg, shadowOpacity: 0, elevation: 0 },
           pressed && !!text.trim() && !sending && { transform: [{ scale: 0.93 }] },
         ]}

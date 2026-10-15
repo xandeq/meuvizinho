@@ -474,6 +474,16 @@ public class GroupsController : ControllerBase
         return Created($"/api/v1/groups/{id}/members/{member.Id}", new { member.Status });
     }
 
+    // DELETE /api/v1/groups/{id}/members/me — sair do grupo.
+    // Site e app sempre chamaram esta rota, mas só existia a versão com GUID: "Sair do grupo" dava 404.
+    [HttpDelete("{id:int}/members/me")]
+    public async Task<IActionResult> LeaveGroup(int id, CancellationToken ct = default)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+        return await RemoveMember(id, userId.Value, ct);
+    }
+
     // DELETE /api/v1/groups/{id}/members/{userId} — leave or remove member
     // GRP-005: Owner/Admin can remove; Admin cannot remove Owner
     [HttpDelete("{id:int}/members/{targetUserId:guid}")]
