@@ -103,8 +103,9 @@ export default function NewWhatsAppGroupPage() {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-sm font-semibold text-fg mb-1">Nome do grupo</label>
+          <label htmlFor="page-nome-do-grupo" className="block text-sm font-semibold text-fg mb-1">Nome do grupo</label>
           <input
+            id="page-nome-do-grupo"
             {...register('name')}
             placeholder="Ex: Condomínio Edifício Solar"
             className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium"
@@ -113,8 +114,9 @@ export default function NewWhatsAppGroupPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-fg mb-1">Link de convite do WhatsApp</label>
+          <label htmlFor="page-link-de-convite-do-whatsapp" className="block text-sm font-semibold text-fg mb-1">Link de convite do WhatsApp</label>
           <input
+            id="page-link-de-convite-do-whatsapp"
             {...register('inviteUrl')}
             placeholder="https://chat.whatsapp.com/..."
             className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg placeholder:text-muted-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium"
@@ -123,8 +125,9 @@ export default function NewWhatsAppGroupPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-semibold text-fg mb-1">Tipo</label>
+          <label htmlFor="page-tipo" className="block text-sm font-semibold text-fg mb-1">Tipo</label>
           <select
+            id="page-tipo"
             {...register('kind')}
             className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium"
           >

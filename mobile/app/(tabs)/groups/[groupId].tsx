@@ -1,23 +1,31 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator,
+  View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, Pressable, Alert,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useKeyboardOverlap } from '../../../src/lib/useKeyboardHeight';
+import { goBackOr } from '../../../src/lib/navigation';
 import { getHubConnection } from '@/lib/signalr';
 import { useGroupStore } from '@/features/groups/useGroupStore';
 import {
-  getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent,
+  getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent, joinGroup, leaveGroup,
 } from '@/features/groups/groupsApi';
 import type { GroupPost, GroupEvent } from '@/features/groups/groupsApi';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
 import { VerifiedBadge } from '../../../src/components/VerifiedBadge';
 import { EmptyState } from '../../../src/components/EmptyState';
+import { Button } from '../../../src/components/Button';
+import { apiErrorMessage } from '../../../src/lib/apiError';
 
 export default function GroupDetailScreen() {
   const { groupId: gidStr } = useLocalSearchParams<{ groupId: string }>();
   const groupId = parseInt(gidStr ?? '0', 10);
   const { colors } = useTheme();
+  const router = useRouter();
+  // Android edge-to-edge: KeyboardAvoidingView não sobe o compositor; padding pelo trecho coberto.
+  const kb = useKeyboardOverlap();
   const { posts, appendPosts, prependPost, resetFeed, currentGroup, setCurrentGroup } = useGroupStore();
   const [activeTab, setActiveTab] = useState<'feed' | 'events'>('feed');
   const [composerText, setComposerText] = useState('');
@@ -32,9 +40,12 @@ export default function GroupDetailScreen() {
     if (!groupId) return;
     resetFeed();
     setLoading(true);
-    Promise.all([getGroup(groupId), getGroupPosts(groupId, 1)])
-      .then(([g, p]) => { setCurrentGroup(g); appendPosts(p); })
-      .finally(() => setLoading(false));
+    // Antes: Promise.all com os posts. Para quem não é membro os posts dão 403 e o grupo nem
+    // aparecia. Agora o grupo carrega sozinho e os posts são opcionais.
+    Promise.allSettled([
+      getGroup(groupId).then(setCurrentGroup),
+      getGroupPosts(groupId, 1).then(appendPosts),
+    ]).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
@@ -75,6 +86,55 @@ export default function GroupDetailScreen() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
+
+  const isMember = currentGroup?.myStatus === 'Active';
+  const isPending = currentGroup?.myStatus === 'PendingApproval';
+  const [joining, setJoining] = useState(false);
+
+  // Não havia como entrar num grupo pelo app: quem não era membro só via a tela vazia.
+  const handleJoin = async () => {
+    if (!currentGroup) return;
+    setJoining(true);
+    setPostError(null);
+    try {
+      await joinGroup(groupId);
+      const open = currentGroup.joinPolicy !== 'Closed';
+      setCurrentGroup({
+        ...currentGroup,
+        myStatus: open ? 'Active' : 'PendingApproval',
+        memberCount: currentGroup.memberCount + (open ? 1 : 0),
+      });
+      if (open) {
+        resetFeed();
+        getGroupPosts(groupId, 1).then(appendPosts).catch(() => {});
+      }
+    } catch (e) {
+      setPostError(apiErrorMessage(e, 'Não foi possível entrar no grupo.'));
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  // Não havia como sair de um grupo. O dono não sai (o grupo ficaria sem responsável).
+  const handleLeave = () => {
+    if (!currentGroup) return;
+    Alert.alert('Sair do grupo?', 'Você deixa de ver as publicações deste grupo.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Sair',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await leaveGroup(groupId);
+            setCurrentGroup({ ...currentGroup, myStatus: null, memberCount: Math.max(0, currentGroup.memberCount - 1) });
+            resetFeed();
+          } catch (e) {
+            setPostError(apiErrorMessage(e, 'Não foi possível sair do grupo.'));
+          }
+        },
+      },
+    ]);
+  };
 
   const handlePost = async () => {
     if (!composerText.trim()) return;
@@ -140,10 +200,29 @@ export default function GroupDetailScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View ref={kb.ref} onLayout={kb.onLayout} style={[styles.container, { backgroundColor: colors.bg, paddingBottom: Platform.OS === 'android' ? kb.overlap : 0 }]}>
         {currentGroup && (
+          // Antes: só o nome, sem "voltar" e sem dizer do que é o grupo nem quantos participam.
           <View style={[styles.groupHeader, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-            <Text style={[styles.groupName, { color: colors.fg }]}>{currentGroup.name}</Text>
+            <View style={styles.headerRow}>
+              <Pressable onPress={() => goBackOr(router, '/groups')} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={12} style={styles.back}>
+                <Ionicons name="arrow-back" size={24} color={colors.fg} />
+              </Pressable>
+              <Text style={[styles.groupName, { color: colors.fg }]} numberOfLines={1} accessibilityRole="header">{currentGroup.name}</Text>
+            </View>
+            <View style={styles.metaRow}>
+            <Text style={[styles.groupMeta, { color: colors.mutedFg, flex: 1 }]}>
+              {currentGroup.category} · {currentGroup.memberCount} {currentGroup.memberCount === 1 ? 'membro' : 'membros'} · {currentGroup.joinPolicy === 'Closed' ? 'Entrada com aprovação' : 'Aberto'}
+            </Text>
+            {isMember && currentGroup.myRole !== 'Owner' ? (
+              <Pressable onPress={handleLeave} accessibilityRole="button" hitSlop={10}>
+                <Text style={[styles.leave, { color: colors.mutedFg }]}>Sair do grupo</Text>
+              </Pressable>
+            ) : null}
+            </View>
+            {currentGroup.description ? (
+              <Text style={[styles.groupDesc, { color: colors.fg }]} numberOfLines={2}>{currentGroup.description}</Text>
+            ) : null}
           </View>
         )}
 
@@ -174,17 +253,41 @@ export default function GroupDetailScreen() {
                 renderItem={renderPost}
                 contentContainerStyle={{ padding: 16, gap: 12 }}
                 ListEmptyComponent={
-                  <EmptyState
-                    icon="chatbubbles-outline"
-                    title="Nenhuma publicação ainda"
-                    subtitle="Seja o primeiro a compartilhar algo com o grupo."
-                  />
+                  isMember ? (
+                    <EmptyState
+                      icon="chatbubbles-outline"
+                      title="Nenhuma publicação ainda"
+                      subtitle="Seja o primeiro a compartilhar algo com o grupo."
+                    />
+                  ) : (
+                    <EmptyState
+                      icon="lock-closed-outline"
+                      title="Só membros veem as publicações"
+                      subtitle={isPending ? 'Seu pedido foi enviado. Você vê o grupo assim que for aprovado.' : 'Entre no grupo para ver e publicar.'}
+                    />
+                  )
                 }
               />
             )}
             {postError && (
               <Text style={[styles.postErrorText, { color: colors.danger }]}>{postError}</Text>
             )}
+            {!isMember && currentGroup ? (
+              <View style={[styles.joinBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+                {isPending ? (
+                  <Text style={[styles.joinPending, { color: colors.mutedFg }]} accessibilityLiveRegion="polite">
+                    Pedido enviado. Aguardando aprovação do responsável.
+                  </Text>
+                ) : (
+                  <Button
+                    title={currentGroup.joinPolicy === 'Closed' ? 'Solicitar entrada' : 'Entrar no grupo'}
+                    icon="person-add-outline"
+                    onPress={handleJoin}
+                    loading={joining}
+                  />
+                )}
+              </View>
+            ) : (
             <View style={[styles.composer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
               <TextInput
                 style={[styles.composerInput, { borderColor: colors.border, color: colors.fg, borderRadius: radius.sm }]}
@@ -197,11 +300,12 @@ export default function GroupDetailScreen() {
               <TouchableOpacity accessibilityRole="button"
                 onPress={handlePost}
                 disabled={submitting || !composerText.trim()}
-                style={[styles.sendBtn, { backgroundColor: colors.secondaryFill, borderRadius: radius.sm }]}
+                style={[styles.sendBtn, { backgroundColor: colors.primaryFill, borderRadius: radius.sm }]}
               >
                 <Text style={styles.sendBtnText}>{submitting ? '...' : 'Enviar'}</Text>
               </TouchableOpacity>
             </View>
+            )}
           </>
         ) : (
           <FlatList
@@ -225,8 +329,14 @@ export default function GroupDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  groupHeader: { padding: 16, paddingBottom: 8, borderBottomWidth: 1 },
-  groupName: { fontFamily: fontFamily.semibold, fontSize: 20 },
+  groupHeader: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12, borderBottomWidth: 1, gap: 4 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginLeft: -6 },
+  back: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  groupName: { flex: 1, fontFamily: fontFamily.bold, fontSize: 20 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  leave: { fontFamily: fontFamily.semibold, fontSize: 13, textDecorationLine: 'underline' },
+  groupMeta: { fontFamily: fontFamily.medium, fontSize: 13 },
+  groupDesc: { fontFamily: fontFamily.regular, fontSize: 14, lineHeight: 20 },
   tabBar: { flexDirection: 'row', borderBottomWidth: 1 },
   tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
   tabText: { fontFamily: fontFamily.regular, fontSize: 14 },
@@ -242,6 +352,8 @@ const styles = StyleSheet.create({
   eventMeta: { fontFamily: fontFamily.regular, fontSize: 13 },
   rsvpBtn: { marginTop: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, alignSelf: 'flex-start' },
   rsvpText: { fontFamily: fontFamily.regular, fontSize: 13 },
+  joinBar: { padding: 12, borderTopWidth: 1 },
+  joinPending: { fontFamily: fontFamily.medium, fontSize: 14, textAlign: 'center', paddingVertical: 8 },
   composer: { flexDirection: 'row', padding: 12, borderTopWidth: 1, gap: 8, alignItems: 'flex-end' },
   composerInput: { flex: 1, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8, fontFamily: fontFamily.regular, fontSize: 14, maxHeight: 100 },
   postErrorText: { fontFamily: fontFamily.regular, fontSize: 13, paddingHorizontal: 16, paddingTop: 8 },

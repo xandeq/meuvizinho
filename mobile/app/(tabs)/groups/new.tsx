@@ -1,34 +1,43 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/lib/auth-store';
 import { createGroup } from '@/features/groups/groupsApi';
+import { Button } from '../../../src/components/Button';
+import { useKeyboardHeight } from '../../../src/lib/useKeyboardHeight';
+import { apiErrorMessage } from '../../../src/lib/apiError';
+import { goBackOr } from '../../../src/lib/navigation';
 import { useTheme } from '../../../src/theme/ThemeContext';
-import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
+import { fontFamily, radius } from '../../../src/theme/tokens';
 
 const CATEGORIES = ['Esportes', 'Animais', 'Pais', 'Segurança', 'Jardinagem', 'Negócios', 'Cultura', 'Outros'] as const;
+const POLICIES = [
+  { code: 'Open', label: 'Aberto', hint: 'Qualquer vizinho verificado entra na hora.' },
+  { code: 'Closed', label: 'Fechado', hint: 'Você aprova cada pedido de entrada.' },
+] as const;
 
+// Antes: tela sem cabeçalho nem "voltar", categorias escondidas na rolagem lateral, erros em pop-up
+// e tudo em verde (que no app é reservado para "verificado").
 export default function NewGroupScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const user = useAuthStore((s) => s.user);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<typeof CATEGORIES[number]>('Outros');
   const [joinPolicy, setJoinPolicy] = useState<'Open' | 'Closed'>('Open');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
-    if (name.trim().length < 3) {
-      Alert.alert('Erro', 'Nome deve ter pelo menos 3 caracteres');
-      return;
-    }
-    if (description.trim().length < 10) {
-      Alert.alert('Erro', 'Descrição deve ter pelo menos 10 caracteres');
-      return;
-    }
-    if (!user?.bairroId) return;
+    if (name.trim().length < 3) return setError('O nome precisa ter pelo menos 3 caracteres.');
+    if (description.trim().length < 10) return setError('Conte um pouco sobre o grupo (mínimo 10 caracteres).');
+    if (!user?.bairroId) return setError('Confirme seu endereço para criar grupos no bairro.');
+    setError(null);
     setSubmitting(true);
     try {
       const group = await createGroup({
@@ -40,115 +49,137 @@ export default function NewGroupScreen() {
         scope: 'Bairro',
       });
       router.replace(`/groups/${group.id}`);
-    } catch {
-      Alert.alert('Erro', 'Não foi possível criar o grupo. Tente novamente.');
+    } catch (e) {
+      setError(apiErrorMessage(e, 'Não foi possível criar o grupo. Tente novamente.'));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const chip = (active: boolean) => [
+    styles.chip,
+    { borderColor: active ? colors.primaryFill : colors.border, backgroundColor: active ? colors.primaryFill : colors.card },
+  ];
+
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 20, gap: 16 }}>
-      <Text style={[styles.title, { color: colors.fg }]}>Criar Grupo</Text>
-
-      <View>
-        <Text style={[styles.label, { color: colors.mutedFg }]}>Nome do grupo</Text>
-        <TextInput
-          style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.fg, borderRadius: radius.sm }]}
-          value={name}
-          onChangeText={setName}
-          maxLength={100}
-          placeholder="Ex: Futebol da Vila"
-          placeholderTextColor={colors.mutedFg}
-        />
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+      <View style={[styles.header, { paddingTop: 8, borderBottomColor: colors.border }]}>
+        <Pressable
+          onPress={() => goBackOr(router, '/groups')}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          hitSlop={12}
+          style={styles.back}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.fg} />
+        </Pressable>
+        <Text style={[styles.title, { color: colors.fg }]} accessibilityRole="header">Criar grupo</Text>
       </View>
 
-      <View>
-        <Text style={[styles.label, { color: colors.mutedFg }]}>Descrição</Text>
-        <TextInput
-          style={[styles.input, { height: 80, borderColor: colors.border, backgroundColor: colors.card, color: colors.fg, borderRadius: radius.sm }]}
-          value={description}
-          onChangeText={setDescription}
-          maxLength={500}
-          placeholder="Sobre o grupo..."
-          placeholderTextColor={colors.mutedFg}
-          multiline
-          textAlignVertical="top"
-        />
-      </View>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, gap: 20, paddingBottom: 32 + Math.max(0, keyboardHeight - insets.bottom) }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View>
+          <Text style={[styles.label, { color: colors.fg }]}>Nome do grupo</Text>
+          <TextInput
+            style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.fg }]}
+            value={name}
+            onChangeText={(t) => { setName(t); setError(null); }}
+            maxLength={100}
+            placeholder="Ex.: Corrida da orla"
+            placeholderTextColor={colors.mutedFg}
+            accessibilityLabel="Nome do grupo"
+          />
+        </View>
 
-      <View>
-        <Text style={[styles.label, { color: colors.mutedFg }]}>Categoria</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View>
+          <Text style={[styles.label, { color: colors.fg }]}>Sobre o grupo</Text>
+          <TextInput
+            style={[styles.input, styles.textarea, { borderColor: colors.border, backgroundColor: colors.card, color: colors.fg }]}
+            value={description}
+            onChangeText={(t) => { setDescription(t); setError(null); }}
+            maxLength={500}
+            placeholder="Ex.: Corrida leve aos sábados às 7h, saindo do quiosque 5."
+            placeholderTextColor={colors.mutedFg}
+            accessibilityLabel="Sobre o grupo"
+            multiline
+            textAlignVertical="top"
+          />
+          <Text style={[styles.counter, { color: colors.mutedFg }]}>{description.length}/500</Text>
+        </View>
+
+        <View>
+          <Text style={[styles.label, { color: colors.fg }]}>Categoria</Text>
+          <View style={styles.wrap} accessibilityRole="radiogroup">
             {CATEGORIES.map((c) => {
-              const isActive = category === c;
+              const active = category === c;
               return (
-                <TouchableOpacity accessibilityRole="button"
+                <Pressable
                   key={c}
                   onPress={() => setCategory(c)}
-                  style={[
-                    styles.chip,
-                    { borderColor: colors.border, backgroundColor: colors.card },
-                    isActive && { backgroundColor: colors.secondaryFill, borderColor: colors.secondary },
-                  ]}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: active }}
+                  style={chip(active)}
                 >
-                  <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>{c}</Text>
-                </TouchableOpacity>
+                  <Text style={[styles.chipText, { color: active ? '#fff' : colors.fg }]}>{c}</Text>
+                </Pressable>
               );
             })}
           </View>
-        </ScrollView>
-      </View>
-
-      <View>
-        <Text style={[styles.label, { color: colors.mutedFg }]}>Tipo de entrada</Text>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          {(['Open', 'Closed'] as const).map((p) => {
-            const isActive = joinPolicy === p;
-            return (
-              <TouchableOpacity accessibilityRole="button"
-                key={p}
-                onPress={() => setJoinPolicy(p)}
-                style={[
-                  styles.chip,
-                  { borderColor: colors.border, backgroundColor: colors.card },
-                  isActive && { backgroundColor: colors.secondaryFill, borderColor: colors.secondary },
-                ]}
-              >
-                <Text style={[styles.chipText, { color: colors.mutedFg }, isActive && { color: '#fff' }]}>
-                  {p === 'Open' ? 'Aberto' : 'Fechado'}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
         </View>
-      </View>
 
-      <TouchableOpacity accessibilityRole="button"
-        onPress={handleCreate}
-        disabled={submitting}
-        style={[
-          styles.createBtn,
-          shadow.emerald,
-          { backgroundColor: colors.secondaryFill, borderRadius: radius.md },
-          submitting && { opacity: 0.6, shadowOpacity: 0, elevation: 0 },
-        ]}
-      >
-        {!submitting && <Ionicons name="people" size={18} color="#fff" style={{ marginRight: 8 }} />}
-        <Text style={styles.createBtnText}>{submitting ? 'Criando...' : 'Criar Grupo'}</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View>
+          <Text style={[styles.label, { color: colors.fg }]}>Quem pode entrar</Text>
+          <View style={{ gap: 10 }} accessibilityRole="radiogroup">
+            {POLICIES.map((p) => {
+              const active = joinPolicy === p.code;
+              return (
+                <Pressable
+                  key={p.code}
+                  onPress={() => setJoinPolicy(p.code)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: active }}
+                  accessibilityLabel={`${p.label}. ${p.hint}`}
+                  style={[
+                    styles.policy,
+                    { borderColor: active ? colors.primaryFill : colors.border, backgroundColor: active ? colors.primaryLight : colors.card },
+                  ]}
+                >
+                  <Ionicons name={active ? 'radio-button-on' : 'radio-button-off'} size={22} color={active ? colors.primary : colors.mutedFg} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.policyTitle, { color: colors.fg }]}>{p.label}</Text>
+                    <Text style={[styles.policyHint, { color: colors.mutedFg }]}>{p.hint}</Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {error ? (
+          <Text style={[styles.error, { color: colors.danger }]} accessibilityLiveRegion="polite">{error}</Text>
+        ) : null}
+
+        <Button title="Criar grupo" icon="people-outline" onPress={handleCreate} loading={submitting} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  title: { fontFamily: fontFamily.semibold, fontSize: 24 },
-  label: { fontFamily: fontFamily.medium, fontSize: 14, marginBottom: 6 },
-  input: { borderWidth: 1, paddingHorizontal: 12, paddingVertical: 10, fontFamily: fontFamily.regular, fontSize: 14 },
-  chip: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1 },
-  chipText: { fontFamily: fontFamily.regular, fontSize: 13 },
-  createBtn: { flexDirection: 'row', paddingVertical: 14, alignItems: 'center', justifyContent: 'center' },
-  createBtnText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: StyleSheet.hairlineWidth },
+  back: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  title: { fontFamily: fontFamily.bold, fontSize: 22 },
+  label: { fontFamily: fontFamily.semibold, fontSize: 15, marginBottom: 8 },
+  input: { borderWidth: 1, borderRadius: radius.md, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fontFamily.regular, fontSize: 15 },
+  textarea: { minHeight: 100 },
+  counter: { fontFamily: fontFamily.regular, fontSize: 12, textAlign: 'right', marginTop: 4 },
+  wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 999, borderWidth: 1.5 },
+  chipText: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  policy: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: radius.md, borderWidth: 1.5 },
+  policyTitle: { fontFamily: fontFamily.semibold, fontSize: 15 },
+  policyHint: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 2 },
+  error: { fontFamily: fontFamily.semibold, fontSize: 14 },
 });

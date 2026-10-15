@@ -10,6 +10,7 @@ export interface Group {
   scope: 'Bairro' | 'CrossBairro';
   memberCount: number;
   myStatus?: string | null;
+  myRole?: string | null;
   coverImageUrl?: string | null;
 }
 

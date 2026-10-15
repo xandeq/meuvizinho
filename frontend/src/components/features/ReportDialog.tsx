@@ -72,8 +72,9 @@ export default function ReportDialog({
         <h2 id="report-dialog-title" className="text-xl font-extrabold text-fg mb-3">Denunciar</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-fg mb-1">Motivo</label>
+            <label htmlFor="reportdialog-motivo" className="block text-sm font-bold text-fg mb-1">Motivo</label>
             <select
+              id="reportdialog-motivo"
               value={reason}
               onChange={(e) => setReason(e.target.value as ReportReason)}
               className="border border-border/50 rounded-xl px-3 py-2 w-full bg-muted focus:bg-card focus:border-primary outline-none"
@@ -86,10 +87,11 @@ export default function ReportDialog({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-bold text-fg mb-1">
+            <label htmlFor="reportdialog-nota-opcional" className="block text-sm font-bold text-fg mb-1">
               Nota (opcional)
             </label>
             <textarea
+              id="reportdialog-nota-opcional"
               value={note}
               onChange={(e) => setNote(e.target.value)}
               maxLength={500}

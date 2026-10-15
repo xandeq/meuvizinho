@@ -72,10 +72,10 @@ export default function GroupClient() {
   useEffect(() => {
     if (!groupId) return;
     resetFeed();
-    Promise.all([getGroup(groupId), getGroupPosts(groupId, 1)]).then(([g, p]) => {
-      setCurrentGroup(g);
-      appendPosts(p);
-    });
+    // Antes: Promise.all com os posts. Para quem não é membro os posts dão 403, o Promise.all
+    // falhava e o grupo nunca aparecia (sem nome, sem botão "Entrar"): ninguém novo entrava.
+    getGroup(groupId).then(setCurrentGroup).catch(() => {});
+    getGroupPosts(groupId, 1).then(appendPosts).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [groupId]);
 
@@ -265,13 +265,39 @@ export default function GroupClient() {
               <span className="text-sm font-semibold px-4 py-2 rounded-xl bg-muted text-muted-fg">
                 Membro
               </span>
+              {/* Não havia como sair de um grupo. O dono não sai (o grupo ficaria sem responsável). */}
+              {myRole !== 'Owner' && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!confirm('Sair deste grupo? Você deixa de ver as publicações.')) return;
+                    const { leaveGroup } = await import('@/lib/api/groups');
+                    try {
+                      await leaveGroup(groupId);
+                      setCurrentGroup({ ...currentGroup, myStatus: null, memberCount: Math.max(0, currentGroup.memberCount - 1) });
+                      resetFeed();
+                    } catch {
+                      // mantém como membro se a API falhar
+                    }
+                  }}
+                  className="text-sm font-semibold px-4 py-2 rounded-xl border border-border text-muted-fg hover:text-danger hover:border-danger/40 transition-colors"
+                >
+                  Sair do grupo
+                </button>
+              )}
             </div>
           ) : (
             <button
               onClick={async () => {
                 const { joinGroup } = await import('@/lib/api/groups');
                 await joinGroup(groupId);
-                setCurrentGroup({ ...currentGroup, myStatus: currentGroup.joinPolicy === 'Closed' ? 'PendingApproval' : 'Active' });
+                const open = currentGroup.joinPolicy !== 'Closed';
+                setCurrentGroup({ ...currentGroup, myStatus: open ? 'Active' : 'PendingApproval' });
+                // Antes o feed continuava vazio até recarregar a página.
+                if (open) {
+                  resetFeed();
+                  getGroupPosts(groupId, 1).then(appendPosts).catch(() => {});
+                }
               }}
               className="shrink-0 text-sm font-semibold px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
             >
@@ -430,7 +456,7 @@ export default function GroupClient() {
             ))}
           </div>
 
-          {hasMore && (
+          {hasMore && posts.length > 0 && (
             <button
               type="button"
               onClick={() => incrementPage()}
@@ -776,8 +802,9 @@ function GroupPollsTab({
           <p className="font-semibold text-fg text-sm">Nova enquete</p>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Pergunta</label>
+            <label htmlFor="group-pergunta" className="text-xs font-medium text-muted-fg mb-1 block">Pergunta</label>
             <input
+              id="group-pergunta"
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder="Ex: Qual horário preferem para o evento?"
@@ -827,8 +854,9 @@ function GroupPollsTab({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Encerrar automaticamente (opcional)</label>
+            <label htmlFor="group-encerrar-automaticamente-opcio" className="text-xs font-medium text-muted-fg mb-1 block">Encerrar automaticamente (opcional)</label>
             <input
+              id="group-encerrar-automaticamente-opcio"
               type="datetime-local"
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
@@ -1130,8 +1158,9 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
           )}
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Título *</label>
+            <label htmlFor="group-titulo" className="text-xs font-medium text-muted-fg mb-1 block">Título *</label>
             <input
+              id="group-titulo"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value.slice(0, 120))}
               placeholder="Ex: Churrasco do bairro"
@@ -1143,8 +1172,9 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Data e hora *</label>
+            <label htmlFor="group-data-e-hora" className="text-xs font-medium text-muted-fg mb-1 block">Data e hora *</label>
             <input
+              id="group-data-e-hora"
               type="datetime-local"
               value={newStartsAt}
               onChange={(e) => setNewStartsAt(e.target.value)}
@@ -1155,8 +1185,9 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Local (opcional)</label>
+            <label htmlFor="group-local-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Local (opcional)</label>
             <input
+              id="group-local-opcional"
               value={newLocation}
               onChange={(e) => setNewLocation(e.target.value.slice(0, 200))}
               placeholder="Ex: Praça central, Casa do João"

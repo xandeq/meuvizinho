@@ -228,8 +228,9 @@ export default function GerenciarAreasComunsClient() {
           {formError && <p className="text-danger text-xs">{formError}</p>}
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Nome</label>
+            <label htmlFor="gerenciarareascomuns-nome" className="text-xs font-medium text-muted-fg mb-1 block">Nome</label>
             <input
+              id="gerenciarareascomuns-nome"
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value.slice(0, 120) }))}
               placeholder="Ex: Salão de festas"
@@ -238,8 +239,9 @@ export default function GerenciarAreasComunsClient() {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Descrição (opcional)</label>
+            <label htmlFor="gerenciarareascomuns-descricao-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Descrição (opcional)</label>
             <textarea
+              id="gerenciarareascomuns-descricao-opcional"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value.slice(0, 1000) }))}
               rows={2}
@@ -248,8 +250,9 @@ export default function GerenciarAreasComunsClient() {
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-fg mb-1 block">Regras de uso (opcional)</label>
+            <label htmlFor="gerenciarareascomuns-regras-de-uso-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Regras de uso (opcional)</label>
             <textarea
+              id="gerenciarareascomuns-regras-de-uso-opcional"
               value={form.rules}
               onChange={(e) => setForm((f) => ({ ...f, rules: e.target.value.slice(0, 2000) }))}
               rows={3}
@@ -260,8 +263,9 @@ export default function GerenciarAreasComunsClient() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Capacidade (opcional)</label>
+              <label htmlFor="gerenciarareascomuns-capacidade-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Capacidade (opcional)</label>
               <input
+                id="gerenciarareascomuns-capacidade-opcional"
                 type="number"
                 min={0}
                 value={form.capacity}
@@ -270,8 +274,9 @@ export default function GerenciarAreasComunsClient() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Foto de capa (URL opcional)</label>
+              <label htmlFor="gerenciarareascomuns-foto-de-capa-url-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Foto de capa (URL opcional)</label>
               <input
+                id="gerenciarareascomuns-foto-de-capa-url-opcional"
                 value={form.coverImageUrl}
                 onChange={(e) => setForm((f) => ({ ...f, coverImageUrl: e.target.value }))}
                 className="w-full px-4 py-2.5 rounded-xl bg-muted text-fg border-2 border-transparent outline-none focus:bg-card focus:border-primary font-medium"
@@ -281,8 +286,9 @@ export default function GerenciarAreasComunsClient() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Abre às (opcional)</label>
+              <label htmlFor="gerenciarareascomuns-abre-as-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Abre às (opcional)</label>
               <input
+                id="gerenciarareascomuns-abre-as-opcional"
                 type="time"
                 value={form.openTime}
                 onChange={(e) => setForm((f) => ({ ...f, openTime: e.target.value }))}
@@ -290,8 +296,9 @@ export default function GerenciarAreasComunsClient() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Fecha às (opcional)</label>
+              <label htmlFor="gerenciarareascomuns-fecha-as-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Fecha às (opcional)</label>
               <input
+                id="gerenciarareascomuns-fecha-as-opcional"
                 type="time"
                 value={form.closeTime}
                 onChange={(e) => setForm((f) => ({ ...f, closeTime: e.target.value }))}
@@ -302,8 +309,9 @@ export default function GerenciarAreasComunsClient() {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Antecedência mín. (h)</label>
+              <label htmlFor="gerenciarareascomuns-antecedencia-min-h" className="text-xs font-medium text-muted-fg mb-1 block">Antecedência mín. (h)</label>
               <input
+                id="gerenciarareascomuns-antecedencia-min-h"
                 type="number"
                 min={0}
                 value={form.minAdvanceHours}
@@ -312,8 +320,9 @@ export default function GerenciarAreasComunsClient() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Antecedência máx. (dias)</label>
+              <label htmlFor="gerenciarareascomuns-antecedencia-max-dias" className="text-xs font-medium text-muted-fg mb-1 block">Antecedência máx. (dias)</label>
               <input
+                id="gerenciarareascomuns-antecedencia-max-dias"
                 type="number"
                 min={1}
                 value={form.maxAdvanceDays}
@@ -322,8 +331,9 @@ export default function GerenciarAreasComunsClient() {
               />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-fg mb-1 block">Duração máx. (min, opcional)</label>
+              <label htmlFor="gerenciarareascomuns-duracao-max-min-opcional" className="text-xs font-medium text-muted-fg mb-1 block">Duração máx. (min, opcional)</label>
               <input
+                id="gerenciarareascomuns-duracao-max-min-opcional"
                 type="number"
                 min={0}
                 value={form.maxDurationMinutes}
