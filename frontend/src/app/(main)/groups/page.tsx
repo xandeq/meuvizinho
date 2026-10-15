@@ -9,13 +9,13 @@ import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
 
 const CATEGORY_COLORS: Record<GroupCategory, string> = {
-  Esportes:   'bg-secondary/15 text-secondary',
-  Animais:    'bg-accent/15 text-accent',
-  Pais:       'bg-secondary/15 text-secondary',
+  Esportes:   'bg-secondary-light text-secondary',
+  Animais:    'bg-accent-light text-accent',
+  Pais:       'bg-secondary-light text-secondary',
   Seguranca:  'bg-danger/10 text-danger',
-  Jardinagem: 'bg-secondary/15 text-secondary',
-  Negocios:   'bg-primary/10 text-primary',
-  Cultura:    'bg-accent/15 text-accent',
+  Jardinagem: 'bg-secondary-light text-secondary',
+  Negocios:   'bg-primary-light text-primary-hover',
+  Cultura:    'bg-accent-light text-accent',
   Outros:     'bg-muted text-muted-fg',
 };
 

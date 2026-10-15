@@ -124,7 +124,7 @@ export default function PostCard({
             </p>
             {post.author.isBusinessAccount && (
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] font-semibold tracking-wide">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-light text-accent text-[10px] font-semibold tracking-wide">
                   <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                     <line x1="3" y1="6" x2="21" y2="6"/>
@@ -175,9 +175,9 @@ export default function PostCard({
           <Link
             href={`/feed/post/?id=${post.id}`}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-muted-fg hover:text-primary hover:bg-primary-light transition-all duration-200 active:scale-95"
-            aria-label="Ver comentários"
           >
             <CommentIcon />
+            <span className="sr-only">Ver comentários: </span>
             <span>{post.commentCount}</span>
           </Link>
         ) : (

@@ -15,8 +15,8 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
 const STATUS_BADGE: Record<AreaReservationStatus, string> = {
-  Pending: 'bg-accent/15 text-accent',
-  Approved: 'bg-secondary/15 text-secondary',
+  Pending: 'bg-accent-light text-accent',
+  Approved: 'bg-secondary-light text-secondary',
   Rejected: 'bg-danger/10 text-danger',
   Cancelled: 'bg-muted text-muted-fg',
 };

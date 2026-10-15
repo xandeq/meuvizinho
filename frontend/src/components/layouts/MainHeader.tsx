@@ -294,7 +294,7 @@ export default function MainHeader() {
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={account.open}
-                aria-label="Sua conta"
+                aria-label={`${initials}, sua conta`}
                 onClick={() => account.setOpen((o) => !o)}
                 className="w-9 h-9 rounded-full bg-primary text-white text-xs font-extrabold grid place-items-center ring-2 ring-transparent hover:ring-primary/30 focus-visible:outline-none focus-visible:ring-primary/50 transition-all"
               >

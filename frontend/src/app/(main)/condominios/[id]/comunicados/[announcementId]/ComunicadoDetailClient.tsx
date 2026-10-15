@@ -134,7 +134,7 @@ export default function ComunicadoDetailClient() {
       ) : announcement ? (
         <div className={`bg-card rounded-2xl border shadow-sm p-5 space-y-4 ${announcement.isImportant ? 'border-danger/30' : 'border-border/50'}`}>
           <div className="flex items-start gap-3">
-            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${announcement.isImportant ? 'bg-danger/10 text-danger' : 'bg-primary/10 text-primary'}`}>
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${announcement.isImportant ? 'bg-danger/10 text-danger' : 'bg-primary-light text-primary-hover'}`}>
               <MegaphoneIcon />
             </div>
             <div className="min-w-0 flex-1 space-y-1.5">

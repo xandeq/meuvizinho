@@ -9,8 +9,8 @@ import EmptyState from '@/components/ui/EmptyState';
 
 const STATUS_BADGE: Record<CondominiumStatus, { label: string; cls: string }> = {
   Unclaimed: { label: 'Sem síndico', cls: 'bg-muted text-muted-fg' },
-  ClaimPending: { label: 'Reivindicação em análise', cls: 'bg-accent/15 text-accent' },
-  Claimed: { label: 'Com síndico', cls: 'bg-secondary/15 text-secondary' },
+  ClaimPending: { label: 'Reivindicação em análise', cls: 'bg-accent-light text-accent' },
+  Claimed: { label: 'Com síndico', cls: 'bg-secondary-light text-secondary' },
 };
 
 function BuildingIcon({ className = 'w-5 h-5' }: { className?: string }) {

@@ -19,11 +19,11 @@ const KIND_FILTERS: { code: string; label: string }[] = [
 ];
 
 const KIND_COLORS: Record<WhatsAppGroupKind, string> = {
-  Condominio: 'bg-secondary/15 text-secondary',
-  Predio: 'bg-secondary/15 text-secondary',
-  Rua: 'bg-primary/10 text-primary',
-  Bairro: 'bg-primary/10 text-primary',
-  Comercio: 'bg-accent/15 text-accent',
+  Condominio: 'bg-secondary-light text-secondary',
+  Predio: 'bg-secondary-light text-secondary',
+  Rua: 'bg-primary-light text-primary-hover',
+  Bairro: 'bg-primary-light text-primary-hover',
+  Comercio: 'bg-accent-light text-accent',
   Interesse: 'bg-muted text-muted-fg',
 };
 
@@ -46,7 +46,7 @@ function PlusIcon() {
 
 function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-secondary/15 text-secondary">
+    <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-semibold bg-secondary-light text-secondary">
       <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 6 9 17 4 12" />
       </svg>
@@ -188,7 +188,7 @@ export default function WhatsAppDirectoryPage() {
               <div className="p-4 space-y-2 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-secondary-light text-secondary flex items-center justify-center shrink-0">
                       <WhatsAppIcon className="w-5 h-5" />
                     </div>
                     <p className="font-bold text-fg leading-tight line-clamp-1">{g.name}</p>

@@ -242,7 +242,7 @@ export default function AreaDetailClient() {
             </div>
 
             <div className="flex flex-wrap gap-2 text-xs font-semibold">
-              <span className={`px-2.5 py-1 rounded-full ${area.requiresApproval ? 'bg-accent/15 text-accent' : 'bg-secondary/15 text-secondary'}`}>
+              <span className={`px-2.5 py-1 rounded-full ${area.requiresApproval ? 'bg-accent-light text-accent' : 'bg-secondary-light text-secondary'}`}>
                 {area.requiresApproval ? 'Reserva sujeita a aprovação do síndico' : 'Reserva confirmada automaticamente'}
               </span>
               {area.capacity != null && (

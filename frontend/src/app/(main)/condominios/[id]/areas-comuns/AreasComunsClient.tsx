@@ -208,7 +208,7 @@ export default function AreasComunsClient() {
                     </div>
                     <p className="font-bold text-fg leading-tight group-hover:text-primary transition-colors line-clamp-1">{a.name}</p>
                   </div>
-                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${a.requiresApproval ? 'bg-accent/15 text-accent' : 'bg-secondary/15 text-secondary'}`}>
+                  <span className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full font-semibold ${a.requiresApproval ? 'bg-accent-light text-accent' : 'bg-secondary-light text-secondary'}`}>
                     {a.requiresApproval ? 'Aprovação do síndico' : 'Reserva automática'}
                   </span>
                 </div>

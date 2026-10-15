@@ -29,7 +29,7 @@ const variants: Record<BadgeVariant, string> = {
   verified:
     "bg-secondary-light text-secondary border border-secondary/25",
   danger:
-    "bg-danger-light text-danger border border-danger/25",
+    "bg-danger-light text-red-700 dark:text-red-300 border border-danger/25",
   outline:
     "bg-transparent text-muted-fg border border-border/50",
 };

@@ -22,6 +22,7 @@ export default function FeedHeader() {
       <div className="flex items-center gap-2">
         <Link
           href="/feed/search/"
+          aria-label="Buscar no bairro"
           className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted border border-border/50 text-sm font-semibold text-muted-fg hover:text-fg hover:border-border-strong hover:bg-card transition-all duration-200"
         >
           <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

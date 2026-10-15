@@ -52,15 +52,16 @@ const sizeMap: Record<
   },
 };
 
+// Tons 700: branco sobre eles passa AA (os 600 reprovavam). Sem verde: é a cor de "verificado".
 const colorPalette = [
-  "bg-blue-600",
-  "bg-violet-600",
-  "bg-emerald-600",
-  "bg-rose-600",
-  "bg-amber-600",
-  "bg-cyan-600",
-  "bg-indigo-600",
-  "bg-pink-600",
+  "bg-blue-700",
+  "bg-violet-700",
+  "bg-slate-700",
+  "bg-rose-700",
+  "bg-amber-700",
+  "bg-cyan-700",
+  "bg-indigo-700",
+  "bg-pink-700",
 ];
 
 function pickColor(name: string | null | undefined): string {

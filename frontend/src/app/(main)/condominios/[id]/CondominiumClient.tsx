@@ -250,7 +250,7 @@ export default function CondominiumClient() {
             {condo.groups.map((g) => (
               <div key={g.id} className="flex items-center justify-between gap-3 bg-card rounded-xl border border-border/50 shadow-sm p-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-9 h-9 rounded-xl bg-secondary/15 text-secondary flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-secondary-light text-secondary flex items-center justify-center shrink-0">
                     <WhatsAppIcon className="w-5 h-5" />
                   </div>
                   <div className="min-w-0">

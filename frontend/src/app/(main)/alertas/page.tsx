@@ -22,9 +22,9 @@ const KIND_FILTERS: { code: string; label: string }[] = [
 
 const KIND_COLORS: Record<SecurityAlertKind, string> = {
   Furto: 'bg-danger/10 text-danger',
-  Suspeito: 'bg-accent/15 text-accent',
-  Incendio: 'bg-accent/15 text-accent',
-  Acidente: 'bg-primary/10 text-primary',
+  Suspeito: 'bg-accent-light text-accent',
+  Incendio: 'bg-accent-light text-accent',
+  Acidente: 'bg-primary-light text-primary-hover',
   Outros: 'bg-muted text-muted-fg',
 };
 

@@ -251,7 +251,7 @@ export default function BusinessesPage() {
 
                 {/* Category chip */}
                 {biz.businessCategory && (
-                  <span className="inline-block bg-accent/15 text-accent rounded-full px-2.5 py-0.5 text-xs font-medium">
+                  <span className="inline-block bg-accent-light text-accent rounded-full px-2.5 py-0.5 text-xs font-medium">
                     {biz.businessCategory}
                   </span>
                 )}

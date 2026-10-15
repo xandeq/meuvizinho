@@ -297,7 +297,7 @@ export default function BusinessProfileClient({ userId }: Props) {
             </div>
 
             {data.businessCategory && (
-              <span className="inline-block bg-accent/15 text-accent rounded-full px-3 py-0.5 text-sm font-medium">
+              <span className="inline-block bg-accent-light text-accent rounded-full px-3 py-0.5 text-sm font-medium">
                 {data.businessCategory}
               </span>
             )}
