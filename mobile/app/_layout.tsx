@@ -107,6 +107,7 @@ function RootNavigator() {
         <Stack.Screen name="marketplace/edit/[id]" options={{ title: 'Editar anúncio' }} />
         <Stack.Screen name="marketplace/search" options={{ title: 'Buscar' }} />
         <Stack.Screen name="chat/[id]" options={{ title: 'Chat' }} />
+        <Stack.Screen name="post/[id]" options={{ title: 'Comentários' }} />
         {/* Comunidade: grupos WhatsApp, condomínios/síndico, alertas de segurança */}
         <Stack.Screen name="whatsapp/index" options={{ title: 'Grupos de WhatsApp' }} />
         <Stack.Screen name="whatsapp/new" options={{ title: 'Indicar grupo' }} />

@@ -34,6 +34,17 @@ export interface FeedPageDto {
   nextCursor: string | null;
 }
 
+export interface CommentDto {
+  id: number;
+  postId: number;
+  parentCommentId: number | null;
+  author: PostAuthor;
+  body: string;
+  createdAt: string;
+  editedAt: string | null;
+  replies: CommentDto[];
+}
+
 export interface LikeToggleResult {
   liked: boolean;
   count: number;
@@ -55,6 +66,21 @@ export function createFeedApi(client: AxiosInstance) {
       const res = await client.post<PostDto>('/api/v1/posts', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
+      return res.data;
+    },
+
+    getPost: async (postId: number): Promise<PostDto> => {
+      const res = await client.get<{ post: PostDto } | PostDto>(`/api/v1/posts/${postId}`);
+      return 'post' in res.data ? res.data.post : res.data;
+    },
+
+    getComments: async (postId: number): Promise<CommentDto[]> => {
+      const res = await client.get<CommentDto[]>(`/api/v1/comments/by-post/${postId}`);
+      return res.data;
+    },
+
+    createComment: async (postId: number, body: string, parentCommentId: number | null = null): Promise<CommentDto> => {
+      const res = await client.post<CommentDto>('/api/v1/comments', { postId, parentCommentId, body });
       return res.data;
     },
 

@@ -56,7 +56,7 @@ export default function FeedScreen() {
         data={posts}
         keyExtractor={(p) => String(p.id)}
         renderItem={({ item }) => (
-          <PostCard post={item} onLike={toggleLike} />
+          <PostCard post={item} onLike={toggleLike} onOpenComments={(id) => router.push(`/post/${id}`)} />
         )}
         contentContainerStyle={styles.list}
         refreshControl={
