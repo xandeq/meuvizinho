@@ -53,7 +53,7 @@ export function buildLeafletHtml(opts: { lat: number; lng: number; zoom: number;
     (pins || []).forEach(function (p) {
       var icon = L.divIcon({ className: '', html: '<div class="mv-pin" style="background:' + esc(p.color) + '"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
       var html = '<div class="mv-title">' + esc(p.title) + '</div>' + (p.subtitle ? '<div class="mv-sub">' + esc(p.subtitle) + '</div>' : '');
-      L.marker([p.lat, p.lng], { icon: icon }).bindPopup(html).addTo(layer);
+      L.marker([p.lat, p.lng], { icon: icon, title: String(p.title || ''), alt: String(p.title || '') }).bindPopup(html).addTo(layer);
     });
   };
   if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage('ready');

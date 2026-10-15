@@ -142,7 +142,14 @@ export default function MapClient() {
         {/* MAP-003 User pins with mini-profile popup */}
         <MarkerClusterGroup chunkedLoading>
           {pins.map((pin) => (
-            <Marker key={pin.userId} position={[pin.lat, pin.lng]} icon={createMarkerIcon(pin.isBusinessAccount)}>
+            // title/alt dão nome acessível ao marcador (antes o leitor de tela dizia só "botão").
+            <Marker
+              key={pin.userId}
+              position={[pin.lat, pin.lng]}
+              icon={createMarkerIcon(pin.isBusinessAccount)}
+              title={pin.displayName ?? 'Vizinho'}
+              alt={pin.displayName ?? 'Vizinho'}
+            >
               <Popup>
                 <div className="min-w-[180px] space-y-1">
                   <div className="flex items-center gap-2">
@@ -179,6 +186,8 @@ export default function MapClient() {
           <Marker
             key={`poi-${poi.id}`}
             position={[poi.lat, poi.lng]}
+            title={poi.name}
+            alt={poi.name}
             icon={L.divIcon({ className: 'poi-icon', html: `<span title="${poi.category}">📍</span>` })}
           >
             <Popup>

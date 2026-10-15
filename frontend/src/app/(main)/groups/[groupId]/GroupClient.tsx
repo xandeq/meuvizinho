@@ -86,9 +86,10 @@ export default function GroupClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  // SignalR — join group room, listen for new posts
+  // SignalR — join group room, listen for new posts. Só membros (o servidor recusa os demais).
+  const memberForRealtime = currentGroup?.myStatus === 'Active';
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId || !memberForRealtime) return;
     let cancelled = false;
     getHubConnection().then((hub) => {
       if (cancelled) return;
@@ -130,7 +131,7 @@ export default function GroupClient() {
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId]);
+  }, [groupId, memberForRealtime]);
 
   // Load members only when members tab is active
   useEffect(() => {

@@ -56,9 +56,12 @@ export default function GroupDetailScreen() {
     }
   }, [activeTab, eventsLoaded, groupId]);
 
-  // SignalR: join group room, handle real-time posts
+  // SignalR: join group room, handle real-time posts.
+  // Só membros: antes entrava na sala ao abrir qualquer grupo e o servidor recusava
+  // ("Not a group member") a cada visita de quem ainda não tinha entrado.
+  const memberForRealtime = currentGroup?.myStatus === 'Active';
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId || !memberForRealtime) return;
 
     let cleanup = false;
     // getHubConnection() may return a Promise<HubConnection> or a HubConnection directly (depending on mock/impl)
@@ -85,7 +88,7 @@ export default function GroupDetailScreen() {
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [groupId]);
+  }, [groupId, memberForRealtime]);
 
   const isMember = currentGroup?.myStatus === 'Active';
   const isPending = currentGroup?.myStatus === 'PendingApproval';
