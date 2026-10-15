@@ -10,6 +10,7 @@ import { apiErrorMessage } from '../../src/lib/apiError';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily } from '../../src/theme/tokens';
 import type { ListingDto } from '../../src/lib/api/marketplace.types';
+import { VerificationGate } from '../../src/components/VerificationGate';
 
 // Antes: título "Buscar" sem o termo, sem campo para refinar e sem dizer quantos achou.
 export default function MarketplaceSearchScreen() {
@@ -79,11 +80,7 @@ export default function MarketplaceSearchScreen() {
           )}
           ListEmptyComponent={
             !bairroId ? (
-              <EmptyState
-                icon="shield-checkmark-outline"
-                title="Complete sua verificação"
-                subtitle="Confirme seu endereço para buscar no marketplace."
-              />
+              <VerificationGate what="o Mercado do seu bairro" />
             ) : error ? (
               <EmptyState icon="cloud-offline-outline" title="Não foi possível buscar" subtitle={error} />
             ) : (

@@ -84,7 +84,7 @@ export default function AdminVerificationsPage() {
     <div className="space-y-6 animate-slide-up">
       <header className="flex items-center justify-between">
         <h1 className="text-3xl font-extrabold text-fg">
-          Verificacoes pendentes
+          Verificações pendentes
         </h1>
         <span className="text-sm font-semibold text-fg/70">
           Total: {total}
@@ -120,7 +120,7 @@ export default function AdminVerificationsPage() {
                 <th className="px-3 py-2">Bairro</th>
                 <th className="px-3 py-2">Duplicado?</th>
                 <th className="px-3 py-2">Comprovante</th>
-                <th className="px-3 py-2">Acoes</th>
+                <th className="px-3 py-2">Ações</th>
               </tr>
             </thead>
             <tbody>

@@ -10,6 +10,7 @@ import { EmptyState } from '../../src/components/EmptyState';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import { ListSkeleton } from '../../src/components/Skeleton';
+import { VerificationGate } from '../../src/components/VerificationGate';
 
 const KIND_FILTERS: { code: SecurityAlertKind | ''; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { code: '', label: 'Todos', icon: 'apps-outline' },
@@ -83,11 +84,7 @@ export default function AlertasScreen() {
   if (!bairroId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <EmptyState
-          icon="shield-checkmark-outline"
-          title="Complete sua verificação"
-          subtitle="Confirme seu endereço para ver os alertas do seu bairro."
-        />
+        <VerificationGate what="os alertas do seu bairro" />
       </View>
     );
   }

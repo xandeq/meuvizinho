@@ -14,6 +14,8 @@ public class ProfileDto
     public string? PhotoUrl { get; set; }
     public string? Bio { get; set; }
     public string? BairroNome { get; set; }
+    // O app usa para atualizar a sessão quando a verificação é aprovada (antes ficava "sem bairro").
+    public int? BairroId { get; set; }
     public bool IsVerified { get; set; }
     public bool IsBusinessAccount { get; set; }
     public string? BusinessName { get; set; }
@@ -81,6 +83,7 @@ public class ProfileController : ControllerBase
             PhotoUrl = user.PhotoUrl,
             Bio = user.Bio,
             BairroNome = user.Bairro?.Nome,
+            BairroId = user.BairroId,
             IsVerified = user.IsVerified,
             IsBusinessAccount = user.IsBusinessAccount,
             BusinessName = user.BusinessName,
@@ -128,6 +131,7 @@ public class ProfileController : ControllerBase
             DisplayName = user.DisplayName,
             PhotoUrl = user.PhotoUrl,
             Bio = user.Bio,
+            BairroId = user.BairroId,
             IsVerified = user.IsVerified,
             IsBusinessAccount = user.IsBusinessAccount,
             BusinessName = user.BusinessName,

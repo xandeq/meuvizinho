@@ -13,11 +13,11 @@ export default function PrivacyPolicyPage() {
             Meu Vizinho:
           </p>
           <ul className="list-disc pl-6 text-muted-fg space-y-1">
-            <li>Nome e e-mail para identificacao da conta</li>
+            <li>Nome e e-mail para identificação da conta</li>
             <li>
               CEP e comprovante de residência para verificação de endereço
             </li>
-            <li>Conteudo de publicacoes e mensagens na plataforma</li>
+            <li>Conteúdo de publicações e mensagens na plataforma</li>
             <li>Dados de uso e navegação para melhoria do serviço</li>
           </ul>
         </section>
@@ -30,7 +30,7 @@ export default function PrivacyPolicyPage() {
           <ul className="list-disc pl-6 text-muted-fg space-y-1">
             <li>Verificar sua identidade e endereço de residência</li>
             <li>Exibir conteúdo relevante ao seu bairro</li>
-            <li>Permitir interacoes com vizinhos verificados</li>
+            <li>Permitir interações com vizinhos verificados</li>
             <li>Enviar notificações sobre atividades na sua comunidade</li>
           </ul>
         </section>

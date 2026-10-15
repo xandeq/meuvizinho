@@ -21,7 +21,8 @@ export default function CepLookup() {
   const lookup = async () => {
     setLoading(true);
     try {
-      const a = await cepApi.lookup(cep);
+      // Máscara 00000-000 na tela; a API recebe só os dígitos.
+      const a = await cepApi.lookup(cep.replace(/\D/g, ''));
       setLocalAddress(a);
       setAddress(a);
     } catch (e: any) {
@@ -40,7 +41,8 @@ export default function CepLookup() {
       <Input
         label="CEP"
         value={cep}
-        onChangeText={setCep}
+        onChangeText={(t) => { const d = t.replace(/\D/g, '').slice(0, 8); setCep(d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d); }}
+        maxLength={9}
         placeholder="00000-000"
         keyboardType="numeric"
       />

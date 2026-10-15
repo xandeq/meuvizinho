@@ -13,6 +13,7 @@ import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import { ListSkeleton } from '../../src/components/Skeleton';
 import { SearchField } from '../../src/components/SearchField';
 import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
+import { VerificationGate } from '../../src/components/VerificationGate';
 
 const STATUS_COLOR: Record<CondominiumStatus, 'mutedFg' | 'accent' | 'secondary'> = {
   Unclaimed: 'mutedFg',
@@ -81,11 +82,7 @@ export default function CondominiumsScreen() {
   if (!bairroId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <EmptyState
-          icon="shield-checkmark-outline"
-          title="Complete sua verificação"
-          subtitle="Confirme seu endereço para ver os condomínios do seu bairro."
-        />
+        <VerificationGate what="os condomínios do seu bairro" />
       </View>
     );
   }

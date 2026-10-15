@@ -550,7 +550,7 @@ export default function ProfilePage() {
                   />
                   <div>
                     <label htmlFor="page-descricao" className="block text-sm font-semibold text-fg mb-1">
-                      Descricao
+                      Descrição
                     </label>
                     <textarea
                       id="page-descricao"

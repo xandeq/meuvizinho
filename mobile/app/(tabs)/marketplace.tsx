@@ -24,6 +24,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import { useBairroName } from '../../src/lib/useBairroName';
 import { SearchField } from '../../src/components/SearchField';
+import { VerificationGate } from '../../src/components/VerificationGate';
 
 export default function MarketplaceScreen() {
   const { colors } = useTheme();
@@ -59,11 +60,7 @@ export default function MarketplaceScreen() {
   if (!bairroId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <EmptyState
-          icon="shield-checkmark-outline"
-          title="Complete sua verificação"
-          subtitle="Confirme seu endereço para ver o marketplace do seu bairro."
-        />
+        <VerificationGate what="o Mercado do seu bairro" />
       </View>
     );
   }

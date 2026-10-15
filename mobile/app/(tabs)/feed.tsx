@@ -14,6 +14,7 @@ import { fontFamily, shadow } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
 import { useBairroName } from '../../src/lib/useBairroName';
 import { useNotificationsStore, selectUnread, useNotificationsLive } from '../../src/lib/notifications-store';
+import { VerificationGate } from '../../src/components/VerificationGate';
 
 export default function FeedScreen() {
   const { colors } = useTheme();
@@ -44,11 +45,7 @@ export default function FeedScreen() {
   if (!bairroId) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
-        <EmptyState
-          icon="shield-checkmark-outline"
-          title="Complete sua verificação"
-          subtitle="Confirme seu endereço para ver o feed do seu bairro."
-        />
+        <VerificationGate what="o feed do seu bairro" />
       </View>
     );
   }

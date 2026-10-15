@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Pressable } from 'react-native';
+import { authApi } from '../src/lib/api';
+import { useAuthStore } from '../src/lib/auth-store';
+import { refreshUserFromProfile } from '../src/lib/refreshUser';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Button } from '../src/components/Button';
@@ -12,10 +15,20 @@ export default function Pending() {
   const router = useRouter();
   const { colors } = useTheme();
   const { status, loading, error } = useVerificationPolling(true, 5000);
+  const logout = useAuthStore((s) => s.logout);
+  // Antes não havia saída desta tela (nem trocar de conta) enquanto o documento era analisado.
+  const switchAccount = async () => {
+    try { await authApi.logout(); } catch { /* sai do aparelho mesmo sem rede */ }
+    logout();
+    router.replace('/login');
+  };
 
   useEffect(() => {
     if (status?.status === 'approved') {
-      const t = setTimeout(() => router.replace('/feed'), 2000);
+      // Atualiza o usuário antes de ir ao feed; senão o feed achava que ainda não era verificado.
+      const t = setTimeout(() => {
+        refreshUserFromProfile().catch(() => {}).finally(() => router.replace('/feed'));
+      }, 1500);
       return () => clearTimeout(t);
     }
   }, [status?.status, router]);
@@ -63,14 +76,26 @@ export default function Pending() {
     );
   }
 
+  // Antes: o indicador de carregamento ficava em cima da barra de progresso.
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <ActivityIndicator size="large" color={colors.primary} />
+    <View style={[styles.waitWrap, { backgroundColor: colors.bg }]}>
       <StepIndicator step={3} />
-      <Text style={[styles.title, { color: colors.fg }]}>Documento em análise</Text>
-      <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
-        Você receberá uma notificação assim que for aprovado.
-      </Text>
+      <View style={styles.waitBody}>
+        <View style={[styles.iconCircle, { backgroundColor: colors.primaryLight }]}>
+          <Ionicons name="hourglass-outline" size={36} color={colors.primary} />
+        </View>
+        <Text style={[styles.title, { color: colors.fg }]}>Documento em análise</Text>
+        <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
+          Um moderador confere se o endereço do comprovante bate com o informado. Você recebe uma notificação quando terminar.
+        </Text>
+        <View style={[styles.note, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Ionicons name="refresh" size={16} color={colors.mutedFg} />
+          <Text style={[styles.noteText, { color: colors.mutedFg }]}>Esta tela atualiza sozinha.</Text>
+        </View>
+      </View>
+      <Pressable onPress={switchAccount} accessibilityRole="button" hitSlop={10} style={styles.switch}>
+        <Text style={[styles.switchText, { color: colors.primary }]}>Entrar com outra conta</Text>
+      </Pressable>
     </View>
   );
 }
@@ -82,6 +107,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  waitWrap: { flex: 1, padding: 24 },
+  waitBody: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  iconCircle: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center' },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, borderWidth: 1 },
+  noteText: { fontFamily: fontFamily.medium, fontSize: 13 },
+  switch: { alignSelf: 'center', paddingVertical: 12 },
+  switchText: { fontFamily: fontFamily.semibold, fontSize: 15 },
   title: {
     fontFamily: fontFamily.extrabold,
     fontSize: 24,
@@ -90,8 +122,10 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontFamily: fontFamily.regular,
-    fontSize: 14,
+    fontSize: 15,
+    lineHeight: 22,
     marginTop: 8,
     textAlign: 'center',
+    maxWidth: 320,
   },
 });

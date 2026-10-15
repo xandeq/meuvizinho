@@ -20,12 +20,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isAdmin = useAuthStore((s) => s.user?.isAdmin === true);
 
+  // Antes checava no primeiro render, antes de o login salvo ser restaurado: abrir ou recarregar
+  // qualquer /admin/... mandava o admin para o login. Mesmo contorno do layout principal.
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("/login/");
-    } else if (!isAdmin) {
-      router.replace("/feed/");
-    }
+    const t = setTimeout(() => {
+      const s = useAuthStore.getState();
+      if (!s.isAuthenticated) router.replace("/login/");
+      else if (s.user?.isAdmin !== true) router.replace("/feed/");
+    }, 0);
+    return () => clearTimeout(t);
   }, [isAuthenticated, isAdmin, router]);
 
   if (!isAuthenticated || !isAdmin) return null;

@@ -184,7 +184,7 @@ export default function ListingPreviewClient({
             </div>
 
             <div className="border-t border-border pt-4">
-              <h2 className="font-bold text-fg mb-2">Descricao</h2>
+              <h2 className="font-bold text-fg mb-2">Descrição</h2>
               <p className="text-fg/80 whitespace-pre-wrap">
                 {listing.description}
               </p>
