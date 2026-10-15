@@ -373,6 +373,7 @@ public class NotificationService : INotificationService
             PostId = alertId,   // PostId carries alertId (see NotifyListingExpiredAsync precedent)
             CommentId = null,
             GroupId = null,
+            Body = Trunc(body),
             IsRead = false,
             CreatedAt = now,
         }).ToList();
@@ -402,6 +403,7 @@ public class NotificationService : INotificationService
             {
                 Id = notif.Id,
                 Type = NotificationTypes.SecurityAlert,
+                Body = Trunc(body),
                 PostId = alertId,
                 CommentId = null,
                 GroupId = null,
@@ -459,6 +461,8 @@ public class NotificationService : INotificationService
         => CreateSystemNotificationAsync(ownerUserId, reviewerId, NotificationTypes.ReservationReviewed, condominiumId,
             approved ? $"Sua reserva de {areaName} foi aprovada" : $"Sua reserva de {areaName} foi recusada", ct);
 
+    private static string? Trunc(string? body) => body is { Length: > 200 } ? body[..199] + "…" : body;
+
     // Wave S: notificação de sistema com corpo pronto. PostId carrega o condominiumId
     // (mesmo precedente de SecurityAlert, que usa PostId=alertId).
     private async Task CreateSystemNotificationAsync(Guid recipientId, Guid actorId, string type, int condominiumId, string body, CancellationToken ct)
@@ -472,6 +476,7 @@ public class NotificationService : INotificationService
             Type = type,
             PostId = condominiumId,
             CommentId = null,
+            Body = Trunc(body),
             IsRead = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -489,6 +494,7 @@ public class NotificationService : INotificationService
             Type = type,
             PostId = condominiumId,
             CommentId = null,
+            Body = notification.Body,
             Actor = new PostAuthorDto
             {
                 Id = actorId,
@@ -537,11 +543,16 @@ public class NotificationService : INotificationService
                 RecipientCap, condominiumId);
 
         var now = DateTime.UtcNow;
+        // Importante: destaque + push com prioridade alta e som.
+        var body = isImportant
+            ? $"📢 IMPORTANTE: {title}"
+            : $"{condominiumName}: {title}";
         var notifications = recipients.Select(uid => new Notification
         {
             UserId = uid,
             ActorUserId = authorId,
             Type = NotificationTypes.AnnouncementPublished,
+            Body = Trunc(body),
             PostId = announcementId,   // PostId carrega o announcementId (precedente SecurityAlert)
             CommentId = null,
             GroupId = condominiumId,   // GroupId carrega o condominiumId p/ deep-link
@@ -551,11 +562,6 @@ public class NotificationService : INotificationService
 
         _db.Notifications.AddRange(notifications);
         await _db.SaveChangesAsync(ct);
-
-        // Importante: destaque + push com prioridade alta e som.
-        var body = isImportant
-            ? $"📢 IMPORTANTE: {title}"
-            : $"{condominiumName}: {title}";
 
         var author = await _db.Users.AsNoTracking()
             .Where(u => u.Id == authorId)
@@ -586,6 +592,7 @@ public class NotificationService : INotificationService
             {
                 Id = notif.Id,
                 Type = NotificationTypes.AnnouncementPublished,
+                Body = Trunc(body),
                 PostId = announcementId,
                 CommentId = null,
                 GroupId = condominiumId,

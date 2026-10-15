@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { NotificationDto, NotificationType } from "@bairronow/shared-types";
 import { getHubConnection } from "@/lib/signalr";
 import { useNotificationStore } from "@/stores/notification-store";
+import { notificationBody, notificationHref } from "@/lib/notifications";
 
 // ─── relative time helper ────────────────────────────────────────────────────
 function relTime(date: string): string {
@@ -16,41 +17,6 @@ function relTime(date: string): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
-// ─── notification body label ─────────────────────────────────────────────────
-function notificationBody(n: NotificationDto): string {
-  const who = n.actor.displayName ?? "Alguém";
-  switch (n.type) {
-    case "like":               return `${who} curtiu seu post`;
-    case "comment":            return `${who} comentou no seu post`;
-    case "reply":              return `${who} respondeu seu comentário`;
-    case "mention":            return `${who} mencionou você`;
-    case "GroupJoinApproved":  return "Sua entrada no grupo foi aprovada";
-    case "NewRating":          return `${who} avaliou seu negócio`;
-    case "GroupEvent":         return `${who} criou um evento no grupo`;
-    case "listing_expired":    return "Seu anúncio expirou";
-    case "price_drop":         return `Queda de preço em um anúncio favorito`;
-    case "security_alert":     return `${who} reportou uma ocorrência no bairro`;
-    default:                   return `${who} interagiu com você`;
-  }
-}
-
-// ─── notification link target ─────────────────────────────────────────────────
-function notificationHref(n: NotificationDto): string {
-  switch (n.type) {
-    case "listing_expired":
-    case "price_drop":
-      return n.postId ? `/marketplace/${n.postId}/` : "/marketplace/";
-    case "GroupJoinApproved":
-    case "GroupEvent":
-      return n.groupId ? `/groups/${n.groupId}/` : "/groups/";
-    case "NewRating":
-      return "/profile/";
-    case "security_alert":
-      return n.postId ? `/alertas/${n.postId}/` : "/alertas/";
-    default:
-      return n.postId ? `/feed/post/?id=${n.postId}` : "/feed/";
-  }
-}
 
 // ─── type → icon ─────────────────────────────────────────────────────────────
 function TypeIcon({ type }: { type: NotificationType | string }) {

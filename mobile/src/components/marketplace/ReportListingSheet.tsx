@@ -7,6 +7,7 @@ import { ReportListingReason, REPORT_REASON_LABELS } from '../../lib/api/marketp
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
 import { useKeyboardHeight } from '../../lib/useKeyboardHeight';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Props {
   visible: boolean;
@@ -20,6 +21,8 @@ interface Props {
 export function ReportListingSheet({ visible, listingId, onClose }: Props) {
   const { colors } = useTheme();
   const keyboardHeight = useKeyboardHeight();
+  // Sheet no fundo: sem o inset, os botões ficavam atrás da barra de navegação (edge-to-edge).
+  const insets = useSafeAreaInsets();
   const [reason, setReason] = useState<ReportListingReason | null>(null);
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -50,7 +53,7 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <Pressable accessibilityRole="button" style={styles.backdrop} onPress={onClose} />
-      <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, bottom: keyboardHeight }]}>
+      <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, bottom: keyboardHeight, paddingBottom: 16 + (keyboardHeight ? 0 : insets.bottom) }]}>
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>

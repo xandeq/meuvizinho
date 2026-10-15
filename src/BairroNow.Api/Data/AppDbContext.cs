@@ -291,6 +291,7 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Type).IsRequired().HasMaxLength(16);
+            entity.Property(e => e.Body).HasMaxLength(200);
             entity.Property(e => e.IsRead).HasDefaultValue(false);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
             entity.HasOne(e => e.User)

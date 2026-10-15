@@ -17,6 +17,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius } from '../../theme/tokens';
 import type { PostCategory } from '../../lib/api/feed';
 import { useKeyboardHeight } from '../../lib/useKeyboardHeight';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CATEGORIES: { value: PostCategory; label: string }[] = [
   { value: 4, label: 'Geral' },
@@ -40,6 +41,8 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
   const [error, setError] = useState<string | null>(null);
 
   const keyboardHeight = useKeyboardHeight();
+  // Sheet no fundo: sem o inset, o rodapé ficava atrás da barra de navegação (edge-to-edge).
+  const insets = useSafeAreaInsets();
 
   const discard = () => {
     setBody('');
@@ -83,7 +86,7 @@ export function FeedComposer({ visible, onClose, onSubmit }: FeedComposerProps) 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={[s.sheetWrapper, Platform.OS === 'android' && { bottom: keyboardHeight }]}
       >
-        <View style={s.sheet}>
+        <View style={[s.sheet, Platform.OS === 'android' && { paddingBottom: 20 + (keyboardHeight ? 0 : insets.bottom) }]}>
           {/* Handle */}
           <View style={s.handle} />
 

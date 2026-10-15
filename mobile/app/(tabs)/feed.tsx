@@ -13,12 +13,15 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, shadow } from '../../src/theme/tokens';
 import type { PostCategory } from '../../src/lib/api/feed';
 import { useBairroName } from '../../src/lib/useBairroName';
+import { useNotificationsStore, selectUnread, useNotificationsLive } from '../../src/lib/notifications-store';
 
 export default function FeedScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const bairroName = useBairroName();
+  const unread = useNotificationsStore(selectUnread);
+  useNotificationsLive(true);
   const bairroId = user?.bairroId ?? 0;
   const isVerified = !!user?.isVerified;
 
@@ -74,6 +77,12 @@ export default function FeedScreen() {
             place={bairroName}
             actions={
               <>
+                <HeaderIconButton
+                  icon="notifications-outline"
+                  label={unread > 0 ? `Notificações, ${unread} não lidas` : 'Notificações'}
+                  badge={unread}
+                  onPress={() => router.push('/notificacoes')}
+                />
                 <HeaderIconButton icon="map-outline" label="Mapa do bairro" onPress={() => router.push('/map')} />
                 <HeaderIconButton icon="people-outline" label="Grupos" onPress={() => router.push('/groups')} />
                 {/* '/profile' had no entry point anywhere in the app — this was the only way in. */}

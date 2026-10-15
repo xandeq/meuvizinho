@@ -48,6 +48,7 @@ public class NotificationsController : ControllerBase
                     BusinessName = n.Actor.BusinessName,
                     BusinessCategory = n.Actor.BusinessCategory,
                 },
+                Body = n.Body,
                 IsRead = n.IsRead,
                 CreatedAt = n.CreatedAt
             })
