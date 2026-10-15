@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { useAuthStore } from '../src/lib/auth-store';
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -69,12 +69,31 @@ function useSessionExpiredRedirect() {
   }, [sessionExpired, router]);
 }
 
+// Telas que não exigem sessão.
+const PUBLIC_ROUTES = new Set(['index', 'login', 'register', 'magic-link', 'auth-callback', '+not-found']);
+
+// Link direto (push, WhatsApp) com a sessão já expirada abria a tela protegida sem login:
+// tudo dava erro e não havia caminho para entrar de novo.
+function useAuthGuard() {
+  const router = useRouter();
+  const segments = useSegments();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [hydrated, setHydrated] = useState(() => useAuthStore.persist.hasHydrated());
+  useEffect(() => useAuthStore.persist.onFinishHydration(() => setHydrated(true)), []);
+  const first = segments[0] as string | undefined;
+  useEffect(() => {
+    if (!hydrated || isAuthenticated) return;
+    if (first && !PUBLIC_ROUTES.has(first)) router.replace('/login');
+  }, [hydrated, isAuthenticated, first, router]);
+}
+
 function RootNavigator() {
   const { isDark, colors } = useTheme();
   // Edge-to-edge: sem recuo, o fim de toda tela da pilha ficava sob a barra de gestos.
   const insets = useSafeAreaInsets();
   usePushNotifications();
   useSessionExpiredRedirect();
+  useAuthGuard();
 
   // A barra de navegação do Android ficava clara no tema escuro (tema nativo travado em "light").
   useEffect(() => {

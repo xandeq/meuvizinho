@@ -26,6 +26,8 @@ import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import WhatsAppShareButton from '../../src/features/share/components/WhatsAppShareButton';
 import { getListingShareUrl } from '../../src/features/share/utils/share';
 import { goBackOr } from '../../src/lib/navigation';
+import { EmptyState } from '../../src/components/EmptyState';
+import { apiErrorMessage } from '../../src/lib/apiError';
 
 const priceFormatter = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
@@ -46,14 +48,22 @@ export default function ListingDetailScreen() {
   const [reportOpen, setReportOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
+  const [loadError, setLoadError] = useState<{ notFound: boolean; message: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await marketplaceApi.get(listingId);
       setListing(data);
-    } catch {
-      Alert.alert('Erro', 'Anúncio não encontrado.');
+    } catch (e) {
+      // Antes: qualquer falha (rede, sessão) virava pop-up "Anúncio não encontrado." e a tela
+      // ficava com o carregando girando para sempre atrás dele.
+      const status = (e as { response?: { status?: number } })?.response?.status;
+      setLoadError({
+        notFound: status === 404,
+        message: apiErrorMessage(e, 'Não foi possível carregar o anúncio.'),
+      });
     } finally {
       setLoading(false);
     }
@@ -62,6 +72,30 @@ export default function ListingDetailScreen() {
   useEffect(() => {
     if (listingId) load();
   }, [listingId]);
+
+  if (!loading && loadError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        {loadError.notFound ? (
+          <EmptyState
+            icon="pricetag-outline"
+            title="Anúncio não encontrado"
+            subtitle="Ele pode ter sido removido pelo vizinho."
+            actionLabel="Ver o Mercado"
+            onAction={() => router.replace('/(tabs)/marketplace')}
+          />
+        ) : (
+          <EmptyState
+            icon="cloud-offline-outline"
+            title="Não foi possível carregar"
+            subtitle={loadError.message}
+            actionLabel="Tentar de novo"
+            onAction={load}
+          />
+        )}
+      </View>
+    );
+  }
 
   if (loading || !listing) {
     return (
