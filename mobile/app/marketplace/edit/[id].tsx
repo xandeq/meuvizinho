@@ -15,6 +15,8 @@ import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../../src/theme/tokens';
 import type { ListingDto } from '../../../src/lib/api/marketplace.types';
 import { goBackOr } from '../../../src/lib/navigation';
+import { EmptyState } from '../../../src/components/EmptyState';
+import { apiErrorMessage } from '../../../src/lib/apiError';
 
 export default function EditListingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -28,14 +30,31 @@ export default function EditListingScreen() {
   const [price, setPrice] = useState('');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    marketplaceApi.get(listingId).then((l) => {
-      setListing(l);
-      setTitle(l.title);
-      setDescription(l.description);
-      setPrice(String(l.price).replace('.', ','));
-    });
-  }, [listingId]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  const load = () => {
+    setLoadError(null);
+    marketplaceApi
+      .get(listingId)
+      .then((l) => {
+        setListing(l);
+        setTitle(l.title);
+        setDescription(l.description);
+        setPrice(String(l.price).replace('.', ','));
+      })
+      // Antes não havia catch: falha deixava o carregando girando para sempre.
+      .catch((e) => setLoadError(apiErrorMessage(e, 'Não foi possível carregar o anúncio.')));
+  };
+
+  useEffect(load, [listingId]);
+
+  if (loadError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <EmptyState icon="cloud-offline-outline" title="Não foi possível carregar" subtitle={loadError} actionLabel="Tentar de novo" onAction={load} />
+      </View>
+    );
+  }
 
   if (!listing) {
     return (
