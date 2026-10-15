@@ -18,7 +18,7 @@ const API_BASE_URL =
 
 const loginSchema = z.object({
   email: z.string().email("E-mail inválido"),
-  password: z.string().min(8, "Senha deve ter no mínimo 8 caracteres"),
+  password: z.string().min(1, "Digite sua senha"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -304,21 +304,30 @@ export default function LoginForm() {
           </svg>
           Entrar com Google
         </a>
+        {/* Entrar com Google pela primeira vez cria a conta: o aviso torna o aceite explícito. */}
+        <p className="mt-2 text-xs text-muted-fg text-center">
+          Ao continuar com Google, você aceita a{" "}
+          <Link href="/privacy-policy/" target="_blank" className="font-semibold text-primary hover:text-primary-hover">
+            Política de Privacidade
+          </Link>
+          .
+        </p>
       </div>
 
-      <div className="flex items-center justify-between text-sm animate-slide-up stagger-slide-5">
+      <div className="space-y-3 text-center text-sm animate-slide-up stagger-slide-5">
         <Link
           href="/auth/magic-link/"
-          className="text-primary hover:text-primary-hover font-medium transition-colors"
+          className="inline-flex items-center gap-1 font-medium text-muted-fg hover:text-primary transition-colors"
         >
-          Entrar sem senha →
+          Entrar sem senha, com link no e-mail
+          <span aria-hidden>→</span>
         </Link>
-        <Link
-          href="/register/"
-          className="text-muted-fg hover:text-fg font-medium transition-colors"
-        >
-          Criar conta
-        </Link>
+        <p className="text-muted-fg">
+          Não tem conta?{" "}
+          <Link href="/register/" className="font-semibold text-primary hover:text-primary-hover transition-colors">
+            Criar conta
+          </Link>
+        </p>
       </div>
     </div>
   );

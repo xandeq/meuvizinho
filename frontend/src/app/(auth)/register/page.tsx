@@ -12,12 +12,7 @@ export default function RegisterPage() {
           headline={
             <>
               Seu bairro,<br />
-              <span
-                className="text-transparent bg-clip-text animate-gradient-text"
-                style={{
-                  backgroundImage: "linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #bfdbfe 100%)",
-                }}
-              >
+              <span className="text-[#93C5FD]">
                 sem estranhos.
               </span>
             </>

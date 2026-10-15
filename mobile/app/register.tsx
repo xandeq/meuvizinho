@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { registerSchema, type RegisterInput } from '@bairronow/shared-validators';
 import { Input } from '../src/components/Input';
 import { Button } from '../src/components/Button';
+import { PasswordChecklist } from '../src/components/PasswordChecklist';
 import { authApi } from '../src/lib/api';
 import { useAuthStore } from '../src/lib/auth-store';
 import { useTheme } from '../src/theme/ThemeContext';
@@ -17,10 +18,12 @@ export default function Register() {
   const login = useAuthStore((s) => s.login);
   const { colors } = useTheme();
   const [loading, setLoading] = useState(false);
-  const { control, handleSubmit, formState: { errors } } = useForm<RegisterInput>({
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema) as any,
     defaultValues: { email: '', password: '', confirmPassword: '', acceptedPrivacyPolicy: false as any },
   });
+
+  const password = watch('password') ?? '';
 
   const onSubmit = async (data: RegisterInput) => {
     setLoading(true);
@@ -44,10 +47,11 @@ export default function Register() {
         <Input label="E-mail" value={value} onChangeText={onChange} keyboardType="email-address" placeholder="voce@exemplo.com" error={errors.email?.message} />
       )} />
       <Controller control={control} name="password" render={({ field: { onChange, value } }) => (
-        <Input label="Senha" value={value} onChangeText={onChange} secureTextEntry placeholder="********" error={errors.password?.message} />
+        <Input label="Senha" value={value} onChangeText={onChange} secureTextEntry placeholder="Crie uma senha" textContentType="newPassword" autoComplete="password-new" error={errors.password?.message} />
       )} />
+      <PasswordChecklist value={password} />
       <Controller control={control} name="confirmPassword" render={({ field: { onChange, value } }) => (
-        <Input label="Confirme a senha" value={value} onChangeText={onChange} secureTextEntry placeholder="********" error={errors.confirmPassword?.message} />
+        <Input label="Confirme a senha" value={value} onChangeText={onChange} secureTextEntry placeholder="Repita a senha" textContentType="newPassword" error={errors.confirmPassword?.message} />
       )} />
       <Controller control={control} name="acceptedPrivacyPolicy" render={({ field: { onChange, value } }) => (
         <>
