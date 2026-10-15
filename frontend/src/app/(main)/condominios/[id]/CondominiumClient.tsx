@@ -6,6 +6,8 @@ import { getCondominium, claimCondominium, clickWhatsAppGroup } from '@/lib/api/
 import type { CondominiumDetail, CondominiumRole } from '@/lib/types/community';
 import { WHATSAPP_KIND_LABELS } from '@/lib/types/community';
 import Button from '@/components/ui/Button';
+import { getMyResidentStatus } from '@/lib/api/reservations';
+import type { MyResidentInfo } from '@/lib/types/reservations';
 
 const ROLE_OPTIONS: { value: CondominiumRole; label: string }[] = [
   { value: 'Sindico', label: 'Síndico(a)' },
@@ -36,6 +38,8 @@ export default function CondominiumClient() {
   const [condoId, setCondoId] = useState<number>(0);
   const [condo, setCondo] = useState<CondominiumDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  // Antes a página oferecia "Vincular minha unidade" até para quem já era morador aprovado.
+  const [residency, setResidency] = useState<MyResidentInfo | null>(null);
   const [showClaim, setShowClaim] = useState(false);
   const [role, setRole] = useState<CondominiumRole>('Sindico');
   const [justification, setJustification] = useState('');
@@ -54,6 +58,7 @@ export default function CondominiumClient() {
       .then(setCondo)
       .catch(() => setCondo(null))
       .finally(() => setLoading(false));
+    getMyResidentStatus(condoId).then(setResidency).catch(() => setResidency(null));
   }, [condoId]);
 
   const handleJoin = async (groupId: number) => {
@@ -202,6 +207,17 @@ export default function CondominiumClient() {
               <Link href={`/condominios/${condoId}/gerenciar/reservas`}><Button variant="secondary" size="sm">Gerenciar reservas</Button></Link>
               <Link href={`/condominios/${condoId}/gerenciar/moradores`}><Button variant="secondary" size="sm">Gerenciar moradores</Button></Link>
             </>
+          ) : residency?.status === 'Approved' ? (
+            <>
+              <Link href={`/condominios/${condoId}/minhas-reservas`}><Button variant="secondary" size="sm">Minhas reservas</Button></Link>
+              <span className="inline-flex items-center rounded-xl bg-muted px-3 text-sm font-semibold text-muted-fg">
+                Morador{residency.unit ? ` · ${residency.unit}` : ''}
+              </span>
+            </>
+          ) : residency?.status === 'Pending' ? (
+            <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-sm font-semibold text-muted-fg">
+              Vínculo em análise pelo síndico
+            </span>
           ) : (
             <Link href={`/condominios/${condoId}/vincular`}><Button variant="outline" size="sm">Vincular minha unidade</Button></Link>
           )}

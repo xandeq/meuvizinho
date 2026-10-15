@@ -339,7 +339,8 @@ export default function FeedPage() {
   const initialLoading = loading && items.length === 0;
 
   return (
-    <div className="max-w-2xl mx-auto">
+    // pb-20 no celular: sem ele o botão "+" fixo cobria o texto do último post.
+    <div className="max-w-2xl mx-auto pb-20 md:pb-0">
       <FeedHeader />
 
       {bairroId !== null && <BusinessSpotlight bairroId={bairroId} />}
