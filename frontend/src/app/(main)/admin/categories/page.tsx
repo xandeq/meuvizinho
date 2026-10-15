@@ -89,7 +89,7 @@ export default function AdminCategoriesPage() {
             >
               <div>
                 <p className="font-bold text-fg">{c.displayName}</p>
-                <p className="text-xs text-fg/50 font-medium">
+                <p className="text-xs text-muted-fg font-medium">
                   {c.subcategories.length} subcategorias
                 </p>
               </div>

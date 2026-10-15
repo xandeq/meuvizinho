@@ -89,7 +89,7 @@ export default function ListingForm({
       <div>
         <label className="block text-sm font-bold text-fg mb-1">
           Descrição{" "}
-          <span className="text-xs text-fg/50 font-medium">
+          <span className="text-xs text-muted-fg font-medium">
             ({description.length}/500)
           </span>
         </label>

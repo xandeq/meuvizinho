@@ -38,7 +38,7 @@ export default function MessageBubble({ message, isOwn }: MessageBubbleProps) {
         )}
         <p
           className={`text-[10px] mt-1 ${
-            isOwn ? "text-white/70" : "text-fg/50"
+            isOwn ? "text-white/70" : "text-muted-fg"
           }`}
         >
           {formatDistanceToNow(new Date(message.sentAt), {

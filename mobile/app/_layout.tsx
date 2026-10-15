@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Pressable, View } from 'react-native';
+import { Platform, Pressable, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useAuthStore } from '../src/lib/auth-store';
 import { StatusBar } from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import {
@@ -74,6 +75,11 @@ function RootNavigator() {
   const insets = useSafeAreaInsets();
   usePushNotifications();
   useSessionExpiredRedirect();
+
+  // A barra de navegação do Android ficava clara no tema escuro (tema nativo travado em "light").
+  useEffect(() => {
+    if (Platform.OS === 'android') NavigationBar.setStyle(isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   return (
     <>

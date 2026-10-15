@@ -7,6 +7,9 @@
     "orientation": "portrait",
     "icon": "./assets/brand/icon.png",
     "userInterfaceStyle": "light",
+    "androidNavigationBar": {
+      "enforceContrast": false
+    },
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/brand/adaptive-icon-foreground.png",
@@ -43,7 +46,8 @@
           "sounds": []
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-navigation-bar"
     ],
     "extra": {
       "apiUrl": "https://api.bairronow.com.br",
