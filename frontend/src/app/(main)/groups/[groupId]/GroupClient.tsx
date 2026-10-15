@@ -104,7 +104,8 @@ export default function GroupClient() {
         if (!cancelled) console.info('GroupEventReminder', ev);
       });
       hub.on('NewGroupPoll', (poll: GroupPoll) => {
-        if (!cancelled) setPolls((prev) => [poll, ...prev]);
+        // O criador já recebe a enquete pela resposta do POST; o eco do SignalR duplicava o card.
+        if (!cancelled) setPolls((prev) => (prev.some((p) => p.id === poll.id) ? prev : [poll, ...prev]));
       });
       hub.on('GroupPollUpdated', (poll: GroupPoll) => {
         if (!cancelled) setPolls((prev) => prev.map((p) => p.id === poll.id ? poll : p));
@@ -451,7 +452,7 @@ export default function GroupClient() {
           API={API}
           isMember={currentGroup?.myStatus === 'Active'}
           isAdminOrOwner={isAdminOrOwner}
-          onPollCreated={(p) => setPolls((prev) => [p, ...prev])}
+          onPollCreated={(p) => setPolls((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev]))}
           onPollUpdated={(p) => setPolls((prev) => prev.map((x) => x.id === p.id ? p : x))}
           onPollDeleted={(id) => setPolls((prev) => prev.filter((x) => x.id !== id))}
         />
