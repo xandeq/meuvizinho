@@ -43,6 +43,11 @@ interface ChatState {
   markRead: (conversationId: number) => Promise<void>;
 }
 
+// A API devolve o histórico do mais novo para o mais antigo. Antes o site exibia nessa ordem:
+// a conversa aparecia de trás para frente (a última mensagem no topo). O app já ordenava.
+const oldestFirst = (msgs: MessageDto[]) =>
+  msgs.slice().sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+
 export const useChatStore = create<ChatState>((set, get) => ({
   conversations: [],
   messagesByConversation: {},
@@ -162,7 +167,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
     set((s) => ({
       messagesByConversation: {
         ...s.messagesByConversation,
-        [conversationId]: msgs,
+        [conversationId]: oldestFirst(msgs),
       },
     })),
 
@@ -171,7 +176,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       const existing = s.messagesByConversation[conversationId] ?? [];
       const existingIds = new Set(existing.map((m) => m.id));
       const merged = [
-        ...msgs.filter((m) => !existingIds.has(m.id)),
+        ...oldestFirst(msgs.filter((m) => !existingIds.has(m.id))),
         ...existing,
       ];
       return {

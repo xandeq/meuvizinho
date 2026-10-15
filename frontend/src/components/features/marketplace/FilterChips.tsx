@@ -19,8 +19,9 @@ export default function FilterChips({ filters, onChange }: FilterChipsProps) {
 
   return (
     <div className="space-y-3">
-      {/* Category chips */}
-      <div className="flex flex-wrap gap-1.5 items-center">
+      {/* Category chips: no celular, uma linha com rolagem lateral. Antes eram 3 linhas de
+          categorias e os anúncios ficavam abaixo da dobra. */}
+      <div className="flex gap-1.5 items-center overflow-x-auto -mx-4 px-4 pb-1 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible [scrollbar-width:none] [&>*]:shrink-0">
         <button
           type="button"
           onClick={() => onChange({ category: undefined })}
