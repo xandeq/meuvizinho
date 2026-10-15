@@ -13,6 +13,7 @@ import { ScreenHeader } from '../../../src/components/ScreenHeader';
 import { ListSkeleton } from '../../../src/components/Skeleton';
 import { useBairroName } from '../../../src/lib/useBairroName';
 import { SearchField } from '../../../src/components/SearchField';
+import { goBackOr } from '../../../src/lib/navigation';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -118,7 +119,7 @@ export default function GroupsIndex() {
   const header = (
     <View>
       <ScreenHeader
-        title="Grupos"
+onBack={() => goBackOr(router, '/(tabs)/feed')}         title="Grupos"
         place={bairroName}
         actions={
           <Pressable

@@ -12,6 +12,7 @@ jest.mock('leaflet', () => ({
   },
   divIcon: jest.fn(() => ({})),
   icon: jest.fn(),
+  latLngBounds: jest.fn(() => ({})),
 }));
 
 // leaflet CSS is handled by the global stylesMock via moduleNameMapper
@@ -24,6 +25,8 @@ jest.mock('react-leaflet', () => ({
   TileLayer: () => null,
   Marker: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Popup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  // FitToPins enquadra o mapa nos vizinhos.
+  useMap: () => ({ fitBounds: jest.fn() }),
 }));
 
 // Mock react-leaflet-cluster

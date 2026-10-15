@@ -42,8 +42,14 @@ export function buildLeafletHtml(opts: { lat: number; lng: number; zoom: number;
   var layer = L.layerGroup().addTo(map);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  // Centro fixo (Vila Velha) para qualquer bairro: na 1ª carga com pinos, enquadra os vizinhos.
+  var fitted = false;
   window.__setMarkers = function (pins) {
     layer.clearLayers();
+    if (!fitted && pins && pins.length) {
+      fitted = true;
+      map.fitBounds(L.latLngBounds(pins.map(function (p) { return [p.lat, p.lng]; })), { padding: [40, 40], maxZoom: 16 });
+    }
     (pins || []).forEach(function (p) {
       var icon = L.divIcon({ className: '', html: '<div class="mv-pin" style="background:' + esc(p.color) + '"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
       var html = '<div class="mv-title">' + esc(p.title) + '</div>' + (p.subtitle ? '<div class="mv-sub">' + esc(p.subtitle) + '</div>' : '');

@@ -2,12 +2,25 @@
 
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { getPins, getPois, updateMapPreference } from '@/lib/api/map';
 import type { MapPin, PointOfInterest, MapFilter } from '@/lib/types/map';
+
+// O mapa abria sempre no mesmo ponto de Vila Velha, qualquer que fosse o bairro.
+// Na primeira carga com pinos, enquadra os vizinhos (uma vez, sem brigar com o zoom do usuário).
+function FitToPins({ pins }: { pins: MapPin[] }) {
+  const map = useMap();
+  const fitted = useRef(false);
+  useEffect(() => {
+    if (fitted.current || pins.length === 0) return;
+    fitted.current = true;
+    map.fitBounds(L.latLngBounds(pins.map((p) => [p.lat, p.lng] as [number, number])), { padding: [40, 40], maxZoom: 16 });
+  }, [map, pins]);
+  return null;
+}
 
 function MapPinAvatar({ photoUrl, displayName }: { photoUrl?: string | null; displayName?: string | null }) {
   const [failed, setFailed] = useState(false);
@@ -124,6 +137,8 @@ export default function MapClient() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        <FitToPins pins={pins} />
+
         {/* MAP-003 User pins with mini-profile popup */}
         <MarkerClusterGroup chunkedLoading>
           {pins.map((pin) => (
@@ -174,6 +189,13 @@ export default function MapClient() {
           </Marker>
         ))}
       </MapContainer>
+
+      {!loading && pins.length === 0 && (
+        <div role="status" className="absolute bottom-4 left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-[500] bg-card border border-border/50 rounded-2xl px-4 py-3 shadow-md">
+          <p className="text-sm font-semibold text-fg">Nenhum vizinho visível no mapa ainda.</p>
+          <p className="text-xs text-muted-fg">A posição é aproximada; o endereço exato nunca aparece.</p>
+        </div>
+      )}
 
       {loading && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[500] flex items-center gap-2 bg-bg/90 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2 shadow-md">

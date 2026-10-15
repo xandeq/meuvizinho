@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme/ThemeContext';
 import { fontFamily, radius } from '../theme/tokens';
 
-interface Props extends Pick<TextInputProps, 'onSubmitEditing' | 'returnKeyType'> {
+interface Props extends Pick<TextInputProps, 'onSubmitEditing' | 'returnKeyType' | 'autoFocus'> {
   value: string;
   onChangeText: (t: string) => void;
   placeholder: string;
