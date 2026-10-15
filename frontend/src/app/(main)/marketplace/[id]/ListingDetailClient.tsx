@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useRouteId } from "@/lib/useRouteId";
 import Link from "next/link";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import ListingDetailGallery from "@/components/features/marketplace/ListingDetailGallery";
@@ -30,10 +31,9 @@ const BRL = new Intl.NumberFormat("pt-BR", {
 });
 
 export default function ListingDetailClient() {
-  const params = useParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const listingId = Number(params?.id);
+  const listingId = useRouteId("marketplace", "id") ?? 0;
 
   const [listing, setListing] = useState<ListingDto | null>(null);
   const [ratings, setRatings] = useState<SellerRatingsResponse | null>(null);

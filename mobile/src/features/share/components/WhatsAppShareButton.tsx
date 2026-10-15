@@ -1,23 +1,29 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { Pressable, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { shareToWhatsApp } from '../utils/share';
 import { fontFamily, radius } from '../../../theme/tokens';
+import { useTheme } from '../../../theme/ThemeContext';
 
 interface Props {
   url: string;
   text?: string;
 }
 
+// Antes: texto branco sobre o verde do WhatsApp (#25D366, ~2:1 de contraste) e rótulo só
+// "WhatsApp". Agora contornado como os outros botões; o verde fica só no logo.
 export default function WhatsAppShareButton({ url, text = 'Veja este post no Meu Vizinho' }: Props) {
+  const { colors } = useTheme();
   return (
-    <TouchableOpacity accessibilityRole="button"
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Compartilhar no WhatsApp"
       onPress={() => shareToWhatsApp(url, text)}
-      style={styles.button}
+      style={({ pressed }) => [styles.button, { borderColor: colors.border, backgroundColor: colors.card, opacity: pressed ? 0.85 : 1 }]}
     >
-      <Ionicons name="logo-whatsapp" size={18} color="#fff" style={{ marginRight: 6 }} />
-      <Text style={styles.text}>WhatsApp</Text>
-    </TouchableOpacity>
+      <Ionicons name="logo-whatsapp" size={20} color="#25D366" style={{ marginRight: 8 }} />
+      <Text style={[styles.text, { color: colors.fg }]}>Compartilhar no WhatsApp</Text>
+    </Pressable>
   );
 }
 
@@ -25,10 +31,11 @@ const styles = StyleSheet.create({
   button: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radius.sm,
-    backgroundColor: '#25D366',
+    justifyContent: 'center',
+    height: 52,
+    paddingHorizontal: 16,
+    borderRadius: radius.md,
+    borderWidth: 2,
   },
-  text: { color: '#fff', fontFamily: fontFamily.semibold, fontSize: 14 },
+  text: { fontFamily: fontFamily.semibold, fontSize: 15 },
 });

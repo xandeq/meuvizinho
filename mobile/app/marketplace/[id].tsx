@@ -183,9 +183,10 @@ export default function ListingDetailScreen() {
         <Text style={[styles.title, { color: colors.fg }]}>{listing.title}</Text>
 
         <View style={[styles.sellerCard, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.muted }]}>
-            <Text style={[styles.avatarText, { color: colors.mutedFg }]}>
-              {listing.sellerDisplayName?.[0]?.toUpperCase() ?? '?'}
+          {/* Iniciais em azul, igual ao feed e ao perfil (antes uma letra cinza). */}
+          <View style={[styles.avatar, { backgroundColor: colors.primaryFill }]}>
+            <Text style={[styles.avatarText, { color: '#fff' }]}>
+              {(listing.sellerDisplayName ?? '').split(' ').filter((w) => /^\p{L}/u.test(w)).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || '?'}
             </Text>
           </View>
           <View style={styles.sellerInfo}>

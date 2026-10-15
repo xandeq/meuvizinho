@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useRouteId } from "@/lib/useRouteId";
 import ListingForm from "@/components/features/marketplace/ListingForm";
 import EmptyState from "@/components/ui/EmptyState";
 import { useAuthStore } from "@/lib/auth";
@@ -9,10 +10,9 @@ import { getListing, updateListing } from "@/lib/api/marketplace";
 import type { ListingDto } from "@/lib/types/marketplace";
 
 export default function EditListingClient() {
-  const params = useParams<{ id: string }>();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const listingId = Number(params?.id);
+  const listingId = useRouteId("marketplace", "id") ?? 0;
 
   const [listing, setListing] = useState<ListingDto | null>(null);
   const [loading, setLoading] = useState(true);

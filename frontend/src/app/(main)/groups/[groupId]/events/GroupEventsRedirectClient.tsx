@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useRouteId } from "@/lib/useRouteId";
 
 export default function GroupEventsRedirectClient() {
   const router = useRouter();
-  const params = useParams<{ groupId: string }>();
+  const groupId = useRouteId("groups", "groupId");
 
   useEffect(() => {
-    router.replace(`/groups/${params.groupId}/`);
-  }, [router, params.groupId]);
+    if (groupId) router.replace(`/groups/${groupId}/`);
+  }, [router, groupId]);
 
   return null;
 }
