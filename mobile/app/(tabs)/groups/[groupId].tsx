@@ -196,7 +196,7 @@ export default function GroupDetailScreen() {
     <View style={[styles.eventCard, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.md }]}>
       <Text style={[styles.eventTitle, { color: colors.fg }]}>{item.title}</Text>
       {item.location && <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.location}</Text>}
-      <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{new Date(item.startsAt).toLocaleString('pt-BR')}</Text>
+      <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{new Date(item.startsAt).toLocaleString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</Text>
       <Text style={[styles.eventMeta, { color: colors.mutedFg }]}>{item.attendingCount === 1 ? '1 confirmado' : `${item.attendingCount} confirmados`}</Text>
       <TouchableOpacity accessibilityRole="button"
         style={[

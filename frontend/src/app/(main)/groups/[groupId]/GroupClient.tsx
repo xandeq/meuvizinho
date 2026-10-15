@@ -1218,7 +1218,7 @@ function GroupEventsTab({ groupId, isMember, joinPolicy }: { groupId: number; is
         <div key={ev.id} className="bg-card rounded-2xl border border-border/50 shadow-sm p-4">
           <p className="font-medium text-fg">{ev.title}</p>
           {ev.location && <p className="text-sm text-muted-fg">{ev.location}</p>}
-          <p className="text-sm text-muted-fg">{new Date(ev.startsAt).toLocaleString('pt-BR')}</p>
+          <p className="text-sm text-muted-fg">{new Date(ev.startsAt).toLocaleString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
           <p className="text-xs text-muted-fg">{ev.attendingCount === 1 ? '1 confirmado' : `${ev.attendingCount} confirmados`}</p>
           {(joinPolicy !== 'Closed' || isMember) && (
             <button
