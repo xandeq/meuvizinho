@@ -19,7 +19,12 @@ export type NotificationType =
   | "GroupEvent"
   | "listing_expired"
   | "price_drop"
-  | "security_alert";
+  | "security_alert"
+  | "res_request"
+  | "res_reviewed"
+  | "resv_pending"
+  | "resv_reviewed"
+  | "annc_new";
 
 export interface PostImageDto {
   url: string;
@@ -104,6 +109,8 @@ export interface NotificationDto {
   commentId: number | null;
   groupId: number | null;
   actor: PostAuthorDto;
+  /** Texto pronto (reserva, vínculo, alerta, comunicado); nulo nos tipos antigos. */
+  body?: string | null;
   isRead: boolean;
   createdAt: string;
 }

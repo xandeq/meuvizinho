@@ -1401,6 +1401,10 @@ namespace BairroNow.Api.Migrations
                     b.Property<Guid>("ActorUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Body")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<int?>("CommentId")
                         .HasColumnType("int");
 

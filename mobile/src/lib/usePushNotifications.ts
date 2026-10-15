@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 import { apiClient } from './api';
 import { useAuthStore } from './auth-store';
 
@@ -43,5 +44,14 @@ export function usePushNotifications() {
     registerPushToken().catch(() => {
       // Silent — push is best-effort, not critical
     });
+  }, [isAuthenticated]);
+
+  // Tocar no push abria o app na tela inicial, sem mostrar do que se tratava.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const sub = Notifications.addNotificationResponseReceivedListener(() => {
+      router.push('/notificacoes');
+    });
+    return () => sub.remove();
   }, [isAuthenticated]);
 }

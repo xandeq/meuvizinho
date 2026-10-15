@@ -33,7 +33,7 @@ export default function EditListingScreen() {
       setListing(l);
       setTitle(l.title);
       setDescription(l.description);
-      setPrice(String(l.price));
+      setPrice(String(l.price).replace('.', ','));
     });
   }, [listingId]);
 
@@ -51,7 +51,7 @@ export default function EditListingScreen() {
       await marketplaceApi.update(listingId, {
         title,
         description,
-        price: Number(price),
+        price: price ? Number(price.replace(',', '.')) : 0,
       });
       Alert.alert('Salvo', 'Anúncio atualizado.');
       goBackOr(router, `/marketplace/${listingId}`);
@@ -82,8 +82,9 @@ export default function EditListingScreen() {
       <TextInput
         style={[styles.input, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.card }]}
         value={price}
-        onChangeText={(t) => setPrice(t.replace(/[^0-9.]/g, ''))}
-        keyboardType="numeric"
+        // Vírgula decimal (padrão BR): antes "12,50" virava 1250.
+        onChangeText={(t) => setPrice(t.replace(/[^0-9,]/g, '').replace(/,(?=.*,)/g, ''))}
+        keyboardType="decimal-pad"
       />
       <View style={{ height: 16 }} />
       <Button title="Salvar alterações" icon="save" onPress={handleSave} loading={saving} />

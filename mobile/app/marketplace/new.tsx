@@ -9,6 +9,7 @@ import {
   Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../../src/components/Button';
@@ -17,6 +18,7 @@ import { CategoryPicker } from '../../src/components/marketplace/CategoryPicker'
 import { marketplaceApi } from '../../src/lib/api/marketplace';
 import { createListingSchema, type CreateListingInput } from '../../src/lib/validators/listing';
 import { useAuthStore } from '../../src/lib/auth-store';
+import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../src/theme/tokens';
 import type { CategoryDto, ListingPhotoAsset } from '../../src/lib/api/marketplace.types';
@@ -28,14 +30,17 @@ export default function CreateListingScreen() {
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [photos, setPhotos] = useState<ListingPhotoAsset[]>([]);
+  const [priceText, setPriceText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
 
   const {
     control,
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitted },
   } = useForm<CreateListingInput>({
     resolver: zodResolver(createListingSchema),
     defaultValues: {
@@ -49,8 +54,9 @@ export default function CreateListingScreen() {
   });
 
   useEffect(() => {
-    setValue('photos', photos, { shouldValidate: true });
-  }, [photos]);
+    // Antes validava ao abrir a tela e já mostrava "Adicione ao menos 1 foto" em vermelho.
+    setValue('photos', photos, { shouldValidate: isSubmitted });
+  }, [photos, isSubmitted, setValue]);
 
   useEffect(() => {
     marketplaceApi.listCategories().then(setCategories).catch(() => {});
@@ -95,7 +101,7 @@ export default function CreateListingScreen() {
   const selectedSub = selectedCat?.subcategories.find((s) => s.code === subcategoryCode);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 16, paddingBottom: 48 + Math.max(0, keyboardHeight - insets.bottom) }} keyboardShouldPersistTaps="handled">
       <Text style={[styles.label, { color: colors.fg }]}>Título</Text>
       <Controller
         control={control}
@@ -137,9 +143,14 @@ export default function CreateListingScreen() {
         render={({ field }) => (
           <TextInput
             style={[styles.input, { borderColor: colors.border, color: colors.fg, backgroundColor: colors.card }]}
-            keyboardType="numeric"
-            value={field.value ? String(field.value) : ''}
-            onChangeText={(t) => field.onChange(Number(t.replace(/[^0-9.]/g, '')))}
+            keyboardType="decimal-pad"
+            value={priceText}
+            onChangeText={(t) => {
+              // Antes "12,50" virava 1250: a vírgula era descartada em vez de virar separador decimal.
+              const clean = t.replace(/[^0-9,]/g, '').replace(/,(?=.*,)/g, '');
+              setPriceText(clean);
+              field.onChange(clean ? Number(clean.replace(',', '.')) : 0);
+            }}
             placeholder="Ex: 450"
             placeholderTextColor={colors.mutedFg}
           />
@@ -149,7 +160,7 @@ export default function CreateListingScreen() {
 
       <Text style={[styles.label, { color: colors.fg }]}>Categoria</Text>
       <Pressable accessibilityRole="button" style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card }]} onPress={() => setPickerOpen(true)}>
-        <Text style={{ color: selectedCat ? colors.fg : colors.mutedFg }}>
+        <Text style={{ color: selectedCat ? colors.fg : colors.mutedFg, fontFamily: fontFamily.regular, fontSize: 15 }}>
           {selectedCat && selectedSub
             ? `${selectedCat.displayName} → ${selectedSub.displayName}`
             : 'Escolher categoria'}
@@ -193,6 +204,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     paddingHorizontal: 12,
     paddingVertical: 12,
+    fontFamily: fontFamily.regular,
+    fontSize: 15,
   },
   textarea: { minHeight: 100, textAlignVertical: 'top' },
   error: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 4 },

@@ -30,6 +30,9 @@ public class Notification
     public int? GroupId { get; set; }
     public Guid ActorUserId { get; set; }
     public User? Actor { get; set; }
+    // Texto pronto (reserva, vínculo, alerta, comunicado). Antes só ia no push e a lista mostrava
+    // "Fulano interagiu com você".
+    public string? Body { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

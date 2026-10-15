@@ -35,10 +35,11 @@ interface IconButtonProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  badge?: number;
 }
 
 // Botão de ícone do cabeçalho: alvo de 44px (público 40+/60+), fundo suave em vez de ícone solto.
-export function HeaderIconButton({ icon, label, onPress }: IconButtonProps) {
+export function HeaderIconButton({ icon, label, onPress, badge }: IconButtonProps) {
   const { colors } = useTheme();
   return (
     <Pressable
@@ -51,6 +52,11 @@ export function HeaderIconButton({ icon, label, onPress }: IconButtonProps) {
       ]}
     >
       <Ionicons name={icon} size={21} color={colors.fg} />
+      {badge ? (
+        <View style={[styles.badge, { backgroundColor: colors.dangerFill, borderColor: colors.bg }]}>
+          <Text style={styles.badgeText}>{badge > 9 ? '9+' : badge}</Text>
+        </View>
+      ) : null}
     </Pressable>
   );
 }
@@ -78,4 +84,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: { color: '#fff', fontFamily: fontFamily.bold, fontSize: 11 },
 });
