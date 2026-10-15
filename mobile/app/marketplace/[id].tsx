@@ -179,7 +179,7 @@ export default function ListingDetailScreen() {
       </View>
 
       <View style={styles.body}>
-        <Text style={[styles.price, { color: colors.fg }]}>{priceFormatter.format(listing.price)}</Text>
+        <Text style={[styles.price, { color: listing.price === 0 ? colors.secondary : colors.fg }]}>{listing.price === 0 ? 'Doação' : priceFormatter.format(listing.price)}</Text>
         <Text style={[styles.title, { color: colors.fg }]}>{listing.title}</Text>
 
         <View style={[styles.sellerCard, shadow.ambientLow, { backgroundColor: colors.card, borderColor: colors.border }]}>

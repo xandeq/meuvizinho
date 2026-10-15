@@ -6,6 +6,7 @@ import { Button } from '../src/components/Button';
 import { useVerificationPolling } from '../src/lib/verification-polling';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily } from '../src/theme/tokens';
+import { StepIndicator } from '../src/components/StepIndicator';
 
 export default function Pending() {
   const router = useRouter();
@@ -42,7 +43,7 @@ export default function Pending() {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
         <Ionicons name="checkmark-circle" size={64} color={colors.verified} />
-        <Text style={[styles.title, { color: colors.fg }]}>Aprovado!</Text>
+        <Text style={[styles.title, { color: colors.fg }]}>Aprovado</Text>
         <Text style={[styles.subtitle, { color: colors.mutedFg }]}>Bem-vindo ao seu bairro.</Text>
       </View>
     );
@@ -65,6 +66,7 @@ export default function Pending() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <ActivityIndicator size="large" color={colors.primary} />
+      <StepIndicator step={3} />
       <Text style={[styles.title, { color: colors.fg }]}>Documento em análise</Text>
       <Text style={[styles.subtitle, { color: colors.mutedFg }]}>
         Você receberá uma notificação assim que for aprovado.

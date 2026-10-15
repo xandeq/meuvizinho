@@ -88,9 +88,9 @@ function RootNavigator() {
         <Stack.Screen name="index" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="login" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="register" options={{ title: '', headerShadowVisible: false }} />
-        <Stack.Screen name="cep-lookup" options={{ title: 'Seu endereço' }} />
-        <Stack.Screen name="proof-upload" options={{ title: 'Comprovante' }} />
-        <Stack.Screen name="pending" options={{ title: 'Verificação' }} />
+        <Stack.Screen name="cep-lookup" options={{ title: '', headerShadowVisible: false }} />
+        <Stack.Screen name="proof-upload" options={{ title: '', headerShadowVisible: false }} />
+        <Stack.Screen name="pending" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="magic-link" options={{ title: '', headerShadowVisible: false }} />
         <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
         {/* Authenticated -- tabs with persistent bottom nav */}

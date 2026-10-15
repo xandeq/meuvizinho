@@ -155,7 +155,7 @@ export default function ListingPreviewClient({
                   {listing.title}
                 </h1>
                 <p className="text-3xl text-primary font-extrabold mt-1">
-                  {BRL.format(listing.price)}
+                  {listing.price === 0 ? <span className="text-secondary">Doação</span> : BRL.format(listing.price)}
                 </p>
               </div>
               {listing.status === "sold" && (

@@ -180,7 +180,7 @@ export default function ListingDetailClient() {
           )}
         </div>
         <p className="text-3xl text-primary font-extrabold">
-          {BRL.format(listing.price)}
+          {listing.price === 0 ? <span className="text-secondary">Doação</span> : BRL.format(listing.price)}
         </p>
         <p className="text-sm text-fg/60 font-medium">
           Publicado em {new Date(listing.createdAt).toLocaleDateString("pt-BR")}
