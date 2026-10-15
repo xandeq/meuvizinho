@@ -1,7 +1,6 @@
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ListingDto } from '../../lib/api/marketplace.types';
-import { VerifiedBadge } from '../VerifiedBadge';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
 
@@ -21,6 +20,9 @@ export function ListingCard({ listing, onPress }: Props) {
   const isSold = listing.status === 'sold';
 
   return (
+    // Em grade de 2 colunas, item sozinho na linha (resultado único, lista ímpar) esticava na
+    // largura toda. A coluna fixa em 50% mantém o card do mesmo tamanho dos outros.
+    <View style={styles.cell}>
     <Pressable
       style={({ pressed }) => [
         styles.card,
@@ -30,7 +32,7 @@ export function ListingCard({ listing, onPress }: Props) {
       ]}
       onPress={onPress}
       accessibilityRole="button"
-      accessibilityLabel={`${listing.title}, ${listing.price === 0 ? 'doação' : priceFormatter.format(listing.price)}${isSold ? ', vendido' : ''}`}
+      accessibilityLabel={`${listing.title}, ${listing.price === 0 ? 'doação' : priceFormatter.format(listing.price)}, por ${listing.sellerDisplayName ?? 'vizinho'}${listing.sellerIsVerified ? ' (verificado)' : ''}${isSold ? ', vendido' : ''}`}
     >
       <View style={[styles.imageWrap, { backgroundColor: colors.muted }]}>
         {cover ? (
@@ -51,15 +53,23 @@ export function ListingCard({ listing, onPress }: Props) {
           {listing.title}
         </Text>
         <Text style={[styles.price, { color: listing.price === 0 ? colors.secondary : colors.fg }]}>{listing.price === 0 ? 'Doação' : priceFormatter.format(listing.price)}</Text>
+        {/* Antes: só uma pílula com o ícone, sem texto. Agora quem vende, como no site. */}
         <View style={styles.sellerRow}>
-          <VerifiedBadge verified={listing.sellerIsVerified} compact />
+          <Text style={[styles.seller, { color: colors.mutedFg }]} numberOfLines={1}>
+            {listing.sellerDisplayName ?? 'Vizinho'}
+          </Text>
+          {listing.sellerIsVerified ? (
+            <Ionicons name="checkmark-circle" size={14} color={colors.verified} accessibilityLabel="Endereço verificado" />
+          ) : null}
         </View>
       </View>
     </Pressable>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  cell: { width: '50%' },
   card: {
     flex: 1,
     margin: 6,
@@ -78,5 +88,6 @@ const styles = StyleSheet.create({
   body: { padding: 12 },
   title: { fontFamily: fontFamily.semibold, fontSize: 14, marginBottom: 4 },
   price: { fontFamily: fontFamily.extrabold, fontSize: 16, marginBottom: 6 },
-  sellerRow: { flexDirection: 'row', alignItems: 'center' },
+  sellerRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  seller: { fontFamily: fontFamily.medium, fontSize: 12, flexShrink: 1 },
 });

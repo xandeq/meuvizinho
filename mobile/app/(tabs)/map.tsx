@@ -11,6 +11,8 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily } from '../../src/theme/tokens';
 import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { useBairroName } from '../../src/lib/useBairroName';
+import { useRouter } from 'expo-router';
+import { goBackOr } from '../../src/lib/navigation';
 
 // Same default center/zoom as the web map (Vila Velha / ES).
 const DEFAULT_CENTER = { lat: -20.3297, lng: -40.2927, zoom: 15 };
@@ -22,6 +24,7 @@ const FILTER_OPTIONS: Array<{ label: string; value: 'all' | 'verified' | 'new' }
 ];
 
 export default function MapScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const bairroName = useBairroName();
@@ -92,7 +95,7 @@ export default function MapScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <ScreenHeader title="Mapa" place={bairroName} />
+      <ScreenHeader onBack={() => goBackOr(router, '/(tabs)/feed')} title="Mapa" place={bairroName} />
       <View style={[styles.controls, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
           {FILTER_OPTIONS.map(({ label, value }) => (
@@ -140,6 +143,16 @@ export default function MapScreen() {
         onMessage={(e) => { if (e.nativeEvent.data === 'ready') setMapReady(true); }}
       />
 
+      {!loading && pins.length === 0 ? (
+        // Mapa vazio sem explicação parecia defeito.
+        <View style={[styles.emptyNote, { backgroundColor: colors.card, borderColor: colors.border }]} accessibilityLiveRegion="polite">
+          <Text style={[styles.emptyText, { color: colors.fg }]}>
+            {filter === 'all' ? 'Nenhum vizinho visível no mapa ainda.' : 'Ninguém com esse filtro no mapa.'}
+          </Text>
+          <Text style={[styles.emptySub, { color: colors.mutedFg }]}>A posição é aproximada; o endereço exato nunca aparece.</Text>
+        </View>
+      ) : null}
+
       {loading && (
         <View style={[styles.loadingOverlay, { backgroundColor: colors.bg + 'B3' }]}>
           <ActivityIndicator color={colors.primary} />
@@ -158,5 +171,8 @@ const styles = StyleSheet.create({
   toggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 8 },
   toggleLabel: { fontFamily: fontFamily.medium, fontSize: 14 },
   map: { flex: 1, width: '100%' },
+  emptyNote: { position: 'absolute', left: 16, right: 16, bottom: 16, padding: 14, borderRadius: 14, borderWidth: 1 },
+  emptyText: { fontFamily: fontFamily.semibold, fontSize: 14 },
+  emptySub: { fontFamily: fontFamily.regular, fontSize: 12, marginTop: 2 },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center' },
 });

@@ -187,6 +187,8 @@ export default function ListingDetailScreen() {
         )}
         {!isOwner && (
           <Pressable accessibilityRole="button"
+            accessibilityLabel={listing.isFavoritedByCurrentUser ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
+            accessibilityState={{ selected: listing.isFavoritedByCurrentUser }}
             onPress={handleToggleFavorite}
             hitSlop={8}
             style={[styles.favoriteFab, shadow.ambientMid, { backgroundColor: colors.card }]}

@@ -9,12 +9,19 @@ interface Props {
   // Nome do bairro (ou contexto local) acima do título: cada aba "do seu bairro", não genérica.
   place?: string | null;
   actions?: ReactNode;
+  // Telas das abas abertas por atalho (mapa, grupos) não tinham como voltar.
+  onBack?: () => void;
 }
 
-export function ScreenHeader({ title, place, actions }: Props) {
+export function ScreenHeader({ title, place, actions, onBack }: Props) {
   const { colors } = useTheme();
   return (
     <View style={styles.header}>
+      {onBack ? (
+        <Pressable onPress={onBack} accessibilityRole="button" accessibilityLabel="Voltar" hitSlop={12} style={styles.back}>
+          <Ionicons name="arrow-back" size={24} color={colors.fg} />
+        </Pressable>
+      ) : null}
       <View style={styles.titles}>
         {place ? (
           <View style={styles.placeRow}>
@@ -62,6 +69,7 @@ export function HeaderIconButton({ icon, label, onPress, badge }: IconButtonProp
 }
 
 const styles = StyleSheet.create({
+  back: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center', marginRight: 4, marginLeft: -6 },
   header: {
     flexDirection: 'row',
     alignItems: 'flex-end',
