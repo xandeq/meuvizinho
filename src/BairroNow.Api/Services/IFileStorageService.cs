@@ -6,4 +6,5 @@ public interface IFileStorageService
     Task<string> SaveImageAsync(Stream content, string originalFileName, string contentType, string folder, CancellationToken ct = default);
     Stream? OpenProof(string relativePath);
     bool DeleteProof(string relativePath);
+    int MigrateLegacyProofs();
 }
