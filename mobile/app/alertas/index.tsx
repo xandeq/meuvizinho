@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator, Animated } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../src/theme/tokens';
 import { ListSkeleton } from '../../src/components/Skeleton';
 import { VerificationGate } from '../../src/components/VerificationGate';
+import { FadeInView, usePop } from '../../src/lib/motion';
 
 const KIND_FILTERS: { code: SecurityAlertKind | ''; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { code: '', label: 'Todos', icon: 'apps-outline' },
@@ -145,34 +146,8 @@ export default function AlertasScreen() {
             />
           )
         }
-        renderItem={({ item }) => (
-          <View style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.lg }]}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.kindBadge, { backgroundColor: colors.danger + '18' }]}>
-                <Ionicons name={KIND_ICON[item.kind]} size={16} color={colors.danger} />
-                <Text style={[styles.kindText, { color: colors.danger }]}>{SECURITY_ALERT_KIND_LABELS[item.kind]}</Text>
-              </View>
-              <Text style={[styles.time, { color: colors.mutedFg }]}>{timeAgo(item.createdAt)}</Text>
-            </View>
-            <Text style={[styles.description, { color: colors.fg }]}>{item.description}</Text>
-            {item.locationDescription && (
-              <View style={styles.locationRow}>
-                <Ionicons name="location-outline" size={14} color={colors.mutedFg} />
-                <Text style={[styles.location, { color: colors.mutedFg }]}>{item.locationDescription}</Text>
-              </View>
-            )}
-            <Pressable accessibilityRole="button"
-              onPress={() => handleUpvote(item)}
-              disabled={upvoting === item.id || item.upvotedByMe}
-              accessibilityState={{ selected: !!item.upvotedByMe, disabled: upvoting === item.id || !!item.upvotedByMe }}
-              style={[styles.upvoteBtn, { borderColor: item.upvotedByMe ? colors.primary : colors.border }]}
-            >
-              <Ionicons name={item.upvotedByMe ? 'checkmark-circle' : 'arrow-up-circle-outline'} size={16} color={item.upvotedByMe ? colors.primary : colors.mutedFg} />
-              <Text style={[styles.upvoteText, { color: item.upvotedByMe ? colors.primary : colors.mutedFg }]}>
-                {item.upvoteCount > 0 ? `${item.upvoteCount} ${item.upvoteCount === 1 ? 'confirmou' : 'confirmaram'}` : 'Confirmar'}
-              </Text>
-            </Pressable>
-          </View>
+        renderItem={({ item, index }) => (
+          <AlertCard item={item} index={index} busy={upvoting === item.id} onUpvote={() => handleUpvote(item)} />
         )}
       />
 
@@ -186,6 +161,46 @@ export default function AlertasScreen() {
         </Pressable>
       )}
     </View>
+  );
+}
+
+function AlertCard({ item, index, busy, onUpvote }: { item: SecurityAlertSummary; index: number; busy: boolean; onUpvote: () => void }) {
+  const { colors } = useTheme();
+  const { scale, pop } = usePop();
+  const confirmed = !!item.upvotedByMe;
+  return (
+    <FadeInView delay={index < 6 ? index * 50 : 0}>
+      <View style={[styles.card, shadow.ambientLow, { backgroundColor: colors.card, borderRadius: radius.lg }]}>
+        <View style={styles.cardHeader}>
+          <View style={[styles.kindBadge, { backgroundColor: colors.danger + '18' }]}>
+            <Ionicons name={KIND_ICON[item.kind]} size={16} color={colors.danger} />
+            <Text style={[styles.kindText, { color: colors.danger }]}>{SECURITY_ALERT_KIND_LABELS[item.kind]}</Text>
+          </View>
+          <Text style={[styles.time, { color: colors.mutedFg }]}>{timeAgo(item.createdAt)}</Text>
+        </View>
+        <Text style={[styles.description, { color: colors.fg }]}>{item.description}</Text>
+        {item.locationDescription && (
+          <View style={styles.locationRow}>
+            <Ionicons name="location-outline" size={14} color={colors.mutedFg} />
+            <Text style={[styles.location, { color: colors.mutedFg }]}>{item.locationDescription}</Text>
+          </View>
+        )}
+        <Pressable accessibilityRole="button"
+          onPress={() => { pop(); onUpvote(); }}
+          disabled={busy || confirmed}
+          accessibilityState={{ selected: confirmed, disabled: busy || confirmed }}
+          // Confirmado vira pílula preenchida: dá para ver de longe o que você já confirmou.
+          style={[styles.upvoteBtn, { borderColor: confirmed ? colors.primary : colors.border, backgroundColor: confirmed ? colors.primaryLight : 'transparent' }]}
+        >
+          <Animated.View style={{ transform: [{ scale }] }}>
+            <Ionicons name={confirmed ? 'checkmark-circle' : 'arrow-up-circle-outline'} size={16} color={confirmed ? colors.primary : colors.mutedFg} />
+          </Animated.View>
+          <Text style={[styles.upvoteText, { color: confirmed ? colors.primary : colors.mutedFg }]}>
+            {item.upvoteCount > 0 ? `${item.upvoteCount} ${item.upvoteCount === 1 ? 'confirmou' : 'confirmaram'}` : 'Confirmar'}
+          </Text>
+        </Pressable>
+      </View>
+    </FadeInView>
   );
 }
 
