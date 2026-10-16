@@ -18,7 +18,7 @@ export interface ListingDto {
   price: number;
   categoryCode: string;
   subcategoryCode: string;
-  status: 'active' | 'sold' | 'removed' | string;
+  status: 'active' | 'sold' | 'removed' | 'expired' | string;
   createdAt: string;
   soldAt: string | null;
   photos: ListingPhotoDto[];

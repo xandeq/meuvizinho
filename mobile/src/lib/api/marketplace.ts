@@ -8,9 +8,9 @@ import type {
   RatingDto,
   SellerRatingsResponse,
   CreateRatingRequest,
-  ReportListingReason,
   ListingPhotoAsset,
 } from './marketplace.types';
+import { ReportListingReason, REPORT_REASON_LABELS } from './marketplace.types';
 
 export interface ListListingsParams {
   bairroId: number;
@@ -92,6 +92,12 @@ export const marketplaceApi = {
     return data;
   },
 
+  // Anúncio expirado: a notificação listing_expired abria a tela sem como renovar.
+  renew: async (id: number): Promise<ListingDto> => {
+    const { data } = await apiClient.post<ListingDto>(`/api/v1/listings/${id}/renew`, {});
+    return data;
+  },
+
   markSold: async (id: number): Promise<ListingDto> => {
     const { data } = await apiClient.post<ListingDto>(`/api/v1/listings/${id}/mark-sold`, {});
     return data;
@@ -114,7 +120,15 @@ export const marketplaceApi = {
     reason: ReportListingReason,
     note?: string
   ): Promise<void> => {
-    await apiClient.post(`/api/v1/listings/${id}/report`, { reason, note });
+    // O enum do app (0 proibido, 1 golpe, 2 preço, 3 enganosa) não é o do servidor (0 Spam,
+    // 1 Ofensivo, 2 Discriminação, 3 Desinformação, 4 Outro): golpe chegava como "Ofensivo".
+    // Mesmo mapeamento do site: motivo mais próximo + o motivo escolhido no início do texto.
+    const serverReason = reason === ReportListingReason.MisleadingDescription ? 'Misinformation' : 'Other';
+    const label = REPORT_REASON_LABELS[reason];
+    await apiClient.post(`/api/v1/listings/${id}/report`, {
+      reason: serverReason,
+      note: note ? `[${label}] ${note}` : label,
+    });
   },
 
   // Categories

@@ -59,3 +59,9 @@ export async function disposeHubConnection(): Promise<void> {
     connection = null;
   }
 }
+
+// Sem isto, depois de sair (ou da sessão expirar) a conexão seguia reconectando sem token:
+// 401 em /hubs/notifications a cada 5–10 s, gastando bateria e rede (visto no log local).
+useAuthStore.subscribe((state, prev) => {
+  if (prev.accessToken && !state.accessToken) void disposeHubConnection();
+});

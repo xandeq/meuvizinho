@@ -46,8 +46,13 @@ export default function Pending() {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
         <Ionicons name="alert-circle" size={64} color={colors.danger} />
-        <Text style={[styles.title, { color: colors.fg }]}>Erro</Text>
+        <Text style={[styles.title, { color: colors.fg }]}>Sem conexão com o servidor</Text>
         <Text style={[styles.subtitle, { color: colors.mutedFg }]}>{error}</Text>
+        <Text style={[styles.subtitle, { color: colors.mutedFg }]}>A tela tenta de novo sozinha.</Text>
+        {/* Antes era um beco sem saída: só "Erro" + o texto em inglês. */}
+        <Pressable onPress={switchAccount} accessibilityRole="button" hitSlop={10} style={styles.switch}>
+          <Text style={[styles.switchText, { color: colors.primary }]}>Entrar com outra conta</Text>
+        </Pressable>
       </View>
     );
   }

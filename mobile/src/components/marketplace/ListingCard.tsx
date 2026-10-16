@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ListingDto } from '../../lib/api/marketplace.types';
@@ -17,6 +18,8 @@ const priceFormatter = new Intl.NumberFormat('pt-BR', {
 export function ListingCard({ listing, onPress }: Props) {
   const { colors } = useTheme();
   const cover = listing.photos[0]?.thumbnailUrl || listing.photos[0]?.url;
+  // Foto que não carrega (arquivo removido, URL de outro ambiente) deixava só um quadrado cinza.
+  const [coverFailed, setCoverFailed] = useState(false);
   const isSold = listing.status === 'sold';
 
   return (
@@ -35,8 +38,8 @@ export function ListingCard({ listing, onPress }: Props) {
       accessibilityLabel={`${listing.title}, ${listing.price === 0 ? 'doação' : priceFormatter.format(listing.price)}, por ${listing.sellerDisplayName ?? 'vizinho'}${listing.sellerIsVerified ? ' (verificado)' : ''}${isSold ? ', vendido' : ''}`}
     >
       <View style={[styles.imageWrap, { backgroundColor: colors.muted }]}>
-        {cover ? (
-          <Image source={{ uri: cover }} style={styles.image} accessibilityIgnoresInvertColors />
+        {cover && !coverFailed ? (
+          <Image source={{ uri: cover }} style={styles.image} accessibilityIgnoresInvertColors onError={() => setCoverFailed(true)} />
         ) : (
           <View style={[styles.image, styles.noPhoto]}>
             <Ionicons name="image-outline" size={28} color={colors.mutedFg} />

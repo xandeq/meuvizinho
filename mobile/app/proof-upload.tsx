@@ -9,6 +9,7 @@ import { useOnboardingStore } from '../src/lib/onboarding-store';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily } from '../src/theme/tokens';
 import { StepIndicator } from '../src/components/StepIndicator';
+import { apiErrorMessage } from '../src/lib/apiError';
 
 export default function ProofUpload() {
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function ProofUpload() {
       setStatus(status);
       router.replace('/pending');
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.message ?? e?.message ?? 'Falha ao enviar');
+      Alert.alert('Não foi possível enviar', apiErrorMessage(e, 'Tente de novo em instantes.'));
     } finally {
       setSubmitting(false);
     }

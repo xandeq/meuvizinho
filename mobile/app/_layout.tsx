@@ -18,6 +18,9 @@ import { fontFamily } from '../src/theme/tokens';
 import { usePushNotifications } from '../src/lib/usePushNotifications';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+// Telas de entrada/raiz: não faz sentido "voltar para o início".
+const NO_HOME_BACK = new Set(['index', 'login', 'register', 'cep-lookup', 'proof-upload', 'pending', 'magic-link', 'auth-callback', '(tabs)']);
+
 function ThemeToggleButton() {
   const { isDark, toggleTheme, colors } = useTheme();
   return (
@@ -88,6 +91,7 @@ function useAuthGuard() {
 }
 
 function RootNavigator() {
+  const router = useRouter();
   const { isDark, colors } = useTheme();
   // Edge-to-edge: sem recuo, o fim de toda tela da pilha ficava sob a barra de gestos.
   const insets = useSafeAreaInsets();
@@ -104,13 +108,27 @@ function RootNavigator() {
     <>
       <StatusBar style={isDark ? 'light' : 'dark'} />
       <Stack
-        screenOptions={{
+        screenOptions={({ navigation, route }) => ({
+          // Tela aberta por notificação ou link (sem histórico) ficava sem seta de voltar.
+          headerLeft: navigation.canGoBack() || NO_HOME_BACK.has(route.name)
+            ? undefined
+            : () => (
+                <Pressable
+                  onPress={() => router.replace('/(tabs)/feed')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Voltar para o início"
+                  hitSlop={12}
+                  style={{ paddingRight: 16 }}
+                >
+                  <Ionicons name="arrow-back" size={24} color={colors.fg} />
+                </Pressable>
+              ),
           headerStyle: { backgroundColor: colors.bg },
           headerTintColor: colors.fg,
           headerTitleStyle: { fontFamily: fontFamily.bold },
           headerRight: () => <ThemeToggleButton />,
           contentStyle: { backgroundColor: colors.bg, paddingBottom: insets.bottom },
-        }}
+        })}
       >
         {/* Auth screens */}
         <Stack.Screen name="index" options={{ title: '', headerShadowVisible: false }} />
