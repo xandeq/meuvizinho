@@ -228,7 +228,7 @@ export default function AnalyticsPage() {
           value={data.ratingAverage != null ? data.ratingAverage.toFixed(1) : "—"}
           sub={
             data.ratingTotal > 0
-              ? `${data.ratingTotal} avaliação${data.ratingTotal !== 1 ? "ões" : ""}`
+              ? `${data.ratingTotal} ${data.ratingTotal === 1 ? "avaliação" : "avaliações"}`
               : "sem avaliações"
           }
           icon={<StarFilledIcon />}

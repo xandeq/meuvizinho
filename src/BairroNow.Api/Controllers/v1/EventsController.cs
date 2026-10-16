@@ -101,8 +101,10 @@ public class EventsController : ControllerBase
                 (e.Group.JoinPolicy == GroupJoinPolicy.Open ||
                  e.Group.Members.Any(m => m.UserId == userId && m.Status == Models.Enums.GroupMemberStatus.Active)));
 
-        if (upcoming)
-            query = query.Where(e => e.StartsAt >= now);
+        // A aba "Passados" mostrava também os futuros: com upcoming=false só invertia a ordem.
+        query = upcoming
+            ? query.Where(e => e.StartsAt >= now)
+            : query.Where(e => e.StartsAt < now);
 
         var totalCount = await query.CountAsync(ct);
         Response.Headers["X-Total-Count"] = totalCount.ToString();

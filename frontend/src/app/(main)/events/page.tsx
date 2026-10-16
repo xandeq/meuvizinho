@@ -2,10 +2,10 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuthStore } from "@/lib/auth";
+import api from "@/lib/api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 
 interface EventItem {
   id: number;
@@ -91,11 +91,10 @@ function SkeletonCard() {
 
 interface EventCardProps {
   event: EventItem;
-  token: string;
   onRsvpChange: (id: number, attending: boolean, newCount: number) => void;
 }
 
-function EventCard({ event, token, onRsvpChange }: EventCardProps) {
+function EventCard({ event, onRsvpChange }: EventCardProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const dayNum = format(new Date(event.startsAt), "d");
@@ -112,14 +111,9 @@ function EventCard({ event, token, onRsvpChange }: EventCardProps) {
     );
     setSubmitting(true);
     try {
-      await fetch(`${API_BASE}/api/v1/events/${event.id}/rsvp`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ attending: newAttending }),
-      });
+      // axios (com renovação de sessão): o fetch cru não olhava res.ok — em 401/403/429 o botão
+      // ficava "Vou!" sem a presença ter sido registrada.
+      await api.post(`/api/v1/events/${event.id}/rsvp`, { attending: newAttending });
     } catch {
       // Revert on failure
       onRsvpChange(
@@ -197,18 +191,14 @@ export default function EventsPage() {
 
   const fetchEvents = useCallback(
     async (upcoming: boolean) => {
-      if (!token) return;
+      // Sem sessão o skeleton girava para sempre (loading nunca saía de true).
+      if (!token) { setLoading(false); return; }
       setLoading(true);
       try {
-        const params = new URLSearchParams({
-          upcoming: upcoming ? "true" : "false",
-          pageSize: "20",
+        // axios renova o token de 15 min; com fetch cru a página mostrava "Sem eventos" depois disso.
+        const { data } = await api.get<EventItem[] | { items?: EventItem[] }>("/api/v1/events", {
+          params: { upcoming: upcoming ? "true" : "false", pageSize: "20" },
         });
-        const res = await fetch(`${API_BASE}/api/v1/events?${params.toString()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("fetch failed");
-        const data: EventItem[] | { items?: EventItem[] } = await res.json();
         const items = Array.isArray(data) ? data : (data.items ?? []);
         setEvents(items);
       } catch {
@@ -295,7 +285,6 @@ export default function EventsPage() {
             <EventCard
               key={ev.id}
               event={ev}
-              token={token ?? ""}
               onRsvpChange={handleRsvpChange}
             />
           ))}

@@ -88,6 +88,10 @@
   # Generic dynamic-segment fallbacks
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^business/[0-9a-fA-F-]{36}/?$ /business/placeholder/index.html [L]
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^marketplace/[0-9]+/?$ /marketplace/0/index.html [L]
 
   RewriteCond %{REQUEST_FILENAME} !-f

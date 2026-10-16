@@ -14,6 +14,9 @@ import { profileApi } from "@/lib/api";
 import { updateProfileSchema } from "@bairronow/shared-validators";
 import { useAuthStore } from "@/lib/auth";
 import type { ProfileDto } from "@bairronow/shared-types";
+import { apiErrorMessage } from "@/lib/apiError";
+
+const BUSINESS_CATEGORIES = ["Alimentação", "Serviços", "Saúde", "Educação", "Tecnologia", "Comércio"] as const;
 
 interface BusinessPhoto {
   id: number;
@@ -86,7 +89,7 @@ function BusinessGalleryUpload({ userId }: { userId: string }) {
       if (!res.ok) throw new Error("Falha ao enviar foto");
       fetchPhotos();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Erro ao enviar foto");
+      setUploadError(apiErrorMessage(err, "Erro ao enviar foto"));
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -103,7 +106,7 @@ function BusinessGalleryUpload({ userId }: { userId: string }) {
       if (!res.ok) throw new Error("Falha ao remover foto");
       fetchPhotos();
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Erro ao remover foto");
+      setUploadError(apiErrorMessage(err, "Erro ao remover foto"));
     } finally {
       setDeletingId(null);
     }
@@ -260,7 +263,7 @@ export default function ProfilePage() {
       })
       .catch((e) => {
         if (!mounted) return;
-        setError(e instanceof Error ? e.message : "Erro ao carregar perfil");
+        setError(apiErrorMessage(e, "Erro ao carregar perfil"));
       })
       .finally(() => {
         if (mounted) setLoading(false);
@@ -274,7 +277,7 @@ export default function ProfilePage() {
     setError(null);
     const parsed = updateProfileSchema.safeParse({ displayName, bio });
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? "Dados invalidos");
+      setError(parsed.error.issues[0]?.message ?? "Dados inválidos");
       return;
     }
     if (isBusinessAccount && !businessName.trim()) {
@@ -295,7 +298,7 @@ export default function ProfilePage() {
       setProfile(updated);
       setEditing(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao salvar perfil");
+      setError(apiErrorMessage(e, "Erro ao salvar perfil"));
     } finally {
       setSaving(false);
     }
@@ -406,7 +409,7 @@ export default function ProfilePage() {
               <div className="pt-2 space-y-2">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-accent-light text-accent">
                   <StoreIcon />
-                  Negocio local
+                  Negócio local
                 </span>
                 {profile.businessName && (
                   <p className="font-semibold text-fg text-base">{profile.businessName}</p>
@@ -520,7 +523,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-fg">Conta Negocio</p>
+                  <p className="text-sm font-semibold text-fg">Conta Negócio</p>
                   <p className="text-xs text-muted-fg">Exibe seu negócio no mapa do bairro</p>
                 </div>
               </label>
@@ -538,16 +541,28 @@ export default function ProfilePage() {
                     required
                     placeholder="Ex: Padaria Boa Vista"
                   />
-                  <FormField
-                    id="businessCategory"
-                    name="businessCategory"
-                    label="Categoria"
-                    type="text"
-                    value={businessCategory}
-                    onChange={(e) => setBusinessCategory(e.target.value)}
-                    maxLength={80}
-                    placeholder="Ex: Alimentacao, Servicos, Comercio"
-                  />
+                  {/* Mesma lista do filtro de /businesses: em texto livre ("Alimentacao" sem acento,
+                      como sugeria o exemplo), o negócio nunca aparecia ao filtrar a categoria. */}
+                  <div>
+                    <label htmlFor="businessCategory" className="block text-sm font-semibold text-fg mb-1">
+                      Categoria
+                    </label>
+                    <select
+                      id="businessCategory"
+                      name="businessCategory"
+                      value={businessCategory}
+                      onChange={(e) => setBusinessCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg bg-muted text-fg border-2 border-transparent outline-none transition-colors duration-150 focus:bg-card focus:border-primary font-medium"
+                    >
+                      <option value="">Escolha uma categoria</option>
+                      {BUSINESS_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                      {businessCategory && !BUSINESS_CATEGORIES.includes(businessCategory as (typeof BUSINESS_CATEGORIES)[number]) && (
+                        <option value={businessCategory}>{businessCategory}</option>
+                      )}
+                    </select>
+                  </div>
                   <div>
                     <label htmlFor="page-descricao" className="block text-sm font-semibold text-fg mb-1">
                       Descrição

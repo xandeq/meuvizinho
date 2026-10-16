@@ -65,3 +65,39 @@ public class GroupLeaveTests
         result.Should().BeOfType<NotFoundResult>();
     }
 }
+
+// Fila de moderação do site: admin do site remove post de grupo sem ser membro.
+public class GroupAdminDeletePostTests
+{
+    [Fact]
+    public async Task SiteAdmin_NotMember_CanDeletePost()
+    {
+        using var db = new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var group = new Group { BairroId = 1, Name = "G", Description = "d", Category = GroupCategory.Outros };
+        db.Groups.Add(group);
+        db.SaveChanges();
+        var post = new GroupPost { GroupId = group.Id, AuthorId = Guid.NewGuid(), Body = "x" };
+        db.GroupPosts.Add(post);
+        db.SaveChanges();
+
+        var admin = Guid.NewGuid();
+        var ctrl = new GroupsController(db, Mock.Of<IHubContext<NotificationHub>>(), Mock.Of<INotificationService>(),
+            Mock.Of<IOffensiveWordFilter>(), NullLogger<GroupsController>.Instance)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = new ClaimsPrincipal(new ClaimsIdentity(new[]
+                    {
+                        new Claim(ClaimTypes.NameIdentifier, admin.ToString()),
+                        new Claim("is_admin", "true"),
+                    }, "Test"))
+                }
+            }
+        };
+
+        (await ctrl.DeletePost(group.Id, post.Id, CancellationToken.None)).Should().BeOfType<NoContentResult>();
+        (await db.GroupPosts.FindAsync(post.Id))!.DeletedAt.Should().NotBeNull();
+    }
+}
