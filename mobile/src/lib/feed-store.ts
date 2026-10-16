@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { PostDto, PostCategory } from './api/feed';
+import type { PostDto, PostCategory, PostImageUpload } from './api/feed';
 import { createFeedApi } from './api/feed';
 import { apiClient } from './api';
 
@@ -15,7 +15,7 @@ interface FeedState {
   loadFirstPage: (bairroId: number) => Promise<void>;
   loadNextPage: (bairroId: number) => Promise<void>;
   refresh: (bairroId: number) => Promise<void>;
-  createPost: (category: PostCategory, body: string) => Promise<void>;
+  createPost: (category: PostCategory, body: string, images?: PostImageUpload[]) => Promise<void>;
   toggleLike: (postId: number) => Promise<void>;
   bumpComments: (postId: number) => void;
   reset: () => void;
@@ -65,8 +65,8 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     }
   },
 
-  createPost: async (category, body) => {
-    const post = await feedApi.create(category, body);
+  createPost: async (category, body, images = []) => {
+    const post = await feedApi.create(category, body, images);
     set((s) => ({ posts: [post, ...s.posts] }));
   },
 

@@ -1,5 +1,11 @@
 import type { AxiosInstance } from 'axios';
 
+export interface PostImageUpload {
+  uri: string;
+  name: string;
+  type: string;
+}
+
 export interface PostAuthor {
   id: string;
   displayName: string | null;
@@ -59,10 +65,14 @@ export function createFeedApi(client: AxiosInstance) {
       return res.data;
     },
 
-    create: async (category: PostCategory, body: string): Promise<PostDto> => {
+    // A API aceita até 4 fotos (campo "images"); antes o app só mandava texto.
+    create: async (category: PostCategory, body: string, images: PostImageUpload[] = []): Promise<PostDto> => {
       const fd = new FormData();
       fd.append('category', String(category));
       fd.append('body', body);
+      for (const img of images) {
+        fd.append('images', { uri: img.uri, name: img.name, type: img.type } as unknown as Blob);
+      }
       const res = await client.post<PostDto>('/api/v1/posts', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
