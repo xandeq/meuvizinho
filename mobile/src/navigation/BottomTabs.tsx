@@ -1,4 +1,5 @@
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useChatStore } from '../lib/chat-store';
 import { useTheme } from '../theme/ThemeContext';
@@ -44,6 +45,18 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
   const insets = useSafeAreaInsets();
   const unreadTotal = useChatStore((s) => s.unreadTotal);
 
+  // O selo só aparecia depois de abrir a aba Chat. Carrega ao entrar, liga o tempo real e
+  // atualiza ao voltar do segundo plano.
+  useEffect(() => {
+    const { loadUnreadCount, connect } = useChatStore.getState();
+    loadUnreadCount();
+    connect();
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') useChatStore.getState().loadUnreadCount();
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
     <View
       style={[
@@ -78,7 +91,7 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
             accessibilityRole="tab"
             accessibilityState={{ selected: isFocused }}
             accessibilityLabel={
-              isChatTab && unreadTotal > 0 ? `${config.label}, ${unreadTotal} mensagens não lidas` : config.label
+              isChatTab && unreadTotal > 0 ? `${config.label}, ${unreadTotal} ${unreadTotal === 1 ? "mensagem não lida" : "mensagens não lidas"}` : config.label
             }
           >
             <View>
