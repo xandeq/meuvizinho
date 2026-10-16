@@ -8,12 +8,15 @@ import { Button } from '../../../../src/components/Button';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../../../src/theme/tokens';
 import { apiErrorMessage } from '../../../../src/lib/apiError';
+import { useKeyboardHeight } from '../../../../src/lib/useKeyboardHeight';
 
 const TITLE_MIN = 4;
 const DESCRIPTION_MIN = 10;
 
 export default function NovaOcorrenciaScreen() {
   const { colors } = useTheme();
+  // Teclado cobria o fim do formulário (botão de enviar) no Android edge-to-edge.
+  const keyboardHeight = useKeyboardHeight();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const condoId = Number(id);
@@ -51,7 +54,7 @@ export default function NovaOcorrenciaScreen() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingBottom: 80 + keyboardHeight }]}
       keyboardShouldPersistTaps="handled"
     >
       <Text style={[styles.lead, { color: colors.mutedFg }]}>
