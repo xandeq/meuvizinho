@@ -219,7 +219,7 @@ function BusinessAvatarCircle({ name }: { name: string }) {
     .join("")
     .toUpperCase();
   return (
-    <div className="w-8 h-8 rounded-full bg-accent/20 text-accent flex items-center justify-center text-xs font-bold shrink-0">
+    <div className="w-8 h-8 rounded-full bg-accent-light text-accent-hover flex items-center justify-center text-xs font-bold shrink-0">
       {initials || "N"}
     </div>
   );

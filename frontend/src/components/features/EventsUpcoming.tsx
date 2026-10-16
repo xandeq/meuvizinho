@@ -66,10 +66,10 @@ export default function EventsUpcoming({ bairroId }: Props) {
             >
               {/* Date badge */}
               <div className="shrink-0 w-10 text-center bg-primary/10 rounded-lg py-1">
-                <div className="text-[10px] font-semibold text-primary uppercase">
+                <div className="text-[10px] font-semibold text-primary-hover uppercase">
                   {format(new Date(ev.startsAt), "MMM", { locale: ptBR })}
                 </div>
-                <div className="text-base font-extrabold text-primary leading-none">
+                <div className="text-base font-extrabold text-primary-hover leading-none">
                   {format(new Date(ev.startsAt), "d")}
                 </div>
               </div>

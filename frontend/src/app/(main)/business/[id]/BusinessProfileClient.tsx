@@ -190,7 +190,7 @@ function StarDisplay({ average, total }: { average: number | null; total: number
     <span className="flex items-center gap-1 text-sm">
       <span className="flex">{stars}</span>
       <span className="text-fg font-semibold ml-1">{average.toFixed(1)}</span>
-      <span className="text-muted-fg">({total} avaliação{total !== 1 ? "ões" : ""})</span>
+      <span className="text-muted-fg">({total} {total === 1 ? "avaliação" : "avaliações"})</span>
     </span>
   );
 }
@@ -199,8 +199,18 @@ interface Props {
   userId: string;
 }
 
-export default function BusinessProfileClient({ userId }: Props) {
+// Export estático: /business/<guid>/ é servido pela página pré-gerada /business/placeholder/
+// (rewrite do .htaccess) e params.id vale sempre "placeholder". Todo link de negócio (lista, feed,
+// mapa, busca) abria "Negócio não encontrado". Lê o GUID da URL real depois da hidratação.
+const GUID_RE = /^\/business\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+
+export default function BusinessProfileClient({ userId: paramId }: Props) {
   const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    const m = window.location.pathname.match(GUID_RE);
+    setUserId(m ? m[1] : paramId !== "placeholder" ? paramId : "");
+  }, [paramId]);
   const token = useAuthStore((s) => s.accessToken);
   const currentUserId = useAuthStore((s) => s.user?.id);
   const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
@@ -230,14 +240,17 @@ export default function BusinessProfileClient({ userId }: Props) {
 
   // Record view (fire and forget, anonymous)
   useEffect(() => {
+    if (!userId) return;
     fetch(`${API}/api/v1/users/${userId}/analytics/view`, { method: "POST" }).catch(() => {});
   }, [userId, API]);
 
   useEffect(() => {
-    if (!token) return;
+    if (userId === null) return;
+    if (userId === "") { setError(true); setLoading(false); return; }
     setLoading(true);
+    // O endpoint é público: sem token, o skeleton girava para sempre.
     fetch(`${API}/api/v1/users/${userId}/public`, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then((r) => {
         if (!r.ok) throw new Error("not found");
@@ -250,7 +263,7 @@ export default function BusinessProfileClient({ userId }: Props) {
 
   if (loading) return <ProfileSkeleton />;
 
-  if (error || !data) {
+  if (error || !data || !userId) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8 text-center space-y-4">
         <p className="text-lg font-semibold text-fg">Negócio não encontrado</p>
@@ -368,7 +381,8 @@ export default function BusinessProfileClient({ userId }: Props) {
       {data.isBusinessAccount && (
         <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-6">
           <h2 className="text-sm font-bold text-fg uppercase tracking-wide mb-4">Avaliações</h2>
-          <BusinessRating businessUserId={userId} canRate={true} />
+          {/* Dono não avalia o próprio negócio. */}
+          <BusinessRating businessUserId={userId} canRate={currentUserId !== userId} />
         </div>
       )}
 

@@ -114,7 +114,7 @@ export default function BusinessRating({
         <div>
           <StarRow value={Math.round(average ?? 0)} readonly />
           <p className="text-xs text-muted-fg mt-0.5">
-            {total} avaliação{total !== 1 ? "ões" : ""}
+            {total} {total === 1 ? "avaliação" : "avaliações"}
           </p>
         </div>
       </div>
