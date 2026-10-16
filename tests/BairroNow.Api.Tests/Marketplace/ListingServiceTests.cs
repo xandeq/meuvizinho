@@ -472,4 +472,33 @@ public class ListingServiceTests
         result.Should().BeFalse();
         db.ListingFavorites.Should().BeEmpty();
     }
+
+    // "Carregar mais" em Menor/Maior preço usava cursor só por Id: pulava/repetia anúncios.
+    [Theory]
+    [InlineData("price_asc")]
+    [InlineData("price_desc")]
+    public async Task Grid_PriceSort_PagesWithoutGapsOrDuplicates(string sort)
+    {
+        var (svc, db, sellerId) = BuildSut();
+        // Preços fora da ordem dos Ids e com empates, como no mundo real.
+        decimal[] prices = { 50m, 10m, 30m, 10m, 80m, 30m, 20m };
+        foreach (var price in prices)
+            db.Listings.Add(new Listing { SellerId = sellerId, BairroId = 1, Title = $"Item {price}", Description = "d", Price = price, CategoryCode = "outros", SubcategoryCode = "outros", Status = ListingStatus.Active, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow });
+        db.SaveChanges();
+
+        var seen = new List<(decimal Price, int Id)>();
+        string? cursor = null;
+        for (var guard = 0; guard < 10; guard++)
+        {
+            var page = await svc.GetBairroGridAsync(sellerId, 1, null, null, null, false, sort, cursor, 2);
+            seen.AddRange(page.Items.Select(i => (i.Price, i.Id)));
+            cursor = page.NextCursor;
+            if (cursor == null) break;
+        }
+
+        seen.Should().HaveCount(prices.Length);
+        seen.Select(x => x.Id).Should().OnlyHaveUniqueItems();
+        var expected = sort == "price_asc" ? seen.OrderBy(x => x.Price).ThenByDescending(x => x.Id) : seen.OrderByDescending(x => x.Price).ThenByDescending(x => x.Id);
+        seen.Should().Equal(expected);
+    }
 }
