@@ -168,7 +168,10 @@ public class AuthController : ControllerBase
         if (error != null)
             return Unauthorized(new { error });
 
-        return Ok(new { accessToken = response!.AccessToken, refreshToken });
+        // Mesmo contrato do login por senha: o app esperava `user` no corpo e recebia só os tokens
+        // (entrava com usuário vazio); o refresh vai em cookie httpOnly, não no JSON.
+        SetRefreshTokenCookie(refreshToken!);
+        return Ok(response);
     }
 
     [HttpPost("magic-link/request")]
