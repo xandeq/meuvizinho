@@ -15,6 +15,7 @@ import {
 import { Button } from '../../../src/components/Button';
 import { useTheme } from '../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../src/theme/tokens';
+import { EmptyState } from '../../../src/components/EmptyState';
 
 const ROLES: { code: CondominiumRole; label: string }[] = [
   { code: 'Sindico', label: 'Síndico' },
@@ -42,11 +43,14 @@ export default function CondominiumDetailScreen() {
   const [justification, setJustification] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [loadFailed, setLoadFailed] = useState(false);
   const load = () => {
     if (!condoId) return;
     setLoading(true);
+    setLoadFailed(false);
     Promise.all([
-      getCondominium(condoId).then(setCondo),
+      // Sem catch, falha deixava o spinner girando para sempre (condo seguia null).
+      getCondominium(condoId).then(setCondo).catch(() => setLoadFailed(true)),
       // Sem vínculo legível (ex.: erro de rede) o card de vínculo só não aparece.
       getMyResidentStatus(condoId).then(setResidency).catch(() => setResidency(null)),
     ]).finally(() => setLoading(false));
@@ -84,6 +88,21 @@ export default function CondominiumDetailScreen() {
       setSubmitting(false);
     }
   };
+
+  if (loadFailed && !condo) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <EmptyState
+          icon="cloud-offline-outline"
+          title="Não foi possível abrir o condomínio"
+          subtitle="Verifique sua conexão e tente de novo."
+          actionLabel="Tentar de novo"
+          actionIcon="refresh"
+          onAction={load}
+        />
+      </View>
+    );
+  }
 
   if (loading || !condo) {
     return (

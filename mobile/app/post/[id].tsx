@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, Pressable, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,7 +35,13 @@ function Initials({ name }: { name: string | null }) {
   );
 }
 
-function CommentItem({ c, depth = 0 }: { c: CommentDto; depth?: number }) {
+// Conta comentários + respostas (o card do post mostra commentCount, que inclui respostas;
+// a tela contava só os de primeiro nível e os números não batiam).
+function countAll(list: CommentDto[]): number {
+  return list.reduce((n, c) => n + 1 + countAll(c.replies ?? []), 0);
+}
+
+function CommentItem({ c, depth = 0, onReply }: { c: CommentDto; depth?: number; onReply?: (c: CommentDto) => void }) {
   const { colors } = useTheme();
   return (
     <View style={{ marginLeft: depth * 36 }}>
@@ -50,7 +56,18 @@ function CommentItem({ c, depth = 0 }: { c: CommentDto; depth?: number }) {
           <Text style={[styles.body, { color: colors.fg }]}>{c.body}</Text>
         </View>
       </View>
-      {c.replies?.map((r) => <CommentItem key={r.id} c={r} depth={Math.min(depth + 1, 1)} />)}
+      {onReply ? (
+        <Pressable
+          onPress={() => onReply(c)}
+          accessibilityRole="button"
+          accessibilityLabel={`Responder ${c.author.displayName ?? 'vizinho'}`}
+          hitSlop={8}
+          style={styles.replyBtn}
+        >
+          <Text style={[styles.replyText, { color: colors.primary }]}>Responder</Text>
+        </Pressable>
+      ) : null}
+      {c.replies?.map((r) => <CommentItem key={r.id} c={r} depth={Math.min(depth + 1, 1)} onReply={onReply} />)}
     </View>
   );
 }
@@ -72,6 +89,13 @@ export default function PostComments() {
   const [error, setError] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  // Antes não havia como responder: a notificação de resposta abria uma conversa sem saída.
+  const [replyTo, setReplyTo] = useState<CommentDto | null>(null);
+  const inputRef = useRef<TextInput>(null);
+  const startReply = (c: CommentDto) => {
+    setReplyTo(c);
+    inputRef.current?.focus();
+  };
 
   const load = useCallback(async () => {
     setError(null);
@@ -93,9 +117,17 @@ export default function PostComments() {
     if (!body || sending) return;
     setSending(true);
     try {
-      const created = await feedApi.createComment(postId, body);
-      setComments((prev) => [...prev, { ...created, replies: created.replies ?? [] }]);
+      // Resposta a uma resposta vai para a mesma conversa (o servidor guarda um nível).
+      const parentId = replyTo ? (replyTo.parentCommentId ?? replyTo.id) : null;
+      const created = await feedApi.createComment(postId, body, parentId);
+      const fresh = { ...created, replies: created.replies ?? [] };
+      setComments((prev) =>
+        parentId == null
+          ? [...prev, fresh]
+          : prev.map((c) => (c.id === parentId ? { ...c, replies: [...(c.replies ?? []), fresh] } : c))
+      );
       setText('');
+      setReplyTo(null);
       bumpComments(postId);
       setPost((p) => (p ? { ...p, commentCount: p.commentCount + 1 } : p));
     } catch (e) {
@@ -116,14 +148,14 @@ export default function PostComments() {
       <FlatList
         data={comments}
         keyExtractor={(c) => String(c.id)}
-        renderItem={({ item }) => <CommentItem c={item} />}
+        renderItem={({ item }) => <CommentItem c={item} onReply={isVerified ? startReply : undefined} />}
         contentContainerStyle={{ paddingBottom: 16 }}
         keyboardShouldPersistTaps="handled"
         ListHeaderComponent={
           <View>
             {shownPost ? <PostCard post={shownPost} onLike={toggleLike} /> : null}
             <Text style={[styles.section, { color: colors.mutedFg }]}>
-              {comments.length > 0 ? `${comments.length} ${comments.length === 1 ? 'comentário' : 'comentários'}` : 'Comentários'}
+              {(() => { const n = countAll(comments); return n > 0 ? `${n} ${n === 1 ? 'comentário' : 'comentários'}` : 'Comentários'; })()}
             </Text>
             {error ? <Text style={[styles.error, { color: colors.danger }]} accessibilityLiveRegion="polite">{error}</Text> : null}
           </View>
@@ -132,12 +164,23 @@ export default function PostComments() {
           <EmptyState icon="chatbubbles-outline" title="Nenhum comentário ainda" subtitle="Seja o primeiro a responder seu vizinho." />
         }
       />
+      {isVerified && replyTo ? (
+        <View style={[styles.replyBar, { backgroundColor: colors.muted, borderTopColor: colors.border }]}>
+          <Text style={[styles.replyBarText, { color: colors.mutedFg }]} numberOfLines={1}>
+            Respondendo a <Text style={{ color: colors.fg, fontFamily: fontFamily.bold }}>{replyTo.author.displayName ?? 'vizinho'}</Text>
+          </Text>
+          <Pressable onPress={() => setReplyTo(null)} accessibilityRole="button" accessibilityLabel="Cancelar resposta" hitSlop={10}>
+            <Ionicons name="close" size={18} color={colors.mutedFg} />
+          </Pressable>
+        </View>
+      ) : null}
       {isVerified ? (
         <View style={[styles.composer, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: 10 + (keyboardHeight ? 0 : insets.bottom) }]}>
           <TextInput
+            ref={inputRef}
             value={text}
             onChangeText={(t) => setText(t.slice(0, MAX))}
-            placeholder="Escreva um comentário"
+            placeholder={replyTo ? 'Escreva sua resposta' : 'Escreva um comentário'}
             placeholderTextColor={colors.mutedFg}
             multiline
             accessibilityLabel="Escreva um comentário"
@@ -161,6 +204,10 @@ export default function PostComments() {
 }
 
 const styles = StyleSheet.create({
+  replyBtn: { marginLeft: 58, marginTop: -4, marginBottom: 10, alignSelf: 'flex-start' },
+  replyText: { fontFamily: fontFamily.semibold, fontSize: 13 },
+  replyBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: StyleSheet.hairlineWidth },
+  replyBarText: { fontFamily: fontFamily.regular, fontSize: 13, flexShrink: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   section: { fontFamily: fontFamily.semibold, fontSize: 13, letterSpacing: 0.3, marginHorizontal: 16, marginTop: 10, marginBottom: 8 },
   error: { fontFamily: fontFamily.semibold, fontSize: 13, marginHorizontal: 16, marginBottom: 8 },

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   Pressable,
   TextInput,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/lib/auth-store';
 import { useMarketplaceStore } from '../../src/lib/marketplace-store';
 import { marketplaceApi } from '../../src/lib/api/marketplace';
@@ -56,6 +56,17 @@ export default function MarketplaceScreen() {
   useEffect(() => {
     if (bairroId) loadFirstPage(bairroId);
   }, [bairroId, filters.category, filters.verifiedOnly, filters.sort]);
+
+  // Ao voltar de criar/excluir/marcar vendido a grade não mudava: o anúncio excluído seguia lá
+  // e o novo só aparecia puxando para atualizar. Recarrega ao ganhar foco (não na 1ª montagem).
+  const focusedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!focusedOnce.current) { focusedOnce.current = true; return; }
+      if (bairroId) loadFirstPage(bairroId);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [bairroId])
+  );
 
   if (!bairroId) {
     return (
