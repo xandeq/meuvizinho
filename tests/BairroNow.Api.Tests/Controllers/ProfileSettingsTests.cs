@@ -55,6 +55,16 @@ public class ProfileSettingsTests
     }
 
     [Fact]
+    public async Task Get_ReturnsShowOnMap()
+    {
+        var (db, ctrl, userId) = Build();
+        (await db.Users.FirstAsync(u => u.Id == userId)).ShowOnMap = false;
+        await db.SaveChangesAsync();
+        var dto = (ProfileDto)((OkObjectResult)await ctrl.Get(CancellationToken.None)).Value!;
+        dto.ShowOnMap.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Put_KeepsBairroNome()
     {
         var (_, ctrl, _) = Build();

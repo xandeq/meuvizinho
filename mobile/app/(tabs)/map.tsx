@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import {
-  View, Text, Switch, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView,
+  View, Text, Switch, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Alert,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useAuthStore } from '../../src/lib/auth-store';
@@ -13,6 +13,8 @@ import { ScreenHeader } from '../../src/components/ScreenHeader';
 import { useBairroName } from '../../src/lib/useBairroName';
 import { useRouter } from 'expo-router';
 import { goBackOr } from '../../src/lib/navigation';
+import { profileApi } from '../../src/lib/api';
+import { apiErrorMessage } from '../../src/lib/apiError';
 
 // Same default center/zoom as the web map (Vila Velha / ES).
 const DEFAULT_CENTER = { lat: -20.3297, lng: -40.2927, zoom: 15 };
@@ -51,12 +53,18 @@ export default function MapScreen() {
 
   useEffect(() => { loadPins(); }, [loadPins]);
 
+  // Estado real da preferência (antes o switch nascia ligado para todo mundo).
+  useEffect(() => {
+    profileApi.getMe().then((p) => { if (typeof p.showOnMap === 'boolean') setShowOnMap(p.showOnMap); }).catch(() => {});
+  }, [setShowOnMap]);
+
   const handleToggleMap = async (value: boolean) => {
     setShowOnMap(value);
     try {
       await updateMapPreference(value);
-    } catch {
+    } catch (e) {
       setShowOnMap(!value);
+      Alert.alert('Não foi possível salvar', apiErrorMessage(e, 'Tente de novo em instantes.'));
     }
   };
 

@@ -17,6 +17,8 @@ public class ProfileDto
     public bool EmailConfirmed { get; set; }
     public bool IsAdmin { get; set; }
     public bool DigestOptOut { get; set; }
+    // "Aparecer no mapa": site e app mostravam sempre ligado porque o valor nunca era enviado.
+    public bool ShowOnMap { get; set; }
     public string? DisplayName { get; set; }
     public string? PhotoUrl { get; set; }
     public string? Bio { get; set; }
@@ -114,6 +116,7 @@ public class ProfileController : ControllerBase
         EmailConfirmed = user.EmailConfirmed,
         IsAdmin = user.IsAdmin,
         DigestOptOut = user.DigestOptOut,
+        ShowOnMap = user.ShowOnMap,
         DisplayName = user.DisplayName,
         PhotoUrl = user.PhotoUrl,
         Bio = user.Bio,
