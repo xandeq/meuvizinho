@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
+import api from "@/lib/api";
+import { apiErrorMessage } from "@/lib/apiError";
 import {
   ResponsiveContainer,
   LineChart,
@@ -147,15 +149,10 @@ export default function AnalyticsPage() {
     if (!user?.id || !token) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
-    fetch(`${API}/api/v1/users/${user.id}/analytics`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error(`Erro ${r.status}`);
-        return r.json();
-      })
-      .then((d: AnalyticsData) => setData(d))
-      .catch((e) => setError(e instanceof Error ? e.message : "Erro ao carregar"))
+    // axios renova a sessão; antes a tela mostrava "Erro 401" depois de 15 min.
+    api.get<AnalyticsData>(`/api/v1/users/${user.id}/analytics`)
+      .then(({ data: d }) => setData(d))
+      .catch((e) => setError(apiErrorMessage(e, "Não foi possível carregar as estatísticas.")))
       .finally(() => setLoading(false));
   }, [user?.id, token, API]);
 

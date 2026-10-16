@@ -1,4 +1,9 @@
 import { Share, Linking } from 'react-native';
+import Constants from 'expo-constants';
+
+// meuvizinho.com.br não resolve (domínio não registrado): todo link compartilhado pelo app abria
+// erro no WhatsApp de quem recebia. O site no ar é meuvizinhoapp.com.br.
+const SITE_URL = ((Constants.expoConfig?.extra?.siteUrl as string | undefined) ?? 'https://meuvizinhoapp.com.br').replace(/\/$/, '');
 
 export async function shareToWhatsApp(url: string, text: string) {
   const message = `${text}: ${url}`;
@@ -14,9 +19,9 @@ export async function shareToWhatsApp(url: string, text: string) {
 }
 
 export function getPostShareUrl(postId: string) {
-  return `https://meuvizinho.com.br/p/${postId}`;
+  return `${SITE_URL}/p/${postId}`;
 }
 
 export function getListingShareUrl(listingId: string) {
-  return `https://meuvizinho.com.br/m/${listingId}`;
+  return `${SITE_URL}/m/${listingId}`;
 }

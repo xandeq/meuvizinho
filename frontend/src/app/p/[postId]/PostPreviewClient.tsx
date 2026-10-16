@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import api from "@/lib/api";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 import { useAuthStore } from "@/lib/auth";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 
 interface PostPreview {
   id: number;
   content: string;
+  imageUrl?: string | null;
   createdAt: string;
   likeCount: number;
   commentCount: number;
@@ -26,17 +27,23 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
-    if (postId === "preview") {
+    // Export estático: /p/<id>/ é servido pela página pré-gerada /p/preview/ e postId vale sempre
+    // "preview" — todo link compartilhado abria vazio. Lê o id da URL real.
+    const m = window.location.pathname.match(/^\/p\/(\d+)/);
+    const id = m ? m[1] : postId !== "preview" ? postId : null;
+    if (!id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError("Post não encontrado");
       setLoading(false);
       return;
     }
 
     const fetchPost = async () => {
       try {
-        const { data } = await api.get<PostPreview>(
-          `/api/v1/posts/${postId}`
-        );
-        setPost(data);
+        // Endpoint público: o /posts/{id} exige login e quem recebia o link caía no login.
+        const res = await fetch(`${API}/api/v1/share/posts/${id}`);
+        if (!res.ok) throw new Error(String(res.status));
+        setPost(await res.json());
       } catch {
         setError("Post não encontrado");
       } finally {
@@ -95,7 +102,7 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
     );
   }
 
-  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinho.com.br";
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinhoapp.com.br";
   const shareUrl = `${SITE_URL}/p/${post.id}`;
 
   return (
@@ -134,7 +141,7 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
               <div className="flex items-center gap-2">
                 <p className="font-bold text-fg">{post.author.name}</p>
                 {post.author.verified && (
-                  <span className="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded-full font-semibold">
+                  <span className="text-xs bg-secondary-light text-secondary px-2 py-0.5 rounded-full font-semibold">
                     Verificado
                   </span>
                 )}
@@ -149,11 +156,15 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
           <p className="text-fg leading-relaxed whitespace-pre-wrap">
             {post.content}
           </p>
+          {post.imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={post.imageUrl} alt="" className="mt-4 w-full rounded-xl object-cover max-h-96" />
+          )}
 
-          <footer className="flex items-center justify-between pt-2 border-t border-border">
-            <div className="flex items-center gap-6 text-sm font-semibold text-fg/70">
-              <span>{post.likeCount} curtidas</span>
-              <span>{post.commentCount} comentarios</span>
+          <footer className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border">
+            <div className="flex items-center gap-4 text-sm font-semibold text-fg/70 whitespace-nowrap">
+              <span>{post.likeCount} {post.likeCount === 1 ? "curtida" : "curtidas"}</span>
+              <span>{post.commentCount} {post.commentCount === 1 ? "comentário" : "comentários"}</span>
             </div>
             <WhatsAppShareButton url={shareUrl} />
           </footer>
