@@ -710,8 +710,11 @@ public class GroupsController : ControllerBase
 
         bool isAuthor = post.AuthorId == userId.Value;
         bool isModerator = actorMember != null && actorMember.Role != GroupMemberRole.Member;
+        // Admin do site remove pela fila de moderação (/admin/groups) sem ser membro do grupo;
+        // antes recebia 403 e o post denunciado continuava no ar.
+        bool isSiteAdmin = User.FindFirst("is_admin")?.Value == "true";
 
-        if (!isAuthor && !isModerator) return Forbid();
+        if (!isAuthor && !isModerator && !isSiteAdmin) return Forbid();
 
         post.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);

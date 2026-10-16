@@ -123,14 +123,14 @@ export default function OfflinePage() {
           <h1
             className="text-2xl font-extrabold tracking-tight text-fg mb-2 animate-fade-up stagger-1"
           >
-            Sem conexao
+            Sem conexão
           </h1>
           <p
             className="text-sm leading-relaxed mb-8 animate-fade-up stagger-2"
             style={{ color: "var(--color-muted-fg)", maxWidth: "260px", margin: "0 auto 2rem" }}
           >
-            Verifique sua internet e tente novamente. Algumas paginas podem
-            estar disponiveis no cache.
+            Verifique sua internet e tente novamente. Algumas páginas podem
+            estar disponíveis no cache.
           </p>
 
           {/* ── Primary action ──────────────────────────────── */}

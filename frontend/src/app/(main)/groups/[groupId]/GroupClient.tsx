@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { getHubConnection } from '@/lib/signalr';
 import { useGroupStore } from '@/stores/group-store';
 import { useAuthStore } from '@/lib/auth';
+import api from '@/lib/api';
 import { getGroup, getGroupPosts, createGroupPost, getGroupEvents, rsvpEvent, getGroupMembers, toggleGroupPostLike, createGroupEvent, deleteGroupPost } from '@/lib/api/groups';
 import type { GroupMember } from '@/lib/api/groups';
 import type { GroupPost, GroupEvent, GroupPoll } from '@/lib/types/groups';
@@ -40,7 +41,6 @@ export default function GroupClient() {
     currentGroup,
     setCurrentGroup,
   } = useGroupStore();
-  const accessToken = useAuthStore((s) => s.accessToken);
   const currentUserId = useAuthStore((s) => s.user?.id);
   const [composerBody, setComposerBody] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -60,7 +60,6 @@ export default function GroupClient() {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
 
-  const API = process.env.NEXT_PUBLIC_API_URL ?? 'https://api.bairronow.com.br';
 
   // Derive role from group detail (always available) with members-tab fallback
   const myMember = members.find((m) => m.userId === currentUserId);
@@ -149,44 +148,36 @@ export default function GroupClient() {
   useEffect(() => {
     if (!groupId || activeTab !== 'polls') return;
     setPollsLoading(true);
-    fetch(`${API}/api/v1/groups/${groupId}/polls`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((r) => r.json())
-      .then((d: GroupPoll[]) => setPolls(Array.isArray(d) ? d : []))
+    // axios renova a sessão: com fetch cru as enquetes sumiam depois dos 15 min do token.
+    api.get<GroupPoll[]>(`/api/v1/groups/${groupId}/polls`)
+      .then(({ data: d }) => setPolls(Array.isArray(d) ? d : []))
       .catch(() => setPolls([]))
       .finally(() => setPollsLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, groupId]);
 
   // Load pending members only when pending tab is active
   useEffect(() => {
     if (!groupId || activeTab !== 'pending') return;
     setPendingLoading(true);
-    fetch(`${API}/api/v1/groups/${groupId}/pending`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((r) => r.json())
-      .then((d: PendingMember[]) => setPending(Array.isArray(d) ? d : []))
+    api.get<PendingMember[]>(`/api/v1/groups/${groupId}/pending`)
+      .then(({ data: d }) => setPending(Array.isArray(d) ? d : []))
       .catch(() => setPending([]))
       .finally(() => setPendingLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, groupId]);
 
   const handleApprove = async (userId: string) => {
-    await fetch(`${API}/api/v1/groups/${groupId}/members/${userId}/approve`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    setPending((prev) => prev.filter((m) => m.userId !== userId));
+    // Antes tirava da lista mesmo quando a API recusava.
+    try {
+      await api.post(`/api/v1/groups/${groupId}/members/${userId}/approve`);
+      setPending((prev) => prev.filter((m) => m.userId !== userId));
+    } catch { /* continua na lista para tentar de novo */ }
   };
 
   const handleReject = async (userId: string) => {
-    await fetch(`${API}/api/v1/groups/${groupId}/members/${userId}/reject`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    setPending((prev) => prev.filter((m) => m.userId !== userId));
+    try {
+      await api.post(`/api/v1/groups/${groupId}/members/${userId}/reject`);
+      setPending((prev) => prev.filter((m) => m.userId !== userId));
+    } catch { /* continua na lista para tentar de novo */ }
   };
 
   const handleToggleLike = async (postId: number, currentlyLiked: boolean, currentCount: number) => {
@@ -475,8 +466,6 @@ export default function GroupClient() {
           polls={polls}
           pollsLoading={pollsLoading}
           currentUserId={currentUserId}
-          accessToken={accessToken}
-          API={API}
           isMember={currentGroup?.myStatus === 'Active'}
           isAdminOrOwner={isAdminOrOwner}
           onPollCreated={(p) => setPolls((prev) => (prev.some((x) => x.id === p.id) ? prev : [p, ...prev]))}
@@ -640,8 +629,6 @@ function GroupPollsTab({
   polls,
   pollsLoading,
   currentUserId,
-  accessToken,
-  API,
   isMember,
   isAdminOrOwner,
   onPollCreated,
@@ -652,8 +639,6 @@ function GroupPollsTab({
   polls: GroupPoll[];
   pollsLoading: boolean;
   currentUserId: string | undefined;
-  accessToken: string | null;
-  API: string;
   isMember: boolean;
   isAdminOrOwner: boolean;
   onPollCreated: (p: GroupPoll) => void;
@@ -697,15 +682,15 @@ function GroupPollsTab({
     if (!question.trim() || validOpts.length < 2) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`${API}/api/v1/groups/${groupId}/polls`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: question.trim(), options: validOpts, expiresAt: expiresAt || null }),
+      const { data } = await api.post<GroupPoll>(`/api/v1/groups/${groupId}/polls`, {
+        question: question.trim(), options: validOpts, expiresAt: expiresAt || null,
       });
-      if (res.ok) {
-        onPollCreated(await res.json());
-        resetForm();
-      }
+      onPollCreated(data);
+      resetForm();
+      setPollError(null);
+    } catch {
+      // Antes falhava em silêncio.
+      setPollError('Não foi possível criar a enquete. Tente de novo.');
     } finally {
       setSubmitting(false);
     }
@@ -716,46 +701,38 @@ function GroupPollsTab({
     setVotingId(poll.id);
     try {
       const isToggle = poll.userVoteOptionId === optionId;
-      const method = isToggle ? 'DELETE' : 'POST';
-      const body = isToggle ? undefined : JSON.stringify({ optionId });
-      const res = await fetch(`${API}/api/v1/groups/${groupId}/polls/${poll.id}/vote`, {
-        method,
-        headers: { Authorization: `Bearer ${accessToken}`, ...(body ? { 'Content-Type': 'application/json' } : {}) },
-        body,
-      });
-      if (res.ok && res.status !== 204) onPollUpdated(await res.json());
+      const url = `/api/v1/groups/${groupId}/polls/${poll.id}/vote`;
+      const res = isToggle ? await api.delete<GroupPoll>(url) : await api.post<GroupPoll>(url, { optionId });
+      if (res.status !== 204 && res.data) onPollUpdated(res.data);
+      setPollError(null);
+    } catch {
+      setPollError('Não foi possível registrar o voto. Tente de novo.');
     } finally {
       setVotingId(null);
     }
   };
 
   const handleClose = async (pollId: number) => {
-    const res = await fetch(`${API}/api/v1/groups/${groupId}/polls/${pollId}/close`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (res.ok) {
+    try {
+      const res = await api.post<GroupPoll>(`/api/v1/groups/${groupId}/polls/${pollId}/close`);
       setPollError(null);
-      if (res.status === 204) {
+      if (res.status === 204 || !res.data) {
         const poll = polls.find((p) => p.id === pollId);
         if (poll) onPollUpdated({ ...poll, isClosed: true });
       } else {
-        onPollUpdated(await res.json());
+        onPollUpdated(res.data);
       }
-    } else {
+    } catch {
       setPollError('Não foi possível encerrar a enquete.');
     }
   };
 
   const handleDelete = async (pollId: number) => {
-    const res = await fetch(`${API}/api/v1/groups/${groupId}/polls/${pollId}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (res.ok) {
+    try {
+      await api.delete(`/api/v1/groups/${groupId}/polls/${pollId}`);
       setPollError(null);
       onPollDeleted(pollId);
-    } else {
+    } catch {
       setPollError('Não foi possível remover a enquete.');
     }
   };

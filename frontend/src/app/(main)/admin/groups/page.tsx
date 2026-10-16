@@ -75,9 +75,9 @@ export default function AdminGroupsPage() {
                 <td className="py-2">
                   <button
                     onClick={() =>
-                      deleteGroupPost(p.groupId, p.id).then(() =>
-                        setFlaggedPosts((ps) => ps.filter((x) => x.id !== p.id))
-                      )
+                      deleteGroupPost(p.groupId, p.id)
+                        .then(() => setFlaggedPosts((ps) => ps.filter((x) => x.id !== p.id)))
+                        .catch(() => window.alert("Não foi possível remover o post. Tente de novo."))
                     }
                     className="text-danger hover:underline text-xs"
                   >
