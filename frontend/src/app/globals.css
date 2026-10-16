@@ -314,3 +314,26 @@ html, body {
 .dark .bg-danger { background-color: #DC2626; }
 .dark .hover\:bg-danger-hover:hover { background-color: #B91C1C; }
 .dark .bg-secondary { background-color: #047857; }
+
+/* Curtir: mesmo "pop" do app (sobe ~1.3x e assenta com mola). */
+@keyframes heart-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  65%  { transform: scale(0.92); }
+  100% { transform: scale(1.15); }
+}
+.animate-heart-pop {
+  animation: heart-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Quem pede menos movimento no sistema não recebe entradas, pulsos nem pops.
+   Antes nenhuma animação do site respeitava essa preferência. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

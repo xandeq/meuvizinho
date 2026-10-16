@@ -11,10 +11,12 @@ interface LikeButtonProps {
   onChange?: (liked: boolean, count: number) => void;
 }
 
-function HeartIcon({ filled }: { filled: boolean }) {
+function HeartIcon({ filled, popKey }: { filled: boolean; popKey: number }) {
   return (
     <svg
-      className="w-4 h-4 transition-transform duration-150"
+      // A key muda a cada curtida: remonta o svg e a animação roda de novo.
+      key={popKey}
+      className={["w-4 h-4 transition-transform duration-150", popKey > 0 && filled ? "animate-heart-pop" : ""].join(" ")}
       style={{ transform: filled ? "scale(1.15)" : "scale(1)" }}
       viewBox="0 0 24 24"
       fill={filled ? "currentColor" : "none"}
@@ -37,6 +39,7 @@ export default function LikeButton({
   const [liked, setLiked] = useState(initialLiked);
   const [count, setCount] = useState(initialCount);
   const [busy, setBusy] = useState(false);
+  const [popKey, setPopKey] = useState(0);
   const setStoreLiked = useFeedStore((s) => s.setLiked);
 
   const handleClick = async () => {
@@ -48,6 +51,7 @@ export default function LikeButton({
 
     setLiked(nextLiked);
     setCount(nextCount);
+    if (nextLiked) setPopKey((k) => k + 1);
     setStoreLiked(postId, nextLiked, nextCount);
     onChange?.(nextLiked, nextCount);
 
@@ -85,7 +89,7 @@ export default function LikeButton({
         .filter(Boolean)
         .join(" ")}
     >
-      <HeartIcon filled={liked} />
+      <HeartIcon filled={liked} popKey={popKey} />
       <span className="sr-only">{liked ? "Descurtir" : "Curtir"}, </span>
       <span>{count}</span>
       <span className="sr-only"> {count === 1 ? "curtida" : "curtidas"}</span>

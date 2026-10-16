@@ -158,8 +158,14 @@ export default function MarketplacePage() {
             aria-label="Anúncios"
             className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
           >
-            {items.map((l) => (
-              <div role="listitem" key={l.id}>
+            {items.map((l, i) => (
+              <div
+                role="listitem"
+                key={l.id}
+                className="animate-fade-up"
+                // Escalona só a primeira leva; "carregar mais" entra junto, sem esperar.
+                style={{ animationDelay: `${i < 8 ? i * 45 : 0}ms` }}
+              >
                 <ListingCard listing={l} />
               </div>
             ))}
