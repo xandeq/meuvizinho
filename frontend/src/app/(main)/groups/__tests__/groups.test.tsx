@@ -14,7 +14,7 @@ jest.mock('@/lib/api/groups', () => ({
   rsvpEvent: jest.fn().mockResolvedValue(undefined),
   deleteGroupPost: jest.fn().mockResolvedValue(undefined),
   toggleGroupPostLike: jest.fn().mockResolvedValue(undefined),
-  createGroupEvent: jest.fn().mockResolvedValue({ id: 1, groupId: 1, title: 'Test Event', description: null, location: null, startsAt: new Date().toISOString(), endsAt: null, rsvpCount: 0, myRsvp: null }),
+  createGroupEvent: jest.fn().mockResolvedValue({ id: 1, groupId: 1, title: 'Test Event', description: null, location: null, startsAt: new Date().toISOString(), endsAt: null, attendingCount: 0, myRsvp: null }),
   getGroupMembers: jest.fn().mockResolvedValue({ items: [], total: 0 }),
 }));
 
@@ -159,7 +159,7 @@ describe('GroupEventsTab', () => {
         location: 'Praça Central',
         startsAt: '2024-06-15T18:00:00.000Z',
         endsAt: null,
-        rsvpCount: 7,
+        attendingCount: 7,
         myRsvp: false,
       },
     ]);

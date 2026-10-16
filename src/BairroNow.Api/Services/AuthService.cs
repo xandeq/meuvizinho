@@ -307,13 +307,26 @@ public class AuthService : IAuthService
         try
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={idToken}", ct);
+            var response = await client.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={Uri.EscapeDataString(idToken)}", ct);
             if (!response.IsSuccessStatusCode)
                 return (null, null, "Token Google invalido.");
 
             var json = await response.Content.ReadAsStringAsync(ct);
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
+
+            // O tokeninfo só diz que o token é do Google, não que foi emitido para o Meu Vizinho.
+            // Sem conferir aud/iss, um token que a vítima deu a outro app servia para entrar na conta dela.
+            var aud = root.TryGetProperty("aud", out var a) ? a.GetString() : null;
+            var iss = root.TryGetProperty("iss", out var i) ? i.GetString() : null;
+            if (iss is not ("https://accounts.google.com" or "accounts.google.com"))
+                return (null, null, "Token Google invalido.");
+            var allowedAudiences = new[] { _configuration["Google:ClientId"] }
+                .Concat((_configuration["Google:MobileClientIds"] ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToHashSet(StringComparer.Ordinal);
+            if (aud is null || !allowedAudiences.Contains(aud))
+                return (null, null, "Token Google invalido.");
 
             var emailVerified = root.TryGetProperty("email_verified", out var ev) ? ev.GetString() : null;
             if (emailVerified != "true")
