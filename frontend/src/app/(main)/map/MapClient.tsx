@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '@/lib/auth';
 import { getPins, getPois, updateMapPreference } from '@/lib/api/map';
 import type { MapPin, PointOfInterest, MapFilter } from '@/lib/types/map';
+import { profileApi } from '@/lib/api';
 
 // O mapa abria sempre no mesmo ponto de Vila Velha, qualquer que fosse o bairro.
 // Na primeira carga com pinos, enquadra os vizinhos (uma vez, sem brigar com o zoom do usuário).
@@ -92,10 +93,19 @@ export default function MapClient() {
       .finally(() => setLoading(false));
   }, [user?.bairroId, filter]);
 
+  // Estado real da preferência: antes nascia ligado e o 1º clique mandava "false" sem mudar nada.
+  useEffect(() => {
+    profileApi.getMe().then((p) => { if (typeof p.showOnMap === "boolean") setShowOnMap(p.showOnMap); }).catch(() => {});
+  }, []);
+
   const handleToggleVisibility = async () => {
     const next = !showOnMap;
     setShowOnMap(next);
-    await updateMapPreference(next);
+    try {
+      await updateMapPreference(next);
+    } catch {
+      setShowOnMap(!next); // desfaz se a API recusar
+    }
   };
 
   return (

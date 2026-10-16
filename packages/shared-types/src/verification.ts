@@ -31,6 +31,7 @@ export interface ProfileDto {
   emailConfirmed?: boolean;
   isAdmin?: boolean;
   digestOptOut?: boolean;
+  showOnMap?: boolean;
   displayName: string | null;
   photoUrl: string | null;
   bio: string | null;

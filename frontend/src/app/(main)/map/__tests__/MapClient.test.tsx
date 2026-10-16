@@ -47,6 +47,10 @@ jest.mock('@/lib/api/map', () => ({
   updateMapPreference: jest.fn().mockResolvedValue(undefined),
 }));
 
+// Preferência "Aparecer no mapa" vem do perfil.
+const mockGetMe = jest.fn().mockResolvedValue({ showOnMap: true });
+jest.mock('@/lib/api', () => ({ profileApi: { getMe: () => mockGetMe() } }));
+
 // Mock auth store
 jest.mock('@/lib/auth', () => ({
   useAuthStore: (selector: (s: { user: { bairroId: number } | null }) => unknown) =>
@@ -96,6 +100,12 @@ describe('MapClient', () => {
       expect(screen.getByText('João Silva')).toBeInTheDocument();
       expect(screen.getByText('Verificado')).toBeInTheDocument();
     });
+  });
+
+  it('starts unchecked when the profile says the user opted out', async () => {
+    mockGetMe.mockResolvedValueOnce({ showOnMap: false });
+    render(<MapClient />);
+    await waitFor(() => expect(screen.getByRole('checkbox')).not.toBeChecked());
   });
 
   it('renders filter buttons Verificados, Novos, Todos', () => {
