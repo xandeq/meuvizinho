@@ -10,6 +10,8 @@ import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../src/theme/tokens';
 import type { ProfileDto } from '@bairronow/shared-types';
 import { useKeyboardHeight } from '../src/lib/useKeyboardHeight';
+import { apiErrorMessage } from '../src/lib/apiError';
+import { EmptyState } from '../src/components/EmptyState';
 
 const BIO_MAX = 160;
 
@@ -37,21 +39,25 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const p = await profileApi.getMe();
-        setProfile(p);
-        setDisplayName(p.displayName ?? '');
-        setBio(p.bio ?? '');
-      } catch (e: any) {
-        Alert.alert('Erro', e?.message ?? 'Falha ao carregar perfil');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  const loadProfile = async () => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const p = await profileApi.getMe();
+      setProfile(p);
+      setDisplayName(p.displayName ?? '');
+      setBio(p.bio ?? '');
+    } catch (e: any) {
+      // Antes: alerta com "Request failed with status code 401" e formulário vazio, sem saída.
+      setLoadError(apiErrorMessage(e, 'Não foi possível carregar seu perfil.'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadProfile(); }, []);
 
   const dirty = !!profile && (displayName !== (profile.displayName ?? '') || bio !== (profile.bio ?? ''));
 
@@ -75,11 +81,19 @@ export default function Profile() {
       // Confirmação inline no lugar de um alerta modal.
       setSaved(true);
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.message ?? e?.message ?? 'Falha ao salvar');
+      Alert.alert('Não foi possível salvar', apiErrorMessage(e, 'Tente de novo em instantes.'));
     } finally {
       setSaving(false);
     }
   };
+
+  if (loadError && !profile) {
+    return (
+      <View style={[styles.center, { backgroundColor: colors.bg }]}>
+        <EmptyState icon="cloud-offline-outline" title="Perfil indisponível" subtitle={loadError} actionLabel="Tentar de novo" actionIcon="refresh" onAction={loadProfile} />
+      </View>
+    );
+  }
 
   if (loading) {
     return (

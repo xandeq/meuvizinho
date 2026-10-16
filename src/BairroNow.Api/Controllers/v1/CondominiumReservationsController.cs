@@ -96,7 +96,8 @@ public class CondominiumReservationsController : ControllerBase
         var resident = await _db.CondominiumResidents.AsNoTracking()
             .Where(r => r.CondominiumId == id && r.UserId == userId.Value)
             .OrderByDescending(r => r.CreatedAt)
-            .Select(r => new { r.Id, Status = r.Status.ToString(), r.Unit, r.CreatedAt, r.ReviewedAt })
+            // ReviewNote: o app mostra o motivo da recusa, mas o campo nunca vinha (sempre vazio).
+            .Select(r => new { r.Id, Status = r.Status.ToString(), r.Unit, r.CreatedAt, r.ReviewedAt, r.ReviewNote })
             .FirstOrDefaultAsync(ct);
 
         if (resident == null) return Ok(new { Status = "None" });
