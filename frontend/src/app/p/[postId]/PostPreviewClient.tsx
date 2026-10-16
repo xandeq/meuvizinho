@@ -181,7 +181,7 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
             <div className="flex justify-center gap-3">
               <Link
                 href="/login/"
-                className="px-6 py-2 font-semibold text-primary border-2 border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
+                className="px-6 py-2 font-semibold bg-card text-primary-hover border-2 border-primary rounded-lg hover:bg-primary hover:text-white transition-colors"
               >
                 Entrar
               </Link>

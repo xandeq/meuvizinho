@@ -15,6 +15,7 @@ public interface IAuthService
     // Phase 6: Google OAuth
     Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInAsync(string email, string googleId, CancellationToken ct = default);
     Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInMobileAsync(string idToken, CancellationToken ct = default);
+    Task<bool> ConfirmEmailAsync(string token, CancellationToken ct = default);
 
     // Phase 6: Magic Link
     Task RequestMagicLinkAsync(string email, CancellationToken ct = default);

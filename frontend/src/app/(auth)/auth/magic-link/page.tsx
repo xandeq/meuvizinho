@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -11,6 +11,15 @@ import AuthLayout from "@/components/layouts/AuthLayout";
 function MagicLinkForm() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
+  const urlToken = searchParams.get("token");
+
+  // O e-mail traz /auth/magic-link?token=...; antes a página só mostrava o formulário e o login
+  // nunca completava. Repassa o token para a API, que grava a sessão e volta em /auth/callback.
+  useEffect(() => {
+    if (!urlToken) return;
+    const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
+    window.location.replace(`${API}/api/v1/auth/magic-link/verify?token=${encodeURIComponent(urlToken)}`);
+  }, [urlToken]);
 
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -37,6 +46,14 @@ function MagicLinkForm() {
     }
   };
 
+  if (urlToken) {
+    return (
+      <AuthLayout title="Entrando…" subtitle="Validando seu link de acesso">
+        <p className="text-center text-fg/60">Só um instante.</p>
+      </AuthLayout>
+    );
+  }
+
   if (sent) {
     return (
       <AuthLayout
@@ -45,7 +62,7 @@ function MagicLinkForm() {
       >
         <div className="text-center space-y-4">
           <p className="text-fg/70 font-medium">
-            Se o email existir, enviamos um link de acesso. Verifique sua caixa
+            Se o e-mail existir, enviamos um link de acesso. Verifique sua caixa
             de entrada.
           </p>
           <Link

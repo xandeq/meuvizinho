@@ -878,11 +878,11 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════
           MARKETPLACE PREVIEW — amber-50 tinted
       ══════════════════════════════════════════════════════ */}
-      <section className="bg-amber-50 py-20 px-6 overflow-hidden">
+      <section className="bg-accent-light py-20 px-6 overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-amber-700 mb-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-accent-hover mb-3">
                 Marketplace
               </p>
               <h2 className="text-4xl md:text-5xl font-extrabold text-fg tracking-tight">
@@ -900,7 +900,7 @@ export default function LandingPage() {
           </div>
 
           {/* Exemplos do Mercado (ilustrativos) */}
-          <p className="text-xs font-semibold uppercase tracking-widest text-amber-800 mb-3">Exemplo de anúncios</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-accent-hover mb-3">Exemplo de anúncios</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             <FakeListingCard title="Bicicleta aro 26 conservada" price="R$&nbsp;380" category="Esporte" art="bike" verified />
             <FakeListingCard title="Mesa de escritório cor carvalho" price="R$&nbsp;250" category="Móveis" art="desk" verified />
@@ -912,7 +912,7 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════════════════════
           LOCAL TRUST — emerald-50, feature list
       ══════════════════════════════════════════════════════ */}
-      <section className="bg-emerald-50 py-20 px-6">
+      <section className="bg-secondary-light py-20 px-6">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           {/* Checklist */}
           <ul className="space-y-4">
@@ -969,7 +969,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/register/"
-              className="h-14 px-10 rounded-lg bg-white text-primary font-extrabold text-lg
+              className="h-14 px-10 rounded-lg bg-white text-[#1D4ED8] font-extrabold text-lg
                          flex items-center gap-2 transition-all duration-200 hover:scale-[1.03]"
             >
               Criar minha conta
