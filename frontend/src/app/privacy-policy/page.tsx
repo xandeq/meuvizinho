@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
           <p className="text-muted-fg">
             Para exercer seus direitos ou tirar dúvidas sobre esta política,
             entre em contato pelo e-mail:{" "}
-            <span className="font-medium">privacidade@meuvizinho.com.br</span>
+            <a href="mailto:privacidade@meuvizinhoapp.com.br" className="font-medium text-primary underline underline-offset-2">privacidade@meuvizinhoapp.com.br</a>
           </p>
         </section>
       </div>
