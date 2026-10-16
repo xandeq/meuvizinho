@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/lib/auth";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import api from "@/lib/api";
 
 interface UpcomingEvent {
   id: number;
@@ -21,21 +22,17 @@ interface Props { bairroId: number | null; }
 
 export default function EventsUpcoming({ bairroId }: Props) {
   const token = useAuthStore((s) => s.accessToken);
-  const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!bairroId || !token) { setLoading(false); return; }
-    fetch(`${API}/api/v1/events/upcoming`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(r => r.json())
-      .then(setEvents)
+    api.get<UpcomingEvent[]>("/api/v1/events/upcoming")
+      .then(({ data }) => setEvents(Array.isArray(data) ? data : []))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [bairroId, token, API]);
+  }, [bairroId, token]);
 
   if (!loading && events.length === 0) return null; // hide widget if no events
 

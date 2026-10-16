@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useAuthStore } from "@/lib/auth";
+import api from "@/lib/api";
+import { apiErrorMessage } from "@/lib/apiError";
 
 interface Rating {
   id: number;
@@ -50,8 +51,7 @@ export default function BusinessRating({
   businessUserId,
   canRate = true,
 }: Props) {
-  const token = useAuthStore((s) => s.accessToken);
-  const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [average, setAverage] = useState<number | null>(null);
@@ -64,11 +64,9 @@ export default function BusinessRating({
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API}/api/v1/users/${businessUserId}/business-ratings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((d: { ratings?: Rating[]; average?: number | null; total?: number }) => {
+    // axios: o fetch cru com o token da memória mostrava 0 avaliações depois dos 15 min do token.
+    api.get<{ ratings?: Rating[]; average?: number | null; total?: number }>(`/api/v1/users/${businessUserId}/business-ratings`)
+      .then(({ data: d }) => {
         setRatings(d.ratings ?? []);
         setAverage(d.average ?? null);
         setTotal(d.total ?? 0);
@@ -79,26 +77,23 @@ export default function BusinessRating({
         setTotal(0);
       })
       .finally(() => setLoading(false));
-  }, [businessUserId, token, submitted, API]);
+  }, [businessUserId, submitted]);
 
   const handleSubmit = async () => {
     if (myStars === 0) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
-      await fetch(`${API}/api/v1/users/${businessUserId}/business-ratings`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          stars: myStars,
-          comment: myComment || undefined,
-        }),
+      await api.post(`/api/v1/users/${businessUserId}/business-ratings`, {
+        stars: myStars,
+        comment: myComment || undefined,
       });
       setSubmitted((s) => !s);
       setMyStars(0);
       setMyComment("");
+    } catch (e) {
+      // Antes não olhava a resposta: o formulário limpava como se tivesse dado certo e a avaliação sumia.
+      setSubmitError(apiErrorMessage(e, "Não foi possível enviar a avaliação."));
     } finally {
       setSubmitting(false);
     }
@@ -140,6 +135,7 @@ export default function BusinessRating({
               >
                 {submitting ? "Enviando..." : "Enviar avaliação"}
               </button>
+              {submitError && <p role="alert" className="text-sm text-danger">{submitError}</p>}
             </>
           )}
         </div>

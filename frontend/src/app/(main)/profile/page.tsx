@@ -10,7 +10,7 @@ import Avatar from "@/components/ui/Avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import EmptyState from "@/components/ui/EmptyState";
 import BusinessRating from "@/components/features/BusinessRating";
-import { profileApi } from "@/lib/api";
+import api, { profileApi } from "@/lib/api";
 import { updateProfileSchema } from "@bairronow/shared-validators";
 import { useAuthStore } from "@/lib/auth";
 import type { ProfileDto } from "@bairronow/shared-types";
@@ -44,8 +44,6 @@ function XIcon() {
 }
 
 function BusinessGalleryUpload({ userId }: { userId: string }) {
-  const token = useAuthStore((s) => s.accessToken);
-  const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [photos, setPhotos] = useState<BusinessPhoto[]>([]);
@@ -56,14 +54,9 @@ function BusinessGalleryUpload({ userId }: { userId: string }) {
 
   const fetchPhotos = () => {
     setLoadingPhotos(true);
-    fetch(`${API}/api/v1/users/${userId}/business-photos`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("Erro ao carregar fotos");
-        return r.json();
-      })
-      .then((d: BusinessPhoto[]) => setPhotos(d))
+    // axios (renova a sessão) e mensagem real da API ("Limite de 10 fotos atingido.").
+    api.get<BusinessPhoto[]>(`/api/v1/users/${userId}/business-photos`)
+      .then(({ data: d }) => setPhotos(d))
       .catch(() => setPhotos([]))
       .finally(() => setLoadingPhotos(false));
   };
@@ -81,12 +74,9 @@ function BusinessGalleryUpload({ userId }: { userId: string }) {
     try {
       const form = new FormData();
       form.append("photo", file);
-      const res = await fetch(`${API}/api/v1/users/${userId}/business-photos`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
+      await api.post(`/api/v1/users/${userId}/business-photos`, form, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      if (!res.ok) throw new Error("Falha ao enviar foto");
       fetchPhotos();
     } catch (err) {
       setUploadError(apiErrorMessage(err, "Erro ao enviar foto"));
@@ -99,11 +89,7 @@ function BusinessGalleryUpload({ userId }: { userId: string }) {
   const handleDelete = async (photoId: number) => {
     setDeletingId(photoId);
     try {
-      const res = await fetch(`${API}/api/v1/users/${userId}/business-photos/${photoId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Falha ao remover foto");
+      await api.delete(`/api/v1/users/${userId}/business-photos/${photoId}`);
       fetchPhotos();
     } catch (err) {
       setUploadError(apiErrorMessage(err, "Erro ao remover foto"));
