@@ -56,6 +56,7 @@ public class SecurityAlertsController : ControllerBase
         if (!string.IsNullOrWhiteSpace(kind) && Enum.TryParse<SecurityAlertKind>(kind, true, out var k))
             query = query.Where(a => a.Kind == k);
 
+        var me = GetUserId();
         var total = await query.CountAsync(ct);
         var items = await query
             .OrderByDescending(a => a.CreatedAt)
@@ -72,6 +73,8 @@ public class SecurityAlertsController : ControllerBase
                 a.Longitude,
                 Status = a.Status.ToString(),
                 a.UpvoteCount,
+                // Para o botão "Eu também vi" já vir marcado.
+                UpvotedByMe = me != null && _db.SecurityAlertUpvotes.Any(u => u.SecurityAlertId == a.Id && u.UserId == me),
                 ReportedBy = a.ReportedByUser != null ? a.ReportedByUser.DisplayName : null,
                 a.CreatedAt,
                 a.ResolvedAt,
@@ -131,6 +134,9 @@ public class SecurityAlertsController : ControllerBase
             return BadRequest(new { error = "Descrição deve ter entre 1 e 1000 caracteres." });
         if (req.BairroId <= 0)
             return BadRequest(new { error = "Bairro inválido." });
+        // Alerta vai para todos os moradores do bairro: só do bairro onde a pessoa é verificada.
+        if (req.BairroId != user.BairroId)
+            return StatusCode(403, new { error = "Você só pode publicar alertas no seu bairro." });
         if (req.LocationDescription?.Length > 300)
             return BadRequest(new { error = "Descrição do local deve ter no máximo 300 caracteres." });
 
@@ -174,18 +180,34 @@ public class SecurityAlertsController : ControllerBase
     [HttpPost("{id:int}/upvote")]
     public async Task<IActionResult> Upvote(int id, CancellationToken ct = default)
     {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
         var exists = await _db.SecurityAlerts
             .AnyAsync(a => a.Id == id && a.DeletedAt == null && a.Status == SecurityAlertStatus.Active, ct);
         if (!exists) return NotFound();
 
-        await _db.SecurityAlerts
-            .Where(a => a.Id == id)
-            .ExecuteUpdateAsync(s => s.SetProperty(a => a.UpvoteCount, a => a.UpvoteCount + 1), ct);
+        // Um voto por pessoa. Antes cada toque somava 1 e "N confirmaram" podia ser inflado à vontade.
+        var already = await _db.SecurityAlertUpvotes.AnyAsync(u => u.SecurityAlertId == id && u.UserId == userId.Value, ct);
+        if (!already)
+        {
+            var alert = await _db.SecurityAlerts.FirstAsync(a => a.Id == id, ct);
+            alert.UpvoteCount++;
+            _db.SecurityAlertUpvotes.Add(new SecurityAlertUpvote { SecurityAlertId = id, UserId = userId.Value });
+            try
+            {
+                await _db.SaveChangesAsync(ct); // voto e contador juntos
+            }
+            catch (DbUpdateException)
+            {
+                // Toque duplo simultâneo: o índice único barrou o segundo; segue sem somar.
+            }
+        }
 
         var upvoteCount = await _db.SecurityAlerts.AsNoTracking()
             .Where(a => a.Id == id).Select(a => a.UpvoteCount).FirstAsync(ct);
 
-        return Ok(new { upvoteCount });
+        return Ok(new { upvoteCount, upvotedByMe = true });
     }
 
     // POST /api/v1/security-alerts/{id}/resolve — admin encerra o alerta.
