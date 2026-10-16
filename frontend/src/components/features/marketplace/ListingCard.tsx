@@ -143,9 +143,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
             <span className="text-xs text-muted-fg truncate font-medium">
               {listing.sellerDisplayName}
             </span>
-            {listing.sellerIsVerified && (
-              <VerifiedBadge verified size="sm" />
-            )}
+            {listing.sellerIsVerified && <VerifiedBadge verified compact />}
             {listing.sellerIsPremium && (
               <span
                 className="inline-flex items-center rounded-full bg-accent/10 text-accent text-[10px] font-bold px-1.5 py-0.5 leading-none"
@@ -160,6 +158,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
             <WhatsAppShareButton
               url={`${process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinhoapp.com.br"}/m/${listing.id}`}
               text="Veja esta oferta no Meu Vizinho"
+              iconOnly
             />
           </div>
         </div>
