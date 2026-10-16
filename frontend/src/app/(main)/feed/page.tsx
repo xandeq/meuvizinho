@@ -255,7 +255,7 @@ function BusinessSpotlight({ bairroId }: { bairroId: number }) {
         <span className="text-accent">
           <StoreIcon />
         </span>
-        <h2 className="text-sm font-bold text-fg">Negocios do Bairro</h2>
+        <h2 className="text-sm font-bold text-fg">Negócios do Bairro</h2>
       </div>
 
       {spotlightLoading ? (
@@ -277,7 +277,7 @@ function BusinessSpotlight({ bairroId }: { bairroId: number }) {
             >
               <BusinessAvatarCircle name={biz.displayName ?? "N"} />
               <span className="text-xs font-semibold text-fg truncate max-w-[100px]">
-                {biz.displayName ?? "Negocio"}
+                {biz.displayName ?? "Negócio"}
               </span>
             </Link>
           ))}

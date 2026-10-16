@@ -26,7 +26,7 @@ public class ResendEmailService : IEmailService
         var html = $@"
 <h2>Confirme seu e-mail no Meu Vizinho</h2>
 <p>Clique no link abaixo para confirmar seu cadastro:</p>
-<p><a href=""{_configuration["FrontendUrl"] ?? "https://meuvizinhoapp.com.br"}/confirm-email?token={token}"">Confirmar e-mail</a></p>
+<p><a href=""{_configuration["FrontendUrl"] ?? "https://meuvizinhoapp.com.br"}/confirm-email/?token={token}"">Confirmar e-mail</a></p>
 <p>Este link expira em 24 horas.</p>";
 
         await SendEmailAsync(email, "Confirme seu e-mail - Meu Vizinho", html);
@@ -37,7 +37,7 @@ public class ResendEmailService : IEmailService
         var html = $@"
 <h2>Redefinir senha - Meu Vizinho</h2>
 <p>Clique no link abaixo para redefinir sua senha:</p>
-<p><a href=""{_configuration["FrontendUrl"] ?? "https://meuvizinhoapp.com.br"}/reset-password?token={token}&email={Uri.EscapeDataString(email)}"">Redefinir senha</a></p>
+<p><a href=""{_configuration["FrontendUrl"] ?? "https://meuvizinhoapp.com.br"}/reset-password/?token={token}&email={Uri.EscapeDataString(email)}"">Redefinir senha</a></p>
 <p>Este link expira em 1 hora.</p>";
 
         await SendEmailAsync(email, "Redefinir senha - Meu Vizinho", html);

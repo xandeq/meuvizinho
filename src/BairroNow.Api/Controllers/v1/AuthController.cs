@@ -158,7 +158,7 @@ public class AuthController : ControllerBase
         SetRefreshTokenCookie(refreshToken!);
 
         var frontendUrl = _configuration["FrontendUrl"] ?? "https://bairronow.com.br";
-        return Redirect($"{frontendUrl}/auth/callback?token={response!.AccessToken}");
+        return Redirect($"{frontendUrl}/auth/callback/?token={response!.AccessToken}");
     }
 
     [HttpPost("google/mobile")]
@@ -180,6 +180,16 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Se o e-mail existir, enviaremos um link de acesso." });
     }
 
+    [HttpPost("confirm-email")]
+    [EnableRateLimiting("public")]
+    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailRequest req, CancellationToken ct)
+    {
+        var ok = await _authService.ConfirmEmailAsync(req.Token, ct);
+        return ok
+            ? Ok(new { message = "E-mail confirmado." })
+            : BadRequest(new { error = "Link de confirmação inválido ou expirado." });
+    }
+
     [HttpGet("magic-link/verify")]
     public async Task<IActionResult> MagicLinkVerify([FromQuery] string token, CancellationToken ct)
     {
@@ -187,10 +197,10 @@ public class AuthController : ControllerBase
 
         var (response, refreshToken, error) = await _authService.VerifyMagicLinkAsync(token, ct);
         if (error != null)
-            return Redirect($"{frontendUrl}/auth/magic-link?error=invalid");
+            return Redirect($"{frontendUrl}/auth/magic-link/?error=invalid");
 
         SetRefreshTokenCookie(refreshToken!);
-        return Redirect($"{frontendUrl}/auth/callback?token={response!.AccessToken}");
+        return Redirect($"{frontendUrl}/auth/callback/?token={response!.AccessToken}");
     }
 
     [HttpPost("refresh")]
@@ -347,3 +357,5 @@ public class AuthController : ControllerBase
 public record TotpVerifyRequest(string TempToken, string Code);
 public record GoogleMobileRequest(string IdToken);
 public record MagicLinkRequestDto(string Email);
+
+public record ConfirmEmailRequest(string Token);

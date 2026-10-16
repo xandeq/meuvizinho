@@ -385,6 +385,23 @@ public class AuthService : IAuthService
         _logger.LogInformation("Deletion cancelled by sign-in for user {UserId}", user.Id);
     }
 
+    /// <summary>Confirma o e-mail pelo link enviado no cadastro. Antes o link apontava para uma página
+    /// inexistente e nada lia o token: nenhum usuário de e-mail/senha ficava confirmado.</summary>
+    public async Task<bool> ConfirmEmailAsync(string token, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return false;
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.EmailConfirmationToken == token, ct);
+        if (user == null) return false;
+        if (user.EmailConfirmed) return true;
+        if (user.EmailConfirmationTokenExpiry.HasValue && user.EmailConfirmationTokenExpiry < DateTime.UtcNow) return false;
+
+        user.EmailConfirmed = true;
+        user.EmailConfirmationToken = null;
+        user.EmailConfirmationTokenExpiry = null;
+        await _db.SaveChangesAsync(ct);
+        return true;
+    }
+
     // ── Phase 6: Magic Link ──
 
     public async Task RequestMagicLinkAsync(string email, CancellationToken ct = default)
@@ -408,7 +425,8 @@ public class AuthService : IAuthService
         await _db.SaveChangesAsync(ct);
 
         var frontendUrl = _configuration["FrontendUrl"] ?? "https://bairronow.com.br";
-        var magicUrl = $"{frontendUrl}/auth/magic-link?token={Convert.ToBase64String(rawToken)}";
+        // Base64 tem "+" e "/": sem escapar, o "+" chegava como espaço e o link nunca validava.
+        var magicUrl = $"{frontendUrl}/auth/magic-link/?token={Uri.EscapeDataString(Convert.ToBase64String(rawToken))}";
         await _emailService.SendMagicLinkAsync(user.Email, magicUrl);
     }
 
