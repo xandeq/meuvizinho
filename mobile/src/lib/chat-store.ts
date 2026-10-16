@@ -58,6 +58,7 @@ export const useChatStore = create<ChatState>((set, get) => ({
       }));
     } catch (err) {
       console.warn('[chat] loadMessages failed', err);
+      throw err; // a tela mostra o erro em vez de spinner eterno
     }
   },
 

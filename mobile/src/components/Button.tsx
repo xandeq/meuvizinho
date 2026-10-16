@@ -10,9 +10,11 @@ interface Props {
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'outline' | 'danger';
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Quando o texto curto do botão não basta para o leitor de tela. */
+  accessibilityLabel?: string;
 }
 
-export function Button({ title, onPress, loading, disabled, variant = 'primary', icon }: Props) {
+export function Button({ title, onPress, loading, disabled, variant = 'primary', icon, accessibilityLabel }: Props) {
   const { colors } = useTheme();
   const isOutline = variant === 'outline';
   const isSecondary = variant === 'secondary';
@@ -28,7 +30,7 @@ export function Button({ title, onPress, loading, disabled, variant = 'primary',
       onPress={onPress}
       disabled={loading || disabled}
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={accessibilityLabel ?? title}
       accessibilityState={{ disabled: !!(loading || disabled), busy: !!loading }}
       style={({ pressed }) => [
         styles.base,

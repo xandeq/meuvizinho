@@ -9,6 +9,7 @@ import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../src/theme/tokens';
 import type { CepLookupResult } from '@bairronow/shared-types';
 import { StepIndicator } from '../src/components/StepIndicator';
+import { apiErrorMessage } from '../src/lib/apiError';
 
 export default function CepLookup() {
   const router = useRouter();
@@ -26,7 +27,7 @@ export default function CepLookup() {
       setLocalAddress(a);
       setAddress(a);
     } catch (e: any) {
-      Alert.alert('Erro', e?.response?.data?.message ?? e?.message ?? 'CEP não encontrado');
+      Alert.alert('CEP não encontrado', apiErrorMessage(e, 'Confira o CEP e tente de novo.'));
     } finally {
       setLoading(false);
     }

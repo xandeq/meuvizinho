@@ -81,7 +81,8 @@ function Chip({
 
 const styles = StyleSheet.create({
   // Sem maxHeight fixo: 48 cortava a perna do "g" (chip real ~49px).
-  row: { flexGrow: 0 },
+  // ScrollView horizontal vem com flexShrink: 1; espremido pela lista abaixo, cortava a base dos chips.
+  row: { flexGrow: 0, flexShrink: 0 },
   content: { paddingHorizontal: 16, paddingVertical: 8, gap: 8 },
   chip: {
     flexDirection: 'row',

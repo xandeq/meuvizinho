@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { VerificationStatusDto } from '@bairronow/shared-types';
 import { verificationApi } from './api';
+import { apiErrorMessage } from './apiError';
 
 export interface PollingResult {
   status: VerificationStatusDto | null;
@@ -34,7 +35,8 @@ export function useVerificationPolling(
         }
       } catch (e: any) {
         if (!cancelled.current) {
-          setError(e?.message ?? 'Erro ao consultar status');
+          // Antes mostrava "Network Error" em inglês.
+          setError(apiErrorMessage(e, 'Não foi possível consultar o andamento agora.'));
           setLoading(false);
         }
       }
