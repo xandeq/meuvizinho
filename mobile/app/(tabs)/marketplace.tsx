@@ -96,8 +96,9 @@ export default function MarketplaceScreen() {
         data={listings}
         keyExtractor={(l) => String(l.id)}
         numColumns={2}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <ListingCard
+            index={index}
             listing={item}
             onPress={() => router.push({ pathname: '/marketplace/[id]', params: { id: item.id } })}
           />

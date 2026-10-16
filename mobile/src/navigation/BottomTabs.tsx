@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { AppState, View, Text, Pressable, StyleSheet } from 'react-native';
+import { Animated, AppState, View, Text, Pressable, StyleSheet } from 'react-native';
+import { usePop } from '../lib/motion';
 import { Ionicons } from '@expo/vector-icons';
 import { useChatStore } from '../lib/chat-store';
 import { useTheme } from '../theme/ThemeContext';
@@ -95,10 +96,11 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
             }
           >
             <View>
-              <Ionicons
+              <TabIcon
+                focused={isFocused}
                 name={isFocused ? config.iconFocused : config.icon}
-                size={23}
                 color={isFocused ? colors.primary : colors.mutedFg}
+                pillColor={colors.primaryLight}
               />
               {isChatTab && unreadTotal > 0 && (
                 <View style={[styles.badge, { backgroundColor: colors.dangerFill }]}>
@@ -116,7 +118,21 @@ export function BottomTabs({ state, navigation, descriptors }: BottomTabsProps) 
   );
 }
 
+// Aba ativa: pílula de fundo + "pulo" curto ao trocar. Antes só a cor mudava.
+function TabIcon({ focused, name, color, pillColor }: { focused: boolean; name: any; color: string; pillColor: string }) {
+  const { scale, pop } = usePop();
+  useEffect(() => { if (focused) pop(); }, [focused]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <View style={[styles.pill, focused && { backgroundColor: pillColor }]}>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Ionicons name={name} size={23} color={color} />
+      </Animated.View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  pill: { paddingHorizontal: 16, paddingVertical: 3, borderRadius: 999 },
   tabBar: {
     flexDirection: 'row',
     borderTopWidth: 1,

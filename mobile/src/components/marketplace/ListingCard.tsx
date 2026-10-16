@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { ListingDto } from '../../lib/api/marketplace.types';
+import { FadeInView } from '../../lib/motion';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
 
 interface Props {
   listing: ListingDto;
   onPress: () => void;
+  /** Posição na grade: escalona a entrada dos primeiros cards. */
+  index?: number;
 }
 
 const priceFormatter = new Intl.NumberFormat('pt-BR', {
@@ -15,7 +18,7 @@ const priceFormatter = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL',
 });
 
-export function ListingCard({ listing, onPress }: Props) {
+export function ListingCard({ listing, onPress, index = 0 }: Props) {
   const { colors } = useTheme();
   const cover = listing.photos[0]?.thumbnailUrl || listing.photos[0]?.url;
   // Foto que não carrega (arquivo removido, URL de outro ambiente) deixava só um quadrado cinza.
@@ -25,7 +28,7 @@ export function ListingCard({ listing, onPress }: Props) {
   return (
     // Em grade de 2 colunas, item sozinho na linha (resultado único, lista ímpar) esticava na
     // largura toda. A coluna fixa em 50% mantém o card do mesmo tamanho dos outros.
-    <View style={styles.cell}>
+    <FadeInView style={styles.cell} delay={index < 6 ? index * 45 : 0}>
     <Pressable
       style={({ pressed }) => [
         styles.card,
@@ -67,7 +70,7 @@ export function ListingCard({ listing, onPress }: Props) {
         </View>
       </View>
     </Pressable>
-    </View>
+    </FadeInView>
   );
 }
 
