@@ -83,6 +83,7 @@ export default function AlertasPage() {
     setLoading(true);
     getSecurityAlerts(user.bairroId, { kind: kind || undefined })
       .then(setAlerts)
+      .catch(() => setAlerts([]))
       .finally(() => setLoading(false));
   }, [user?.bairroId, kind]);
 
@@ -91,7 +92,7 @@ export default function AlertasPage() {
     setUpvoting(a.id);
     try {
       const { upvoteCount } = await upvoteSecurityAlert(a.id);
-      setAlerts((prev) => prev.map((x) => (x.id === a.id ? { ...x, upvoteCount } : x)));
+      setAlerts((prev) => prev.map((x) => (x.id === a.id ? { ...x, upvoteCount, upvotedByMe: true } : x)));
     } catch {
       // silencioso
     } finally {
@@ -204,8 +205,9 @@ export default function AlertasPage() {
                 {/* Upvote "Eu também vi" */}
                 <button
                   onClick={() => handleUpvote(a)}
-                  disabled={!user || upvoting === a.id}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-fg hover:text-primary disabled:opacity-50 transition-colors"
+                  disabled={!user || upvoting === a.id || a.upvotedByMe}
+                  aria-pressed={!!a.upvotedByMe}
+                  className={`inline-flex items-center gap-1.5 text-xs font-semibold transition-colors ${a.upvotedByMe ? "text-primary" : "text-muted-fg hover:text-primary disabled:opacity-50"}`}
                 >
                   {upvoting === a.id ? (
                     <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

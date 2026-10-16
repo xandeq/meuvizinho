@@ -25,6 +25,13 @@ public class VerificationService : IVerificationService
         if (proof == null || proof.Length == 0)
             throw new InvalidOperationException("Arquivo de comprovante obrigatório.");
 
+        // Um comprovante em análise por vez: o login do site mandava quem já tinha enviado de volta ao
+        // passo 1 e cada reenvio virava mais um item na fila do moderador.
+        var hasPending = await _db.Verifications.AsNoTracking()
+            .AnyAsync(v => v.UserId == userId && v.Status == VerificationStatus.Pending, ct);
+        if (hasPending)
+            throw new InvalidOperationException("Você já enviou um comprovante e ele está em análise. Aguarde a resposta.");
+
         var address = await _cep.LookupAsync(cep, ct);
 
         string relPath;

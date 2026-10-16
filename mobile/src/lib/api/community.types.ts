@@ -107,6 +107,8 @@ export interface SecurityAlertSummary {
   longitude: number | null;
   status: SecurityAlertStatus;
   upvoteCount: number;
+  /** Se quem está vendo já confirmou (um voto por pessoa). */
+  upvotedByMe?: boolean;
   reportedBy: string | null;
   createdAt: string;
   resolvedAt: string | null;

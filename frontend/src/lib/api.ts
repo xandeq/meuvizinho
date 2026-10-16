@@ -76,6 +76,9 @@ api.interceptors.response.use(
   },
   async (error) => {
     const url = error.config?.url ?? '';
+    // Resposta de erro do servidor (4xx/5xx) = pedido processado: libera a chave. Sem isso, tentar de
+    // novo em até 5 min reaproveitava a chave e recebia a mesma resposta guardada.
+    if (error.response && error.config?.method === 'post') clearIdempotencyKey(url);
     const isAuthEndpoint = AUTH_ENDPOINTS.some((ep) => url.includes(ep));
     // 403 here isn't a genuine permission denial as often as it looks: our
     // claim-based policies (VerifiedOnly, Admin) bake is_verified/is_admin

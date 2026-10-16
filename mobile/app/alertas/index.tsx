@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../src/lib/auth-store';
@@ -52,6 +52,7 @@ export default function AlertasScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [upvoting, setUpvoting] = useState<number | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   const load = (showRefresh = false) => {
     if (!bairroId) {
@@ -59,21 +60,25 @@ export default function AlertasScreen() {
       return;
     }
     showRefresh ? setRefreshing(true) : setLoading(true);
+    setLoadError(false);
+    // Sem catch, uma falha aparecia como "Nenhum alerta no seu bairro — Que bom!" num recurso de segurança.
     getSecurityAlerts(bairroId, { kind: kind || undefined })
       .then(setAlerts)
+      .catch(() => setLoadError(true))
       .finally(() => {
         setLoading(false);
         setRefreshing(false);
       });
   };
 
-  useEffect(() => { load(); }, [bairroId, kind]);
+  // Ao voltar de "novo alerta" a lista não recarregava e o alerta recém-criado não aparecia.
+  useFocusEffect(useCallback(() => { load(); /* eslint-disable-line react-hooks/exhaustive-deps */ }, [bairroId, kind]));
 
   const handleUpvote = async (a: SecurityAlertSummary) => {
     setUpvoting(a.id);
     try {
       const { upvoteCount } = await upvoteSecurityAlert(a.id);
-      setAlerts((prev) => prev.map((x) => (x.id === a.id ? { ...x, upvoteCount } : x)));
+      setAlerts((prev) => prev.map((x) => (x.id === a.id ? { ...x, upvoteCount, upvotedByMe: true } : x)));
     } catch {
       // silencioso — upvote é melhoria incremental, não crítico pro fluxo
     } finally {
@@ -123,6 +128,15 @@ export default function AlertasScreen() {
         ListEmptyComponent={
           loading ? (
             <ListSkeleton rows={4} />
+          ) : loadError ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="Não foi possível carregar os alertas"
+              subtitle="Verifique sua conexão e tente de novo."
+              actionLabel="Tentar de novo"
+              actionIcon="refresh"
+              onAction={() => load()}
+            />
           ) : (
             <EmptyState
               icon="shield-checkmark-outline"
@@ -149,11 +163,12 @@ export default function AlertasScreen() {
             )}
             <Pressable accessibilityRole="button"
               onPress={() => handleUpvote(item)}
-              disabled={upvoting === item.id}
-              style={[styles.upvoteBtn, { borderColor: colors.border }]}
+              disabled={upvoting === item.id || item.upvotedByMe}
+              accessibilityState={{ selected: !!item.upvotedByMe, disabled: upvoting === item.id || !!item.upvotedByMe }}
+              style={[styles.upvoteBtn, { borderColor: item.upvotedByMe ? colors.primary : colors.border }]}
             >
-              <Ionicons name="arrow-up-circle-outline" size={16} color={colors.mutedFg} />
-              <Text style={[styles.upvoteText, { color: colors.mutedFg }]}>
+              <Ionicons name={item.upvotedByMe ? 'checkmark-circle' : 'arrow-up-circle-outline'} size={16} color={item.upvotedByMe ? colors.primary : colors.mutedFg} />
+              <Text style={[styles.upvoteText, { color: item.upvotedByMe ? colors.primary : colors.mutedFg }]}>
                 {item.upvoteCount > 0 ? `${item.upvoteCount} ${item.upvoteCount === 1 ? 'confirmou' : 'confirmaram'}` : 'Confirmar'}
               </Text>
             </Pressable>
