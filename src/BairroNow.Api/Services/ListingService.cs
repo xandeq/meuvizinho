@@ -375,7 +375,16 @@ public class ListingService : IListingService
                 _            => q.OrderByDescending(l => l.CreatedAt).ThenByDescending(l => l.Id),
             };
 
-            if (!string.IsNullOrWhiteSpace(cursor) && int.TryParse(cursor, out var afterId))
+            // Ordenando por preço, o cursor precisa ser (preço, id): só com o Id a 2ª página
+            // pulava ou repetia anúncios ("Carregar mais" em Menor/Maior preço).
+            var byPrice = sort is "price_asc" or "price_desc";
+            if (byPrice && TryParsePriceCursor(cursor, out var cPrice, out var cId))
+            {
+                q = sort == "price_asc"
+                    ? q.Where(l => l.Price > cPrice || (l.Price == cPrice && l.Id < cId))
+                    : q.Where(l => l.Price < cPrice || (l.Price == cPrice && l.Id < cId));
+            }
+            else if (!byPrice && !string.IsNullOrWhiteSpace(cursor) && int.TryParse(cursor, out var afterId))
                 q = q.Where(l => l.Id < afterId);
 
             var rows = await q.Take(take + 1).ToListAsync(ct);
@@ -405,7 +414,11 @@ public class ListingService : IListingService
         return new ListingPageResult
         {
             Items = items.Select(l => MapDto(l, favIds.Contains(l.Id), favCounts.GetValueOrDefault(l.Id, 0))).ToList(),
-            NextCursor = hasMore ? items.Last().Id.ToString(CultureInfo.InvariantCulture) : null
+            NextCursor = hasMore
+                ? (sort is "price_asc" or "price_desc"
+                    ? $"{items.Last().Price.ToString(CultureInfo.InvariantCulture)}_{items.Last().Id.ToString(CultureInfo.InvariantCulture)}"
+                    : items.Last().Id.ToString(CultureInfo.InvariantCulture))
+                : null
         };
     }
 
@@ -617,5 +630,15 @@ public class ListingService : IListingService
         if (await entry.GetDatabaseValuesAsync(ct) == null)
             throw new ListingNotFoundException();
         await entry.ReloadAsync(ct);
+    }
+
+    private static bool TryParsePriceCursor(string? cursor, out decimal price, out int id)
+    {
+        price = 0; id = 0;
+        if (string.IsNullOrWhiteSpace(cursor)) return false;
+        var parts = cursor.Split('_');
+        return parts.Length == 2
+            && decimal.TryParse(parts[0], NumberStyles.Number, CultureInfo.InvariantCulture, out price)
+            && int.TryParse(parts[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out id);
     }
 }
