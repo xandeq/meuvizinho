@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Pressable, Alert, ScrollView, ActivityIndicator, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../theme/ThemeContext';
 import { fontFamily, radius } from '../../../theme/tokens';
-import { authApi } from '../../../lib/api';
+import { apiClient, authApi } from '../../../lib/api';
 import { useAuthStore } from '../../../lib/auth-store';
 
 type ThemeMode = 'light' | 'dark' | 'system';
@@ -21,6 +21,27 @@ export default function SettingsScreen() {
   const logout = useAuthStore((s) => s.logout);
   const email = useAuthStore((s) => s.user?.email);
   const [leaving, setLeaving] = useState(false);
+  // null = carregando/indisponível. O switch só aparece depois de saber o valor real do servidor.
+  const [digestOn, setDigestOn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    apiClient
+      .get<{ digestOptOut?: boolean }>('/api/v1/profile/me')
+      .then(({ data }) => { if (alive) setDigestOn(!data.digestOptOut); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const toggleDigest = async (next: boolean) => {
+    setDigestOn(next);
+    try {
+      await apiClient.patch('/api/v1/profile/me', { digestOptOut: !next });
+    } catch {
+      setDigestOn(!next);
+      Alert.alert('Não foi possível salvar', 'Verifique sua conexão e tente de novo.');
+    }
+  };
 
   // Antes não havia "Sair" no app (só dentro do fluxo de exclusão LGPD).
   const confirmLogout = () => {
@@ -74,15 +95,25 @@ export default function SettingsScreen() {
       {/* Notifications section */}
       <Text style={[styles.sectionTitle, { color: colors.fg, marginTop: 24 }]}>Notificações</Text>
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        {/* Ainda não existe: linha informativa, não um botão que não faz nada. */}
-        <View style={styles.option} accessible accessibilityLabel="Resumo semanal do bairro, em breve">
-          <View style={styles.optionLeft}>
+        <View style={styles.option}>
+          <View style={[styles.optionLeft, { flex: 1 }]}>
             <Ionicons name="mail-outline" size={19} color={colors.mutedFg} />
-            <Text style={[styles.optionText, { color: colors.mutedFg }]}>Resumo semanal do bairro</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.optionText, { color: colors.fg }]}>Resumo semanal do bairro</Text>
+              <Text style={{ color: colors.mutedFg, fontSize: 13, marginTop: 2 }}>E-mail com as novidades da semana</Text>
+            </View>
           </View>
-          <View style={[styles.soon, { backgroundColor: colors.muted }]}>
-            <Text style={[styles.soonText, { color: colors.mutedFg }]}>Em breve</Text>
-          </View>
+          {digestOn === null ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <Switch
+              value={digestOn}
+              onValueChange={toggleDigest}
+              trackColor={{ true: colors.primary, false: colors.border }}
+              thumbColor="#fff"
+              accessibilityLabel="Receber resumo semanal do bairro por e-mail"
+            />
+          )}
         </View>
       </View>
 
@@ -143,8 +174,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { padding: 16, paddingBottom: 80 },
   shrink: { flexShrink: 1 },
-  soon: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: radius.xl },
-  soonText: { fontFamily: fontFamily.semibold, fontSize: 12 },
   sectionTitle: { fontFamily: fontFamily.bold, fontSize: 16, marginBottom: 8 },
   card: {
     borderRadius: radius.md,

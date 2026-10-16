@@ -54,8 +54,10 @@ export default function SettingsPage() {
         deletionDate: string;
       }>("/api/v1/account/delete");
       setPendingDeletion(true);
+      // A data vem como "yyyy-MM-dd": sem horário, o fuso do Brasil mostrava o dia anterior.
+      const until = new Date(`${data.deletionDate}T12:00:00`).toLocaleDateString("pt-BR");
       setDeleteMsg(
-        `Conta agendada para exclusão em ${new Date(data.deletionDate).toLocaleDateString("pt-BR")}. Você pode cancelar durante este período.`
+        `Conta agendada para exclusão em ${until}. Mudou de ideia? Use o botão abaixo agora ou entre de novo até essa data que a exclusão é cancelada.`
       );
       setShowDeleteConfirm(false);
     } catch {
@@ -70,7 +72,7 @@ export default function SettingsPage() {
     try {
       await api.post("/api/v1/account/delete/cancel");
       setPendingDeletion(false);
-      setDeleteMsg("Exclusao cancelada com sucesso.");
+      setDeleteMsg("Exclusão cancelada. Sua conta continua ativa.");
     } catch {
       setDeleteMsg("Erro ao cancelar exclusão.");
     } finally {
@@ -126,7 +128,7 @@ export default function SettingsPage() {
         <h2 className="text-lg font-bold text-fg mb-2">Meus Dados (LGPD)</h2>
         <p className="text-sm text-fg/60 mb-4">
           Exporte todos os seus dados pessoais armazenados na plataforma.
-          Limitado a 1 exportacao por 24 horas.
+          Limitado a 1 exportação por 24 horas.
         </p>
         <Button
           type="button"

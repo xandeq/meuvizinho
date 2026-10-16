@@ -115,7 +115,7 @@ public class AuthController : ControllerBase
 
         var result = await _authService.SetupTotpAsync(userId.Value, ct);
         if (result == null)
-            return NotFound(new { error = "Usuario nao encontrado." });
+            return NotFound(new { error = "Usuário não encontrado." });
 
         var email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value
             ?? User.FindFirst(ClaimTypes.Email)?.Value ?? "user";
@@ -199,7 +199,7 @@ public class AuthController : ControllerBase
     {
         var refreshToken = Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
-            return Unauthorized(new { error = "Token nao encontrado." });
+            return Unauthorized(new { error = "Token não encontrado." });
 
         var (response, newRefreshToken, error) = await _authService.RefreshAsync(refreshToken, GetIpAddress(), ct);
         if (error != null)
@@ -222,7 +222,7 @@ public class AuthController : ControllerBase
             await _authService.LogoutAsync(refreshToken, GetIpAddress(), ct);
 
         ClearRefreshTokenCookie();
-        return Ok(new { message = "Sessao encerrada." });
+        return Ok(new { message = "Sessão encerrada." });
     }
 
     [HttpPost("logout-all")]
@@ -234,7 +234,7 @@ public class AuthController : ControllerBase
             ?? User.FindFirst("sub")?.Value;
 
         if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
-            return Unauthorized(new { error = "Usuario nao identificado." });
+            return Unauthorized(new { error = "Usuário não identificado." });
 
         await _authService.LogoutAllAsync(userId, ct);
         ClearRefreshTokenCookie();

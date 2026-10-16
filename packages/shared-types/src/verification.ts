@@ -26,6 +26,11 @@ export interface AdminVerificationListItem {
 }
 
 export interface ProfileDto {
+  id?: string;
+  email?: string;
+  emailConfirmed?: boolean;
+  isAdmin?: boolean;
+  digestOptOut?: boolean;
   displayName: string | null;
   photoUrl: string | null;
   bio: string | null;

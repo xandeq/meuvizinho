@@ -22,11 +22,12 @@ export default function LgpdScreen() {
       const jsonStr = JSON.stringify(data, null, 2);
 
       // Share as text via system share sheet
-      await Share.share({
+      const result = await Share.share({
         message: jsonStr,
         title: 'Meu Vizinho - Meus Dados',
       });
-      Alert.alert('Sucesso', 'Dados exportados com sucesso.');
+      // Antes dizia "exportados com sucesso" mesmo quando a pessoa fechava sem compartilhar.
+      if (result.action === Share.sharedAction) Alert.alert('Pronto', 'Seus dados foram compartilhados.');
     } catch (e: any) {
       if (e?.response?.status === 429) {
         Alert.alert('Aguarde', 'Aguarde 24 horas entre exportações.');
@@ -50,11 +51,21 @@ export default function LgpdScreen() {
           onPress: async () => {
             setDeleting(true);
             try {
-              await apiClient.post('/api/v1/account/delete');
+              const { data } = await apiClient.post<{ deletionDate?: string }>('/api/v1/account/delete');
               setDeleteRequested(true);
+              // A sessão é encerrada no servidor (tokens revogados). Antes o app seguia "logado" até
+              // o token expirar e o aviso "pode cancelar" ficava só na memória da tela.
+              const until = data?.deletionDate
+                ? new Date(`${data.deletionDate}T12:00:00`).toLocaleDateString('pt-BR')
+                : 'os próximos 30 dias';
               Alert.alert(
                 'Conta marcada para exclusão',
-                'Seus dados serão anonimizados em 30 dias. Você pode cancelar a exclusão até lá.',
+                `Seus dados serão apagados depois de ${until}. Mudou de ideia? É só entrar de novo até lá que a exclusão é cancelada.`,
+                [
+                  { text: 'Desfazer agora', onPress: handleCancelDeletion },
+                  { text: 'Sair', style: 'destructive', onPress: () => logout() },
+                ],
+                { cancelable: false },
               );
             } catch (e: any) {
               Alert.alert('Erro', apiErrorMessage(e, 'Falha ao solicitar exclusão'));

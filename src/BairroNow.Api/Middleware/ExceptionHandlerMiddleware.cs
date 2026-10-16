@@ -22,6 +22,13 @@ public class ExceptionHandlerMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // Quem cancelou foi o cliente (trocou de página, fechou o app). Antes virava 500 e
+            // ERRO no log a cada navegação rápida, sujando o monitoramento com falso alarme.
+            _logger.LogDebug("Request aborted by client on {Method} {Path}", context.Request.Method, context.Request.Path);
+            if (!context.Response.HasStarted) context.Response.StatusCode = 499;
+        }
         catch (Exception ex)
         {
             var correlationId = context.Items["CorrelationId"] as string;
