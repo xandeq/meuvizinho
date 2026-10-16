@@ -67,6 +67,7 @@ public class AppDbContext : DbContext
 
     // Wave Q — Alertas de Segurança Geolocalizados
     public DbSet<SecurityAlert> SecurityAlerts => Set<SecurityAlert>();
+    public DbSet<SecurityAlertUpvote> SecurityAlertUpvotes => Set<SecurityAlertUpvote>();
 
     // Wave S — Reserva de áreas comuns de condomínio
     public DbSet<CondominiumResident> CondominiumResidents => Set<CondominiumResident>();
@@ -749,6 +750,13 @@ public class AppDbContext : DbContext
             entity.HasIndex(e => new { e.BairroId, e.Status });
             // Índice temporal para ordenação reverse-chrono.
             entity.HasIndex(e => new { e.BairroId, e.CreatedAt });
+        });
+
+        modelBuilder.Entity<SecurityAlertUpvote>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasOne(e => e.SecurityAlert).WithMany().HasForeignKey(e => e.SecurityAlertId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.SecurityAlertId, e.UserId }).IsUnique();
         });
 
         // ─── Wave S: CondominiumResident (vínculo morador↔condomínio) ───

@@ -1797,6 +1797,31 @@ namespace BairroNow.Api.Migrations
                     b.ToTable("SecurityAlerts");
                 });
 
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.SecurityAlertUpvote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SecurityAlertId")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SecurityAlertId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("SecurityAlertUpvotes");
+                });
+
             modelBuilder.Entity("BairroNow.Api.Models.Entities.SellerRating", b =>
                 {
                     b.Property<int>("Id")
@@ -2896,6 +2921,17 @@ namespace BairroNow.Api.Migrations
                     b.Navigation("Bairro");
 
                     b.Navigation("ReportedByUser");
+                });
+
+            modelBuilder.Entity("BairroNow.Api.Models.Entities.SecurityAlertUpvote", b =>
+                {
+                    b.HasOne("BairroNow.Api.Models.Entities.SecurityAlert", "SecurityAlert")
+                        .WithMany()
+                        .HasForeignKey("SecurityAlertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SecurityAlert");
                 });
 
             modelBuilder.Entity("BairroNow.Api.Models.Entities.SellerRating", b =>
