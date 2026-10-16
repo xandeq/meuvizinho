@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import api from "@/lib/api";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 import { useAuthStore } from "@/lib/auth";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
 
@@ -36,17 +36,21 @@ export default function ListingPreviewClient({
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
-    if (listingId === "preview") {
+    // Mesmo problema de /p/: export estático entrega listingId="preview"; lê o id da URL real.
+    const m = window.location.pathname.match(/^\/m\/(\d+)/);
+    const id = m ? m[1] : listingId !== "preview" ? listingId : null;
+    if (!id) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError("Anúncio não encontrado");
       setLoading(false);
       return;
     }
 
     const fetchListing = async () => {
       try {
-        const { data } = await api.get<ListingPreview>(
-          `/api/v1/listings/${listingId}`
-        );
-        setListing(data);
+        const res = await fetch(`${API}/api/v1/share/listings/${id}`);
+        if (!res.ok) throw new Error(String(res.status));
+        setListing(await res.json());
       } catch {
         setError("Anúncio não encontrado");
       } finally {
@@ -104,7 +108,7 @@ export default function ListingPreviewClient({
     );
   }
 
-  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinho.com.br";
+  const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://meuvizinhoapp.com.br";
   const shareUrl = `${SITE_URL}/m/${listing.id}`;
   const cover = listing.photos?.[0];
 
@@ -173,7 +177,7 @@ export default function ListingPreviewClient({
             <div className="flex items-center gap-2 text-sm text-fg/60 font-medium">
               <span>{listing.sellerDisplayName}</span>
               {listing.sellerIsVerified && (
-                <span className="text-xs bg-secondary/20 text-secondary px-2 py-0.5 rounded-full font-semibold">
+                <span className="text-xs bg-secondary-light text-secondary px-2 py-0.5 rounded-full font-semibold">
                   Verificado
                 </span>
               )}
