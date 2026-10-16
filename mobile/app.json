@@ -2,8 +2,8 @@
   "expo": {
     "name": "Meu Vizinho",
     "slug": "meuvizinho",
-    "scheme": "meuvizinho",
-    "version": "0.2.2",
+    "scheme": ["meuvizinho", "com.meuvizinho.app"],
+    "version": "0.2.3",
     "orientation": "portrait",
     "icon": "./assets/brand/icon.png",
     "userInterfaceStyle": "light",
@@ -57,7 +57,8 @@
       "router": {
         "origin": false
       },
-      "kiwifyCheckoutUrl": ""
+      "kiwifyCheckoutUrl": "",
+      "googleClientId": "1092069609858-rg2n14a53ag7r2edrus3u1t5t1fhan2h.apps.googleusercontent.com"
     },
     "owner": "xandeq"
   }

@@ -39,13 +39,16 @@ export default function Login() {
   });
 
   // Google OAuth via expo-auth-session
+  // Android exige o client do tipo Android (pacote + SHA-1 da chave de assinatura da Play);
+  // o redirect volta pelo esquema com.meuvizinho.app:/oauthredirect (scheme no app.json).
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: GOOGLE_CLIENT_ID,
+    androidClientId: GOOGLE_CLIENT_ID,
   });
 
   useEffect(() => {
     if (response?.type === 'success') {
-      const idToken = response.params?.id_token;
+      // Fluxo nativo troca o código sozinho: o id_token vem em authentication, não em params.
+      const idToken = response.params?.id_token ?? response.authentication?.idToken;
       if (idToken) {
         handleGoogleLogin(idToken);
       }
