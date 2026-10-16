@@ -22,6 +22,10 @@ public class ConversationDto
     public bool OtherUserIsVerified { get; set; }
     public DateTime LastMessageAt { get; set; }
     public int UnreadCount { get; set; }
+    /// <summary>Prévia da última mensagem (até 80 caracteres; "📷 Foto" para imagem). A lista de
+    /// conversas só mostrava nome e anúncio, sem dizer o que foi falado nem quem falou por último.</summary>
+    public string? LastMessagePreview { get; set; }
+    public bool LastMessageIsMine { get; set; }
 }
 
 public class CreateConversationRequest

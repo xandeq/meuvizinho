@@ -125,9 +125,36 @@ public class ChatService : IChatService
             .Select(g => new { ConversationId = g.Key, Count = g.Count() })
             .ToDictionaryAsync(x => x.ConversationId, x => x.Count, ct);
 
+        // Última mensagem de cada conversa numa consulta só.
+        var lastByConv = await _db.Messages.AsNoTracking()
+            .Where(m => convIds.Contains(m.ConversationId) && m.DeletedAt == null)
+            .GroupBy(m => m.ConversationId)
+            .Select(g => g.OrderByDescending(m => m.SentAt).Select(m => new { m.ConversationId, m.Text, m.ImagePath, m.SenderId }).First())
+            .ToListAsync(ct);
+        var last = lastByConv.ToDictionary(x => x.ConversationId);
+
         return conversations
-            .Select(c => MapConv(c, userId, unreadByConv.GetValueOrDefault(c.Id, 0)))
+            .Select(c =>
+            {
+                var dto = MapConv(c, userId, unreadByConv.GetValueOrDefault(c.Id, 0));
+                if (last.TryGetValue(c.Id, out var m))
+                {
+                    dto.LastMessagePreview = Preview(m.Text, m.ImagePath);
+                    dto.LastMessageIsMine = m.SenderId == userId;
+                }
+                return dto;
+            })
             .ToList();
+    }
+
+    private static string? Preview(string? text, string? imagePath)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            var t = text.Trim().ReplaceLineEndings(" ");
+            return t.Length <= 80 ? t : t[..80].TrimEnd() + "…";
+        }
+        return string.IsNullOrEmpty(imagePath) ? null : "📷 Foto";
     }
 
     public async Task<List<MessageDto>> GetHistoryAsync(Guid userId, int conversationId, DateTime? before, int limit, CancellationToken ct = default)
