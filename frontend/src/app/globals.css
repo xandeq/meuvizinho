@@ -272,7 +272,7 @@ html, body {
 .dark {
   --color-bg:               #0D1117;
   --color-fg:               #F1F5F9;
-  --color-muted-fg:         #94A3B8;
+  --color-muted-fg:         #A8B5C8; /* #94A3B8 dava 4,49:1 em primary-light e 3,79:1 em secondary-light */
   --color-card:             #161B27;
   --color-surface-elevated: #1E2535;
   --color-muted:            #1A2236;
