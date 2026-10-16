@@ -6,7 +6,7 @@ import { z } from "zod";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import api, { profileApi } from "@/lib/api";
+import api, { profileApi, verificationApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
 import type { AuthResponse } from "@bairronow/shared-types";
 import FormField from "@/components/ui/FormField";
@@ -101,6 +101,11 @@ export default function LoginForm() {
         if (current) useAuthStore.getState().setUser({ ...current, bairroName: profile.bairroNome });
       }
       if (profile.isVerified) destination = "/feed/";
+      else {
+        // Quem já mandou o comprovante ia de novo para o passo 1 e reenviava (fila do admin duplicada).
+        const v = await verificationApi.getMyStatus().catch(() => null);
+        if (v?.status === "pending") destination = "/pending/";
+      }
     } catch {
       // ignore - fall back to onboarding
     }
