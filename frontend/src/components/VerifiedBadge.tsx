@@ -3,10 +3,21 @@
 interface VerifiedBadgeProps {
   verified: boolean;
   size?: "sm" | "md";
+  /** Só o ✓ (ao lado do nome, em cards). O texto quebrava em 2 linhas no card do Mercado. */
+  compact?: boolean;
 }
 
-export default function VerifiedBadge({ verified, size = "md" }: VerifiedBadgeProps) {
+export default function VerifiedBadge({ verified, size = "md", compact = false }: VerifiedBadgeProps) {
   if (!verified) return null;
+
+  if (compact) {
+    return (
+      <svg role="img" aria-label="Vizinho verificado" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-secondary">
+        <title>Vizinho verificado</title>
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+      </svg>
+    );
+  }
 
   const sizeClasses =
     size === "sm"
@@ -15,7 +26,7 @@ export default function VerifiedBadge({ verified, size = "md" }: VerifiedBadgePr
 
   return (
     <span
-      className={`inline-flex items-center rounded-full bg-secondary-light text-secondary font-semibold ${sizeClasses}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-full bg-secondary-light text-secondary font-semibold ${sizeClasses}`}
       aria-label="Vizinho verificado"
     >
       <svg
