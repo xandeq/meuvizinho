@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useAuthStore } from "@/lib/auth";
 import BusinessRating from "@/components/features/BusinessRating";
 import type { ConversationDto } from "@/lib/types/marketplace";
+import api from "@/lib/api";
+import { apiErrorMessage } from "@/lib/apiError";
 
 interface BusinessPhoto {
   id: number;
@@ -224,15 +226,11 @@ export default function BusinessProfileClient({ userId: paramId }: Props) {
     if (!token) { router.push("/login"); return; }
     setSendingDm(true);
     try {
-      const res = await fetch(`${API}/api/v1/users/${userId}/conversation`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("failed");
-      const conv: ConversationDto = await res.json();
+      const { data: conv } = await api.post<ConversationDto>(`/api/v1/users/${userId}/conversation`);
       router.push(`/chat/${conv.id}/`);
-    } catch {
-      // best-effort — stay on page
+    } catch (e) {
+      // Antes falhava em silêncio (e com fetch cru, sempre depois de 15 min de sessão).
+      window.alert(apiErrorMessage(e, "Não foi possível abrir a conversa. Tente de novo."));
     } finally {
       setSendingDm(false);
     }

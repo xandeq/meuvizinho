@@ -12,6 +12,7 @@ import { useAuthStore } from "@/lib/auth";
 import { getPins } from "@/lib/api/map";
 import type { MapPin } from "@/lib/types/map";
 import EventsUpcoming from "@/components/features/EventsUpcoming";
+import api from "@/lib/api";
 
 // ─── Trending types ───────────────────────────────────────────────────────────
 interface TrendingAuthor {
@@ -137,21 +138,18 @@ function TrendingSkeletonCard() {
 
 function TrendingSection() {
   const token = useAuthStore((s) => s.accessToken);
-  const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
   const [posts, setPosts] = useState<TrendingPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!token) { setLoading(false); return; }
-    fetch(`${API}/api/v1/feed/trending`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => (r.ok ? r.json() : Promise.resolve([])))
-      .then((data: TrendingPost[]) => setPosts(Array.isArray(data) ? data : []))
+    // axios renova a sessão: com fetch cru o bloco sumia depois de 15 min.
+    api.get<TrendingPost[]>("/api/v1/feed/trending")
+      .then(({ data }) => setPosts(Array.isArray(data) ? data : []))
       .catch(() => setPosts([]))
       .finally(() => setLoading(false));
-  }, [token, API]);
+  }, [token]);
 
   if (!loading && posts.length === 0) return null;
 

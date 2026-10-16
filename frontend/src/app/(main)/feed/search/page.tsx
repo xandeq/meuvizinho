@@ -10,9 +10,10 @@ import Avatar from "@/components/ui/Avatar";
 import Badge from "@/components/ui/Badge";
 import { feedClient } from "@/lib/feed";
 import { useAuthStore } from "@/lib/auth";
+import api from "@/lib/api";
+import { apiErrorMessage } from "@/lib/apiError";
 import type { ConversationDto } from "@/lib/types/marketplace";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 
 type Tab = "posts" | "users" | "listings";
 
@@ -88,12 +89,7 @@ export default function SearchPage() {
     if (!token) { router.push("/login"); return; }
     setSendingDmFor(recipientId);
     try {
-      const res = await fetch(`${API}/api/v1/users/${recipientId}/conversation`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("failed");
-      const conv: ConversationDto = await res.json();
+      const { data: conv } = await api.post<ConversationDto>(`/api/v1/users/${recipientId}/conversation`);
       router.push(`/chat/${conv.id}/`);
     } catch {
       // best-effort
@@ -131,25 +127,16 @@ export default function SearchPage() {
         const res = await feedClient.search({ q: query, take: 20 });
         setPostResults(res.items);
       } else if (activeTab === "users") {
-        const res = await fetch(
-          `${API}/api/v1/search/users?q=${encodeURIComponent(query)}&take=20`,
-          { headers: { Authorization: `Bearer ${token ?? ""}` } }
-        );
-        if (!res.ok) throw new Error(`Erro ${res.status}`);
-        const data = await res.json() as { items: UserResult[]; total: number };
+        // axios renova a sessão; com fetch cru as abas mostravam "Erro 401" depois de 15 min.
+        const { data } = await api.get<{ items: UserResult[]; total: number }>("/api/v1/search/users", { params: { q: query, take: 20 } });
         setUserResults(data.items);
       } else {
-        const res = await fetch(
-          `${API}/api/v1/search/listings?q=${encodeURIComponent(query)}&take=20`,
-          { headers: { Authorization: `Bearer ${token ?? ""}` } }
-        );
-        if (!res.ok) throw new Error(`Erro ${res.status}`);
-        const data = await res.json() as { items: ListingResult[]; total: number };
+        const { data } = await api.get<{ items: ListingResult[]; total: number }>("/api/v1/search/listings", { params: { q: query, take: 20 } });
         setListingResults(data.items);
       }
       setSearched(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro na busca");
+      setError(apiErrorMessage(e, "Não foi possível buscar agora. Tente de novo."));
     } finally {
       setLoading(false);
     }
