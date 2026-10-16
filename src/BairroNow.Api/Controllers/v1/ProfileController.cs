@@ -10,6 +10,13 @@ namespace BairroNow.Api.Controllers.v1;
 
 public class ProfileDto
 {
+    // Id/Email/IsAdmin/EmailConfirmed: o site grava esta resposta como o usuário da sessão depois do login
+    // por Google ou link mágico. Sem eles, admin perdia os menus e "meus posts" não eram reconhecidos.
+    public Guid Id { get; set; }
+    public string Email { get; set; } = string.Empty;
+    public bool EmailConfirmed { get; set; }
+    public bool IsAdmin { get; set; }
+    public bool DigestOptOut { get; set; }
     public string? DisplayName { get; set; }
     public string? PhotoUrl { get; set; }
     public string? Bio { get; set; }
@@ -23,6 +30,11 @@ public class ProfileDto
     public string? BusinessDescription { get; set; }
     public string? BusinessPhone { get; set; }
     public string? BusinessWebsite { get; set; }
+}
+
+public class UpdateSettingsRequest
+{
+    public bool? DigestOptOut { get; set; }
 }
 
 public class UpdateProfileRequest
@@ -77,22 +89,44 @@ public class ProfileController : ControllerBase
 
         if (user == null) return NotFound();
 
-        return Ok(new ProfileDto
-        {
-            DisplayName = user.DisplayName,
-            PhotoUrl = user.PhotoUrl,
-            Bio = user.Bio,
-            BairroNome = user.Bairro?.Nome,
-            BairroId = user.BairroId,
-            IsVerified = user.IsVerified,
-            IsBusinessAccount = user.IsBusinessAccount,
-            BusinessName = user.BusinessName,
-            BusinessCategory = user.BusinessCategory,
-            BusinessDescription = user.BusinessDescription,
-            BusinessPhone = user.BusinessPhone,
-            BusinessWebsite = user.BusinessWebsite
-        });
+        return Ok(ToDto(user));
     }
+
+    // Resumo semanal: o site chamava PATCH /profile/me, que não existia (405), e o switch voltava sozinho.
+    [HttpPatch("/api/v1/profile/me")]
+    public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsRequest req, CancellationToken ct)
+    {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+
+        var user = await _db.Users.Include(u => u.Bairro).FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
+        if (user == null) return NotFound();
+
+        if (req.DigestOptOut.HasValue) user.DigestOptOut = req.DigestOptOut.Value;
+        await _db.SaveChangesAsync(ct);
+        return Ok(ToDto(user));
+    }
+
+    private static ProfileDto ToDto(Models.Entities.User user) => new()
+    {
+        Id = user.Id,
+        Email = user.Email,
+        EmailConfirmed = user.EmailConfirmed,
+        IsAdmin = user.IsAdmin,
+        DigestOptOut = user.DigestOptOut,
+        DisplayName = user.DisplayName,
+        PhotoUrl = user.PhotoUrl,
+        Bio = user.Bio,
+        BairroNome = user.Bairro?.Nome,
+        BairroId = user.BairroId,
+        IsVerified = user.IsVerified,
+        IsBusinessAccount = user.IsBusinessAccount,
+        BusinessName = user.BusinessName,
+        BusinessCategory = user.BusinessCategory,
+        BusinessDescription = user.BusinessDescription,
+        BusinessPhone = user.BusinessPhone,
+        BusinessWebsite = user.BusinessWebsite
+    };
 
     [HttpPut("/api/v1/profile/me")]
     public async Task<IActionResult> Update([FromBody] UpdateProfileRequest req, CancellationToken ct)
@@ -100,7 +134,8 @@ public class ProfileController : ControllerBase
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
 
-        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
+        // Include do bairro: a resposta voltava sem o nome e a tela mostrava "Bairro não definido".
+        var user = await _db.Users.Include(u => u.Bairro).FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
         if (user == null) return NotFound();
 
         user.DisplayName = req.DisplayName;
@@ -126,20 +161,7 @@ public class ProfileController : ControllerBase
 
         await _db.SaveChangesAsync(ct);
 
-        return Ok(new ProfileDto
-        {
-            DisplayName = user.DisplayName,
-            PhotoUrl = user.PhotoUrl,
-            Bio = user.Bio,
-            BairroId = user.BairroId,
-            IsVerified = user.IsVerified,
-            IsBusinessAccount = user.IsBusinessAccount,
-            BusinessName = user.BusinessName,
-            BusinessCategory = user.BusinessCategory,
-            BusinessDescription = user.BusinessDescription,
-            BusinessPhone = user.BusinessPhone,
-            BusinessWebsite = user.BusinessWebsite
-        });
+        return Ok(ToDto(user));
     }
 
     private Guid? GetUserId()

@@ -17,7 +17,7 @@ function CallbackHandler() {
     const token = params.get("token");
     if (!token) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setError("Token de autenticacao ausente.");
+      setError("Token de autenticação ausente.");
       return;
     }
 
