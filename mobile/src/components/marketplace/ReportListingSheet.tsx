@@ -52,12 +52,12 @@ export function ReportListingSheet({ visible, listingId, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable accessibilityRole="button" style={styles.backdrop} onPress={onClose} />
+      <Pressable accessibilityRole="button" accessibilityLabel="Fechar" style={styles.backdrop} onPress={onClose} />
       <View style={[styles.sheet, shadow.ambientHigh, { backgroundColor: colors.card, borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg, bottom: keyboardHeight, paddingBottom: 16 + (keyboardHeight ? 0 : insets.bottom) }]}>
         <View style={[styles.handle, { backgroundColor: colors.border }]} />
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.fg }]}>Denunciar anúncio</Text>
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Fechar" onPress={onClose} hitSlop={8} style={[styles.closeBtn, { backgroundColor: colors.muted }]}>
             <Ionicons name="close" size={18} color={colors.mutedFg} />
           </Pressable>
         </View>

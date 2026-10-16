@@ -107,14 +107,28 @@ export default function ListingDetailScreen() {
 
   const isOwner = currentUserId === listing.sellerId;
   const isSold = listing.status === 'sold';
+  // Removido/expirado: antes só "vendido" era tratado e o botão de chat aparecia (servidor recusava com 403).
+  const isClosed = listing.status === 'removed' || listing.status === 'expired';
+  const canChat = !isOwner && !isSold && !isClosed;
 
   const handleChatSeller = async () => {
     setBusy(true);
     try {
       const conv = await chatApi.createConversation(listing.id);
       router.push({ pathname: '/chat/[id]', params: { id: conv.id } });
-    } catch {
-      Alert.alert('Erro', 'Não foi possível iniciar a conversa.');
+    } catch (e) {
+      Alert.alert('Não foi possível iniciar a conversa', apiErrorMessage(e, 'Tente de novo em instantes.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRenew = async () => {
+    setBusy(true);
+    try {
+      setListing(await marketplaceApi.renew(listing.id));
+    } catch (e) {
+      Alert.alert('Não foi possível renovar', apiErrorMessage(e, 'Tente de novo em instantes.'));
     } finally {
       setBusy(false);
     }
@@ -162,7 +176,8 @@ export default function ListingDetailScreen() {
   const photoCount = listing.photos.length;
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ paddingBottom: 32 }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ paddingBottom: canChat ? 120 : 32 }}>
       <View>
         <FlatList
           data={listing.photos}
@@ -180,12 +195,12 @@ export default function ListingDetailScreen() {
             </View>
           }
         />
-        {isSold && (
+        {(isSold || isClosed) && (
           <View style={[styles.soldBadge, { backgroundColor: colors.fg }]}>
-            <Text style={styles.soldBadgeText}>VENDIDO</Text>
+            <Text style={styles.soldBadgeText}>{isSold ? 'VENDIDO' : listing.status === 'expired' ? 'EXPIRADO' : 'REMOVIDO'}</Text>
           </View>
         )}
-        {!isOwner && (
+        {!isOwner && !isClosed && (
           <Pressable accessibilityRole="button"
             accessibilityLabel={listing.isFavoritedByCurrentUser ? 'Remover dos favoritos' : 'Salvar nos favoritos'}
             accessibilityState={{ selected: listing.isFavoritedByCurrentUser }}
@@ -244,14 +259,6 @@ export default function ListingDetailScreen() {
         <Text style={[styles.description, { color: colors.fg }]}>{listing.description}</Text>
 
         <View style={styles.actions}>
-          {!isOwner && !isSold && (
-            <Button
-              title="Chat com vendedor"
-              icon="chatbubble"
-              onPress={handleChatSeller}
-              loading={busy}
-            />
-          )}
           <WhatsAppShareButton
             url={getListingShareUrl(String(listing.id))}
             text="Veja esta oferta no Meu Vizinho"
@@ -262,7 +269,10 @@ export default function ListingDetailScreen() {
           <View style={[styles.ownerSection, { borderTopColor: colors.border }]}>
             <Text style={[styles.sectionLabel, { color: colors.mutedFg }]}>Gerenciar anúncio</Text>
             <View style={styles.actions}>
-              {!isSold && (
+              {listing.status === 'expired' && (
+                <Button title="Renovar anúncio" icon="refresh" onPress={handleRenew} loading={busy} />
+              )}
+              {!isSold && !isClosed && (
                 <>
                   <Button
                     title="Editar"
@@ -299,10 +309,33 @@ export default function ListingDetailScreen() {
         onClose={() => setReportOpen(false)}
       />
     </ScrollView>
+    {/* Ação principal sempre à vista: antes ficava no fim, depois da foto e da descrição, colada na
+        barra de navegação do Android (um toque ali caía no botão Início). */}
+    {canChat && (
+      <View style={[styles.stickyBar, shadow.ambientHigh, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: 12 }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.stickyPrice, { color: listing.price === 0 ? colors.secondary : colors.fg }]} numberOfLines={1}>
+            {listing.price === 0 ? 'Doação' : priceFormatter.format(listing.price)}
+          </Text>
+          <Text style={[styles.stickySeller, { color: colors.mutedFg }]} numberOfLines={1}>{listing.sellerDisplayName ?? 'Vizinho'}</Text>
+        </View>
+        <View style={{ flex: 1.4 }}>
+          <Button title="Conversar" icon="chatbubble" onPress={handleChatSeller} loading={busy} accessibilityLabel="Conversar com o vendedor" />
+        </View>
+      </View>
+    )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  stickyBar: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 16, paddingTop: 12, borderTopWidth: 1,
+  },
+  stickyPrice: { fontFamily: fontFamily.extrabold, fontSize: 18 },
+  stickySeller: { fontFamily: fontFamily.regular, fontSize: 13, marginTop: 2 },
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   photoPlaceholder: { alignItems: 'center', justifyContent: 'center' },

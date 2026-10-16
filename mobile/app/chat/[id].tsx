@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -19,6 +19,7 @@ import { Stack } from 'expo-router';
 import { fontFamily } from '../../src/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
+import { EmptyState } from '../../src/components/EmptyState';
 
 
 const NO_MESSAGES: never[] = [];
@@ -49,14 +50,23 @@ export default function ChatScreen() {
   const connect = useChatStore((s) => s.connect);
 
   const joinedRef = useRef(false);
+  // Conversa nova (vinda de "Chat com vendedor") não tem mensagens: antes o spinner girava para sempre.
+  const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
     if (!conversationId) return;
     let cancelled = false;
 
     (async () => {
-      await connect(); // ensures hub singleton + handlers registered
-      await loadMessages(conversationId);
+      // Tempo real é extra: se o hub falhar, as mensagens ainda carregam por HTTP.
+      try { await connect(); } catch (err) { console.warn('[chat] connect failed', err); }
+      try {
+        await loadMessages(conversationId);
+        if (!cancelled) { setLoaded(true); setLoadFailed(false); }
+      } catch {
+        if (!cancelled) { setLoaded(true); setLoadFailed(true); }
+      }
       if (cancelled) return;
       setActive(conversationId);
       markRead(conversationId);
@@ -126,9 +136,20 @@ export default function ChatScreen() {
         onEndReachedThreshold={0.4}
         contentContainerStyle={{ paddingVertical: 8 }}
         ListEmptyComponent={
-          <View style={styles.center}>
-            <ActivityIndicator color={colors.primary} />
-          </View>
+          !loaded ? (
+            <View style={styles.center}>
+              <ActivityIndicator color={colors.primary} />
+            </View>
+          ) : (
+            // FlatList invertida: o vazio também aparece de cabeça para baixo sem o scaleY.
+            <View style={{ transform: [{ scaleY: -1 }], flex: 1 }}>
+              {loadFailed ? (
+                <EmptyState icon="cloud-offline-outline" title="Não foi possível carregar as mensagens" subtitle="Verifique sua conexão e tente de novo." />
+              ) : (
+                <EmptyState icon="chatbubbles-outline" title="Diga oi ao vizinho" subtitle="Escreva a primeira mensagem abaixo." />
+              )}
+            </View>
+          )
         }
       />
       <MessageComposer conversationId={conversationId} />

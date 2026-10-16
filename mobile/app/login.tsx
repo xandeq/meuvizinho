@@ -146,7 +146,9 @@ export default function Login() {
       )}
       <View style={{ height: 24 }} />
 
-      {/* Google Sign-In */}
+      {/* Google Sign-In: só aparece com client ID configurado. Sem ele o botão ficava apagado
+          e não fazia nada (build atual não tem googleClientId). */}
+      {GOOGLE_CLIENT_ID ? (<>
       <Pressable
         onPress={() => promptAsync()}
         disabled={!request || googleLoading}
@@ -169,6 +171,7 @@ export default function Login() {
         <Text style={[styles.dividerText, { color: colors.mutedFg }]}>ou</Text>
         <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
       </View>
+      </>) : null}
 
       <Controller
         control={control}
