@@ -19,6 +19,8 @@ export interface ConversationDto {
   otherUserIsVerified: boolean;
   lastMessageAt: string;
   unreadCount: number;
+  lastMessagePreview?: string | null;
+  lastMessageIsMine?: boolean;
 }
 
 export interface UnreadCountResponse {

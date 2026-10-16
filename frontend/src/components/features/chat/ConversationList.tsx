@@ -36,6 +36,19 @@ function UserAvatar({ name, photoUrl }: { name: string | null; photoUrl: string 
   );
 }
 
+// Hoje: 14:05 · ontem · dia da semana nesta semana · 12/10 antes disso (igual ao app).
+function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const now = new Date();
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  if (days <= 0) return d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  if (days === 1) return "ontem";
+  if (days < 7) return d.toLocaleDateString("pt-BR", { weekday: "short" }).replace(".", "");
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
 export default function ConversationList({ conversations }: ConversationListProps) {
   if (conversations.length === 0) {
     return (
@@ -98,7 +111,16 @@ export default function ConversationList({ conversations }: ConversationListProp
                       : (c.listingTitle ?? "Anúncio")}
                   </span>
                   {c.otherUserIsVerified && <VerifiedBadge verified size="sm" />}
+                  <span className={`ml-auto shrink-0 text-xs ${c.unreadCount > 0 ? "text-primary font-semibold" : "text-muted-fg"}`}>
+                    {formatWhen(c.lastMessageAt)}
+                  </span>
                 </div>
+                {/* Prévia da última mensagem: antes a lista não dizia o que foi falado. */}
+                <p className={`text-sm truncate mt-0.5 ${c.unreadCount > 0 ? "text-fg font-semibold" : "text-muted-fg"}`}>
+                  {c.lastMessagePreview
+                    ? `${c.lastMessageIsMine ? "Você: " : ""}${c.lastMessagePreview}`
+                    : "Nenhuma mensagem ainda"}
+                </p>
                 {!isDirect && (
                   <p className="text-xs text-muted-fg font-medium truncate mt-0.5">
                     {c.otherUserDisplayName ?? "Vizinho"}
@@ -106,7 +128,7 @@ export default function ConversationList({ conversations }: ConversationListProp
                 )}
               </div>
               {c.unreadCount > 0 && (
-                <span className="bg-danger text-white text-xs font-extrabold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shrink-0">
+                <span aria-label={`${c.unreadCount} não lidas`} className="bg-primary text-white text-xs font-extrabold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shrink-0">
                   {c.unreadCount > 99 ? "99+" : c.unreadCount}
                 </span>
               )}
