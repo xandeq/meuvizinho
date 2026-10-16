@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Image, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Image, ScrollView, useWindowDimensions, Animated } from 'react-native';
+import { usePop } from '../../lib/motion';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../theme/tokens';
@@ -113,6 +114,8 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, onLike, onOpenComments }: PostCardProps) {
+  // Coração "pula" ao curtir: confirma o toque sem esperar a resposta da API.
+  const { scale: likeScale, pop: popLike } = usePop();
   const { colors } = useTheme();
   const { width: screenWidth } = useWindowDimensions();
   const [expanded, setExpanded] = useState(false);
@@ -196,16 +199,18 @@ export function PostCard({ post, onLike, onOpenComments }: PostCardProps) {
       <View style={[s.actions, { borderTopColor: colors.border }]}>
         <Pressable
           style={({ pressed }) => [s.actionBtn, { opacity: pressed ? 0.6 : 1 }]}
-          onPress={() => onLike(post.id)}
+          onPress={() => { if (!post.likedByMe) popLike(); onLike(post.id); }}
           accessibilityRole="button"
           accessibilityState={{ selected: post.likedByMe }}
           accessibilityLabel={post.likedByMe ? 'Descurtir' : 'Curtir'}
         >
-          <Ionicons
-            name={post.likedByMe ? 'heart' : 'heart-outline'}
-            size={20}
-            color={post.likedByMe ? colors.danger : colors.mutedFg}
-          />
+          <Animated.View style={{ transform: [{ scale: likeScale }] }}>
+            <Ionicons
+              name={post.likedByMe ? 'heart' : 'heart-outline'}
+              size={20}
+              color={post.likedByMe ? colors.danger : colors.mutedFg}
+            />
+          </Animated.View>
           <Text style={[s.actionText, { color: post.likedByMe ? colors.danger : colors.mutedFg }]}>
             {post.likeCount > 0 ? post.likeCount : 'Curtir'}
           </Text>

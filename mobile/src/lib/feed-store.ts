@@ -11,6 +11,8 @@ interface FeedState {
   hasMore: boolean;
   loading: boolean;
   refreshing: boolean;
+  /** Falha ao carregar: antes aparecia "Nenhum post no seu bairro" mesmo sem conexão. */
+  error: string | null;
 
   loadFirstPage: (bairroId: number) => Promise<void>;
   loadNextPage: (bairroId: number) => Promise<void>;
@@ -27,13 +29,16 @@ export const useFeedStore = create<FeedState>((set, get) => ({
   hasMore: true,
   loading: false,
   refreshing: false,
+  error: null,
 
   loadFirstPage: async (bairroId) => {
     if (get().loading) return;
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
       const page = await feedApi.list(bairroId, null);
       set({ posts: page.items, cursor: page.nextCursor, hasMore: !!page.nextCursor });
+    } catch {
+      set({ error: 'Não foi possível carregar o feed. Verifique sua conexão.' });
     } finally {
       set({ loading: false });
     }
@@ -59,7 +64,9 @@ export const useFeedStore = create<FeedState>((set, get) => ({
     set({ refreshing: true });
     try {
       const page = await feedApi.list(bairroId, null);
-      set({ posts: page.items, cursor: page.nextCursor, hasMore: !!page.nextCursor });
+      set({ posts: page.items, cursor: page.nextCursor, hasMore: !!page.nextCursor, error: null });
+    } catch {
+      set({ error: 'Não foi possível atualizar o feed. Verifique sua conexão.' });
     } finally {
       set({ refreshing: false });
     }

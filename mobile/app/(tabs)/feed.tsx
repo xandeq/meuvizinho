@@ -15,6 +15,7 @@ import type { PostCategory } from '../../src/lib/api/feed';
 import { useBairroName } from '../../src/lib/useBairroName';
 import { useNotificationsStore, selectUnread, useNotificationsLive } from '../../src/lib/notifications-store';
 import { VerificationGate } from '../../src/components/VerificationGate';
+import { FadeInView } from '../../src/lib/motion';
 
 export default function FeedScreen() {
   const { colors } = useTheme();
@@ -29,6 +30,7 @@ export default function FeedScreen() {
   const posts = useFeedStore((s) => s.posts);
   const loading = useFeedStore((s) => s.loading);
   const refreshing = useFeedStore((s) => s.refreshing);
+  const feedError = useFeedStore((s) => s.error);
   const hasMore = useFeedStore((s) => s.hasMore);
   const loadFirstPage = useFeedStore((s) => s.loadFirstPage);
   const loadNextPage = useFeedStore((s) => s.loadNextPage);
@@ -55,8 +57,11 @@ export default function FeedScreen() {
       <FlatList
         data={posts}
         keyExtractor={(p) => String(p.id)}
-        renderItem={({ item }) => (
-          <PostCard post={item} onLike={toggleLike} onOpenComments={(id) => router.push(`/post/${id}`)} />
+        renderItem={({ item, index }) => (
+          // Entrada escalonada só nos primeiros itens; o resto aparece sem atraso ao rolar.
+          <FadeInView delay={index < 6 ? index * 50 : 0}>
+            <PostCard post={item} onLike={toggleLike} onOpenComments={(id) => router.push(`/post/${id}`)} />
+          </FadeInView>
         )}
         contentContainerStyle={styles.list}
         refreshControl={
@@ -89,13 +94,22 @@ export default function FeedScreen() {
           />
         }
         ListEmptyComponent={
-          loading ? <ListSkeleton rows={3} /> : (
+          loading ? <ListSkeleton rows={3} /> : feedError ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="Sem conexão com o bairro"
+              subtitle={feedError}
+              actionLabel="Tentar de novo"
+              actionIcon="refresh"
+              onAction={() => loadFirstPage(bairroId)}
+            />
+          ) : (
             <EmptyState
               icon="chatbubbles-outline"
               title="Nenhum post no seu bairro ainda"
               subtitle={
                 isVerified
-                  ? 'Toque no botão + e compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
+                  ? 'Toque em Publicar e compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
                   : 'Compartilhe um aviso, uma dica ou uma pergunta com seus vizinhos.'
               }
             />
