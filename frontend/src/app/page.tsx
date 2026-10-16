@@ -969,7 +969,7 @@ export default function LandingPage() {
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/register/"
-              className="h-14 px-10 rounded-lg bg-white text-primary font-extrabold text-lg
+              className="h-14 px-10 rounded-lg bg-white text-[#1D4ED8] font-extrabold text-lg
                          flex items-center gap-2 transition-all duration-200 hover:scale-[1.03]"
             >
               Criar minha conta
