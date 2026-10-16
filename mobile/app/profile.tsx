@@ -9,6 +9,7 @@ import { useAuthStore } from '../src/lib/auth-store';
 import { useTheme } from '../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../src/theme/tokens';
 import type { ProfileDto } from '@bairronow/shared-types';
+import { useKeyboardHeight } from '../src/lib/useKeyboardHeight';
 
 const BIO_MAX = 160;
 
@@ -27,6 +28,8 @@ function initialsOf(name: string | null | undefined, fallback: string): string {
 
 export default function Profile() {
   const { colors } = useTheme();
+  // Teclado cobria o fim do formulário (botão de enviar) no Android edge-to-edge.
+  const keyboardHeight = useKeyboardHeight();
   const email = useAuthStore((s) => s.user?.email ?? '');
   const [profile, setProfile] = useState<ProfileDto | null>(null);
   const [displayName, setDisplayName] = useState('');
@@ -78,7 +81,7 @@ export default function Profile() {
   return (
     <ScrollView
       style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={styles.container}
+      contentContainerStyle={[styles.container, { paddingBottom: 80 + keyboardHeight }]}
       keyboardShouldPersistTaps="handled"
     >
       <View style={[styles.hero, shadow.ambientLow, { backgroundColor: colors.card }]}>
