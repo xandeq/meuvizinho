@@ -91,6 +91,33 @@ public class GoogleOAuthTests : IDisposable
     }
 
     [Fact]
+    public async Task GoogleSignInMobileAsync_SendsTokenInBody_NotInUrl()
+    {
+        HttpRequestMessage? sent = null;
+        string? body = null;
+        var mockHandler = new Mock<HttpMessageHandler>();
+        mockHandler.Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .Callback<HttpRequestMessage, CancellationToken>((r, _) =>
+            {
+                sent = r;
+                body = r.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
+            })
+            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.BadRequest));
+
+        _httpClientFactoryMock.Setup(f => f.CreateClient(It.IsAny<string>())).Returns(new HttpClient(mockHandler.Object));
+
+        await _service.GoogleSignInMobileAsync("segredo-do-token");
+
+        sent.Should().NotBeNull();
+        sent!.Method.Should().Be(HttpMethod.Post);
+        sent.RequestUri!.ToString().Should().NotContain("segredo-do-token");
+        body.Should().Contain("id_token=segredo-do-token");
+    }
+
+    [Fact]
     public async Task GoogleSignInMobileAsync_VerifiesIdToken_ReturnsJwt()
     {
         var tokenInfo = JsonSerializer.Serialize(new

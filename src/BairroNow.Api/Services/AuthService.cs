@@ -327,7 +327,10 @@ public class AuthService : IAuthService
         try
         {
             var client = _httpClientFactory.CreateClient();
-            var response = await client.GetAsync($"https://oauth2.googleapis.com/tokeninfo?id_token={Uri.EscapeDataString(idToken)}", ct);
+            // Token no corpo (POST), não na URL: o log do HttpClient gravava a URL inteira, com o id_token,
+            // em nível Information — credencial válida por 1h parada nos logs de produção.
+            using var form = new FormUrlEncodedContent(new Dictionary<string, string> { ["id_token"] = idToken });
+            var response = await client.PostAsync("https://oauth2.googleapis.com/tokeninfo", form, ct);
             if (!response.IsSuccessStatusCode)
                 return (null, null, "Token Google invalido.");
 
