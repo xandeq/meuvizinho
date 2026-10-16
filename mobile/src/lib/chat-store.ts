@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { chatApi, type ConversationDto, type MessageDto } from './api/chat';
 import { getHubConnection } from './signalr';
+import { useAuthStore } from './auth-store';
 
 interface ChatState {
   conversations: ConversationDto[];
@@ -118,6 +119,8 @@ export const useChatStore = create<ChatState>((set, get) => ({
           c.id === conversationId ? { ...c, unreadCount: 0 } : c
         ),
       }));
+      // O selo da aba Chat não baixava depois de ler (o servidor não avisa o próprio leitor).
+      await get().loadUnreadCount();
     } catch (err) {
       console.warn('[chat] markRead failed', err);
     }
@@ -162,3 +165,11 @@ export const useChatStore = create<ChatState>((set, get) => ({
     }
   },
 }));
+
+// Ao sair, o hub é descartado (signalr.ts). Sem zerar isto, no próximo login connect() retornava
+// cedo e os eventos de tempo real (mensagem nova, não lidas) nunca eram registrados de novo.
+useAuthStore.subscribe((state, prev) => {
+  if (prev.accessToken && !state.accessToken) {
+    useChatStore.setState({ hubRegistered: false, unreadTotal: 0, conversations: [], messagesByConversation: {}, activeConversationId: null });
+  }
+});
