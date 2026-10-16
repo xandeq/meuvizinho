@@ -20,6 +20,7 @@ import { fontFamily } from '../../src/theme/tokens';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
 import { EmptyState } from '../../src/components/EmptyState';
+import { FadeInView } from '../../src/lib/motion';
 
 
 const NO_MESSAGES: never[] = [];
@@ -52,6 +53,7 @@ export default function ChatScreen() {
   const joinedRef = useRef(false);
   // Conversa nova (vinda de "Chat com vendedor") não tem mensagens: antes o spinner girava para sempre.
   const [loaded, setLoaded] = useState(false);
+  const initialIds = useRef<Set<number>>(new Set());
   const [loadFailed, setLoadFailed] = useState(false);
 
   useEffect(() => {
@@ -63,7 +65,10 @@ export default function ChatScreen() {
       try { await connect(); } catch (err) { console.warn('[chat] connect failed', err); }
       try {
         await loadMessages(conversationId);
-        if (!cancelled) { setLoaded(true); setLoadFailed(false); }
+        if (!cancelled) {
+          initialIds.current = new Set((useChatStore.getState().messagesByConversation[conversationId] ?? []).map((m) => m.id));
+          setLoaded(true); setLoadFailed(false);
+        }
       } catch {
         if (!cancelled) { setLoaded(true); setLoadFailed(true); }
       }
@@ -129,9 +134,16 @@ export default function ChatScreen() {
         data={[...messages].reverse()}
         keyExtractor={(m) => String(m.id)}
         inverted
-        renderItem={({ item }) => (
-          <MessageBubble message={item} isOwn={item.senderId === currentUserId} />
-        )}
+        renderItem={({ item }) =>
+          // Só mensagens que chegam/saem com a conversa aberta entram animadas; o histórico não.
+          loaded && !initialIds.current.has(item.id) ? (
+            <FadeInView>
+              <MessageBubble message={item} isOwn={item.senderId === currentUserId} />
+            </FadeInView>
+          ) : (
+            <MessageBubble message={item} isOwn={item.senderId === currentUserId} />
+          )
+        }
         onEndReached={() => loadMoreMessages(conversationId)}
         onEndReachedThreshold={0.4}
         contentContainerStyle={{ paddingVertical: 8 }}
