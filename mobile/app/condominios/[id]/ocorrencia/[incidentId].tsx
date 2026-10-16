@@ -13,6 +13,7 @@ import { EmptyState } from '../../../../src/components/EmptyState';
 import { useTheme } from '../../../../src/theme/ThemeContext';
 import { fontFamily, radius, shadow } from '../../../../src/theme/tokens';
 import { apiErrorMessage } from '../../../../src/lib/apiError';
+import { useKeyboardHeight } from '../../../../src/lib/useKeyboardHeight';
 
 const STEP_HINT: Record<IncidentStatus, string> = {
   Aberta: 'Enviada ao síndico',
@@ -23,6 +24,8 @@ const STEP_HINT: Record<IncidentStatus, string> = {
 
 export default function OcorrenciaDetalheScreen() {
   const { colors } = useTheme();
+  // Teclado cobria o fim do formulário (botão de enviar) no Android edge-to-edge.
+  const keyboardHeight = useKeyboardHeight();
   const { id, incidentId } = useLocalSearchParams<{ id: string; incidentId: string }>();
   const condoId = Number(id);
   const isAdmin = useAuthStore((s) => !!s.user?.isAdmin);
@@ -83,7 +86,7 @@ export default function OcorrenciaDetalheScreen() {
   const steps = timelineSteps(item.status);
 
   return (
-    <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <ScrollView style={{ backgroundColor: colors.bg }} contentContainerStyle={[styles.content, { paddingBottom: 80 + keyboardHeight }]} keyboardShouldPersistTaps="handled">
       <View style={[styles.hero, shadow.ambientLow, { backgroundColor: colors.card }]}>
         <View style={styles.heroTop}>
           <View style={[styles.catTile, { backgroundColor: colors.primaryLight }]}>
@@ -160,6 +163,16 @@ export default function OcorrenciaDetalheScreen() {
             accessibilityLabel="Resposta ao morador"
           />
           <View style={styles.actions}>
+            {/* Só responder, sem mudar o status. Antes, com a ocorrência já "Em andamento",
+                o síndico não tinha como mandar um recado ("o técnico vem amanhã"). */}
+            {note.trim().length > 0 && item.status === 'EmAndamento' && (
+              <Button
+                title="Enviar resposta"
+                icon="send-outline"
+                onPress={() => changeStatus(item.status)}
+                loading={saving === item.status}
+              />
+            )}
             {item.status !== 'EmAndamento' && (
               <Button
                 title={closed ? 'Reabrir' : 'Em andamento'}

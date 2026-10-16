@@ -8,11 +8,14 @@ import { Button } from '../../src/components/Button';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { fontFamily, radius } from '../../src/theme/tokens';
 import { goBackOr } from '../../src/lib/navigation';
+import { useKeyboardHeight } from '../../src/lib/useKeyboardHeight';
 
 const KINDS = Object.keys(WHATSAPP_KIND_LABELS) as WhatsAppGroupKind[];
 
 export default function NewWhatsAppGroupScreen() {
   const { colors } = useTheme();
+  // Teclado cobria o fim do formulário (botão de enviar) no Android edge-to-edge.
+  const keyboardHeight = useKeyboardHeight();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const [name, setName] = useState('');
@@ -50,7 +53,7 @@ export default function NewWhatsAppGroupScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 20, paddingBottom: 80, gap: 16 }}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.bg }]} contentContainerStyle={{ padding: 20, paddingBottom: 80 + keyboardHeight, gap: 16 }} keyboardShouldPersistTaps="handled">
       <View>
         <Text style={[styles.label, { color: colors.mutedFg }]}>Nome do grupo</Text>
         <TextInput

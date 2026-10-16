@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, Linking, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, Linking, RefreshControl, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,6 +34,7 @@ export default function WhatsAppGroupsScreen() {
   const [kind, setKind] = useState<WhatsAppGroupKind | ''>('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   const load = (showRefresh = false) => {
     if (!bairroId) {
@@ -41,8 +42,11 @@ export default function WhatsAppGroupsScreen() {
       return;
     }
     showRefresh ? setRefreshing(true) : setLoading(true);
+    setLoadError(false);
+    // Sem catch, um erro deixava "Nenhum grupo ainda" como se a lista estivesse vazia.
     getWhatsAppGroups(bairroId, { kind: kind || undefined })
       .then(setGroups)
+      .catch(() => setLoadError(true))
       .finally(() => {
         setLoading(false);
         setRefreshing(false);
@@ -54,9 +58,10 @@ export default function WhatsAppGroupsScreen() {
   const handleOpen = async (g: WhatsAppGroupSummary) => {
     try {
       const { inviteUrl } = await clickWhatsAppGroup(g.id);
-      Linking.openURL(inviteUrl);
+      await Linking.openURL(inviteUrl);
     } catch {
-      Linking.openURL(`https://wa.me/`);
+      // Antes abria wa.me "vazio", o que parecia que o grupo era esse.
+      Alert.alert('Não foi possível abrir o grupo', 'Verifique sua conexão e tente de novo.');
     }
   };
 
@@ -100,6 +105,15 @@ export default function WhatsAppGroupsScreen() {
         ListEmptyComponent={
           loading ? (
             <ListSkeleton rows={4} />
+          ) : loadError ? (
+            <EmptyState
+              icon="cloud-offline-outline"
+              title="Não foi possível carregar os grupos"
+              subtitle="Verifique sua conexão e tente de novo."
+              actionLabel="Tentar de novo"
+              actionIcon="refresh"
+              onAction={() => load()}
+            />
           ) : (
             <EmptyState
               icon="logo-whatsapp"
