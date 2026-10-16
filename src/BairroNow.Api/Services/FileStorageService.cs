@@ -5,7 +5,8 @@ using SixLabors.ImageSharp.Processing;
 
 namespace BairroNow.Api.Services;
 
-// Uses SixLabors.ImageSharp to resize/compress images. Stores under wwwroot/uploads/{folder}.
+// Uses SixLabors.ImageSharp to resize/compress images. Public images under wwwroot/uploads/{folder};
+// proofs (personal documents) under App_Data/uploads/proofs, never served as static files.
 // Supported folders: "proofs" (images + PDF for verification), "posts" (images only for feed posts).
 public class FileStorageService : IFileStorageService
 {
@@ -42,10 +43,12 @@ public class FileStorageService : IFileStorageService
 
         ms.Position = 0;
 
-        var webRoot = ResolveWebRoot();
+        // Comprovante é documento pessoal: grava FORA do wwwroot (pasta servida publicamente).
+        // O caminho guardado no banco segue igual ("uploads/proofs/aaaa/mm/x.jpg").
+        var privateRoot = ResolvePrivateRoot();
         var now = DateTime.UtcNow;
         var relDir = $"uploads/proofs/{now:yyyy}/{now:MM}";
-        var absDir = Path.Combine(webRoot, relDir.Replace("/", Path.DirectorySeparatorChar.ToString()));
+        var absDir = Path.Combine(privateRoot, relDir.Replace("/", Path.DirectorySeparatorChar.ToString()));
         Directory.CreateDirectory(absDir);
 
         string ext;
@@ -152,10 +155,44 @@ public class FileStorageService : IFileStorageService
         return true;
     }
 
+    private string ResolvePrivateRoot() => Path.Combine(_env.ContentRootPath, "App_Data");
+
+    // Novo local (App_Data). Arquivos enviados antes desta mudança ainda podem estar no wwwroot:
+    // se só existir lá, move para o local privado na hora e devolve o novo caminho.
     private string ResolveProofPath(string relativePath)
     {
-        var webRoot = ResolveWebRoot();
-        var trimmed = relativePath.TrimStart('/');
-        return Path.Combine(webRoot, trimmed.Replace("/", Path.DirectorySeparatorChar.ToString()));
+        var rel = relativePath.TrimStart('/').Replace("/", Path.DirectorySeparatorChar.ToString());
+        var privateRoot = Path.GetFullPath(ResolvePrivateRoot());
+        var privatePath = Path.GetFullPath(Path.Combine(privateRoot, rel));
+        if (!privatePath.StartsWith(privateRoot, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("Caminho de comprovante inválido.");
+        if (File.Exists(privatePath)) return privatePath;
+
+        var legacy = Path.GetFullPath(Path.Combine(ResolveWebRoot(), rel));
+        if (File.Exists(legacy))
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(privatePath)!);
+            File.Move(legacy, privatePath);
+        }
+        return privatePath;
+    }
+
+    /// <summary>Move de uma vez os comprovantes antigos de wwwroot/uploads/proofs para App_Data.
+    /// Chamado no start; seguro rodar sempre (não sobrescreve, só move o que falta).</summary>
+    public int MigrateLegacyProofs()
+    {
+        var legacyRoot = Path.Combine(ResolveWebRoot(), "uploads", "proofs");
+        if (!Directory.Exists(legacyRoot)) return 0;
+        var moved = 0;
+        foreach (var file in Directory.EnumerateFiles(legacyRoot, "*", SearchOption.AllDirectories))
+        {
+            var rel = Path.GetRelativePath(ResolveWebRoot(), file);
+            var target = Path.Combine(ResolvePrivateRoot(), rel);
+            if (File.Exists(target)) continue;
+            Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+            File.Move(file, target);
+            moved++;
+        }
+        return moved;
     }
 }

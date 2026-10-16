@@ -491,6 +491,26 @@ try
         ? Path.Combine(app.Environment.ContentRootPath, "wwwroot")
         : app.Environment.WebRootPath;
     Directory.CreateDirectory(webRootPath);
+    // Comprovantes antigos que ainda estejam no wwwroot vão para App_Data (privado).
+    try
+    {
+        using var scope = app.Services.CreateScope();
+        var moved = scope.ServiceProvider.GetRequiredService<BairroNow.Api.Services.IFileStorageService>().MigrateLegacyProofs();
+        if (moved > 0) app.Logger.LogInformation("Moved {Count} legacy proof files out of wwwroot", moved);
+    }
+    catch (Exception ex) { app.Logger.LogError(ex, "Legacy proof migration failed"); }
+    // Comprovantes de residência ficam em wwwroot/uploads/proofs, mas são documento pessoal (LGPD):
+    // só o admin abre, pelo endpoint autenticado /api/v1/admin/verifications/{id}/proof.
+    // Sem este bloqueio, qualquer um com o link baixava o arquivo pelo servidor de estáticos.
+    app.Use(async (ctx, next) =>
+    {
+        if (ctx.Request.Path.StartsWithSegments("/uploads/proofs", StringComparison.OrdinalIgnoreCase))
+        {
+            ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
+        await next();
+    });
     app.UseStaticFiles(new StaticFileOptions
     {
         FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(webRootPath),
