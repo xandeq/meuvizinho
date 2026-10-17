@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api, { profileApi, verificationApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth";
@@ -74,6 +74,11 @@ function ServerError({ message }: { message: string }) {
   );
 }
 
+
+// Login com Google no SITE exige o client OAuth Web configurado na API (Google:ClientId/Secret). Sem ele
+// o botão levava a um JSON "Erro interno do servidor" (500). Fica escondido até NEXT_PUBLIC_GOOGLE_WEB_LOGIN=1.
+const GOOGLE_WEB_LOGIN = process.env.NEXT_PUBLIC_GOOGLE_WEB_LOGIN === "1";
+
 export default function LoginForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -83,6 +88,12 @@ export default function LoginForm() {
   const [tempToken, setTempToken] = useState<string | null>(null);
   const [totpCode, setTotpCode] = useState("");
   const [totpLoading, setTotpLoading] = useState(false);
+
+  // A API devolve /login/?error=google quando o login com Google não está disponível.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("error") === "google")
+      setServerError("O login com Google não está disponível no site. Entre com e-mail e senha ou pelo link de acesso.");
+  }, []);
 
   const {
     register,
@@ -290,6 +301,8 @@ export default function LoginForm() {
         </div>
       </form>
 
+      {GOOGLE_WEB_LOGIN && (
+        <>
       <div className="flex items-center gap-3 animate-slide-up stagger-slide-4">
         <div className="flex-1 h-px bg-border" />
         <span className="text-xs font-medium text-muted-fg">ou continue com</span>
@@ -318,6 +331,8 @@ export default function LoginForm() {
           .
         </p>
       </div>
+        </>
+      )}
 
       <div className="space-y-3 text-center text-sm animate-slide-up stagger-slide-5">
         <Link

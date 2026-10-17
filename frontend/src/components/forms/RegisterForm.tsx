@@ -51,6 +51,11 @@ const GoogleLogo = () => (
   </svg>
 );
 
+
+// Login com Google no SITE exige o client OAuth Web configurado na API (Google:ClientId/Secret). Sem ele
+// o botão levava a um JSON "Erro interno do servidor" (500). Fica escondido até NEXT_PUBLIC_GOOGLE_WEB_LOGIN=1.
+const GOOGLE_WEB_LOGIN = process.env.NEXT_PUBLIC_GOOGLE_WEB_LOGIN === "1";
+
 export default function RegisterForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -116,6 +121,8 @@ export default function RegisterForm() {
 
   return (
     <div className="space-y-5">
+      {GOOGLE_WEB_LOGIN && (
+        <>
       <div className="space-y-2">
         <a
           href={`${API_BASE_URL}/api/v1/auth/google`}
@@ -139,6 +146,8 @@ export default function RegisterForm() {
         <span className="text-xs font-medium text-muted-fg">ou com e-mail</span>
         <div className="flex-1 h-px bg-border" />
       </div>
+        </>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
         <FormField

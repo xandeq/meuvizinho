@@ -132,8 +132,17 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("google")]
-    public IActionResult GoogleChallenge()
+    public async Task<IActionResult> GoogleChallenge()
     {
+        // Sem o client OAuth Web configurado o esquema "Google" não existe e Challenge estourava em 500
+        // (JSON cru para quem clicou). Volta para o login com aviso.
+        var schemes = HttpContext.RequestServices.GetService<IAuthenticationSchemeProvider>();
+        if (schemes == null || await schemes.GetSchemeAsync("Google") == null)
+        {
+            var frontendUrl = _configuration["FrontendUrl"] ?? "https://bairronow.com.br";
+            return Redirect($"{frontendUrl}/login/?error=google");
+        }
+
         var properties = new AuthenticationProperties
         {
             RedirectUri = "/api/v1/auth/google/callback"

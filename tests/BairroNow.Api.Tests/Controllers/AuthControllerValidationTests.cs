@@ -67,4 +67,19 @@ public class AuthControllerValidationTests
         result.Should().BeOfType<BadRequestObjectResult>();
         _auth.Verify(a => a.ResetPasswordAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+
+    [Fact]
+    public async Task GoogleChallenge_WithoutGoogleScheme_RedirectsToLoginInsteadOf500()
+    {
+        var schemes = new Mock<Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider>();
+        schemes.Setup(s => s.GetSchemeAsync("Google")).ReturnsAsync((Microsoft.AspNetCore.Authentication.AuthenticationScheme?)null);
+        var services = new Mock<IServiceProvider>();
+        services.Setup(s => s.GetService(typeof(Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider))).Returns(schemes.Object);
+        var controller = Controller();
+        controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { RequestServices = services.Object } };
+
+        var result = await controller.GoogleChallenge();
+
+        result.Should().BeOfType<RedirectResult>().Which.Url.Should().EndWith("/login/?error=google");
+    }
 }
