@@ -1116,7 +1116,7 @@ namespace BairroNow.Api.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.HasIndex("GroupId");
+                    b.HasIndex("GroupId", "CreatedAt");
 
                     b.ToTable("GroupPosts");
                 });
@@ -1440,6 +1440,8 @@ namespace BairroNow.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ActorUserId");
+
+                    b.HasIndex("UserId", "CreatedAt");
 
                     b.HasIndex("UserId", "IsRead");
 
