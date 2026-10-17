@@ -746,15 +746,29 @@ public class NotificationService : INotificationService
             if (tokens.Count == 0) return;
 
             using var http = _httpClientFactory.CreateClient(ExpoClientName);
-            foreach (var chunk in tokens.Chunk(ExpoBatchLimit))
+
+            async Task<bool> PostAsync(IEnumerable<string> to)
             {
                 object payload = priority == null
-                    ? chunk.Select(to => new { to, title = PushTitle, body, data = new { type, refId } }).ToArray()
-                    : chunk.Select(to => (object)new { to, title = PushTitle, body, data = new { type, refId }, priority, sound = "default" }).ToArray();
+                    ? to.Select(t => new { to = t, title = PushTitle, body, data = new { type, refId } }).ToArray()
+                    : to.Select(t => (object)new { to = t, title = PushTitle, body, data = new { type, refId }, priority, sound = "default" }).ToArray();
                 using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
                 using var response = await http.PostAsync(ExpoUrl, content, CancellationToken.None);
-                if (!response.IsSuccessStatusCode)
-                    _logger.LogWarning("Expo push em lote ({Count}) devolveu {Status} — tipo {Type}", chunk.Length, response.StatusCode, type);
+                return response.IsSuccessStatusCode;
+            }
+
+            foreach (var chunk in tokens.Chunk(ExpoBatchLimit))
+            {
+                if (await PostAsync(chunk) || chunk.Length == 1) continue;
+
+                // A Expo recusa o lote INTEIRO se um token for de outro projeto (ex.: build antiga, antes da
+                // troca de projectId) — um token velho deixaria até 99 vizinhos sem o alerta. Reenvia um a um.
+                _logger.LogWarning("Expo recusou lote de {Count} ({Type}) — reenviando um a um", chunk.Length, type);
+                var failed = 0;
+                foreach (var token in chunk)
+                    if (!await PostAsync(new[] { token })) failed++;
+                if (failed > 0)
+                    _logger.LogWarning("Expo push: {Failed} de {Count} tokens recusados individualmente ({Type})", failed, chunk.Length, type);
             }
         }
         catch (Exception ex)

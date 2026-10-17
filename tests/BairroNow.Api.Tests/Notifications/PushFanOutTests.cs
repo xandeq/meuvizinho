@@ -21,11 +21,18 @@ public class PushFanOutTests
     private sealed class ExpoRecorder : HttpMessageHandler
     {
         public readonly List<JsonElement[]> Batches = new();
+        // Simula a Expo recusando o lote inteiro quando mistura tokens de projetos diferentes.
+        public string? ForeignToken;
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
             var json = await request.Content!.ReadAsStringAsync(ct);
-            lock (Batches) Batches.Add(JsonSerializer.Deserialize<JsonElement[]>(json)!);
-            return new HttpResponseMessage(HttpStatusCode.OK);
+            var batch = JsonSerializer.Deserialize<JsonElement[]>(json)!;
+            lock (Batches) Batches.Add(batch);
+            var mixed = ForeignToken != null && batch.Length > 1 && batch.Any(m => m.GetProperty("to").GetString() == ForeignToken);
+            return new HttpResponseMessage(mixed ? HttpStatusCode.BadRequest : HttpStatusCode.OK)
+            {
+                Content = new StringContent(mixed ? "{\"errors\":[{\"code\":\"PUSH_TOO_MANY_EXPERIENCE_IDS\"}]}" : "{\"data\":[]}"),
+            };
         }
     }
 
@@ -94,5 +101,25 @@ public class PushFanOutTests
 
         var batches = await WaitForBatches(expo, 2);
         batches.Select(b => b.Length).OrderBy(n => n).Should().Equal(50, 100);
+    }
+
+    [Fact]
+    public async Task RejectedBatch_FallsBackToOneByOne_SoEveryNeighbourGetsTheAlert()
+    {
+        // Um token antigo de outro projeto Expo fazia a Expo recusar o lote inteiro: 99 vizinhos sem alerta.
+        var (svc, db, expo) = Build();
+        expo.ForeignToken = "ExponentPushToken[projeto-antigo]";
+        var reporter = Guid.NewGuid();
+        db.Users.Add(new User { Id = reporter, Email = "r@t.com", PasswordHash = "h", BairroId = 1, IsVerified = true });
+        db.Users.Add(new User { Id = Guid.NewGuid(), Email = "velho@t.com", PasswordHash = "h", BairroId = 1, IsVerified = true, ExpoPushToken = expo.ForeignToken });
+        for (var i = 0; i < 3; i++)
+            db.Users.Add(new User { Id = Guid.NewGuid(), Email = $"v{i}@t.com", PasswordHash = "h", BairroId = 1, IsVerified = true, ExpoPushToken = $"ExponentPushToken[{i}]" });
+        await db.SaveChangesAsync();
+
+        await svc.NotifySecurityAlertAsync(1, reporter, alertId: 9, "Furto", "Moto levada");
+
+        var batches = await WaitForBatches(expo, 5);
+        var singles = batches.Where(b => b.Length == 1).Select(b => b[0].GetProperty("to").GetString()).ToList();
+        singles.Should().Contain(new[] { "ExponentPushToken[0]", "ExponentPushToken[1]", "ExponentPushToken[2]" });
     }
 }
