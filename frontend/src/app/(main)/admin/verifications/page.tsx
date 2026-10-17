@@ -40,13 +40,25 @@ export default function AdminVerificationsPage() {
     load();
   }, [load]);
 
+  // 404 = outro moderador já aprovou/rejeitou: antes aparecia "Request failed with status code 404"
+  // e o item continuava na lista. Agora explica e recarrega.
+  const handleActionError = async (e: unknown, fallback: string) => {
+    const status = (e as { response?: { status?: number } } | null)?.response?.status;
+    if (status === 404) {
+      setError("Este comprovante já foi revisado por outro moderador. A lista foi atualizada.");
+      await load();
+      return;
+    }
+    setError(e instanceof Error ? e.message : fallback);
+  };
+
   const handleApprove = async (id: number) => {
     setBusyId(id);
     try {
       await adminVerificationApi.approve(id);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao aprovar");
+      await handleActionError(e, "Erro ao aprovar");
     } finally {
       setBusyId(null);
     }
@@ -63,7 +75,7 @@ export default function AdminVerificationsPage() {
       await adminVerificationApi.reject(id, reason);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro ao rejeitar");
+      await handleActionError(e, "Erro ao rejeitar");
     } finally {
       setBusyId(null);
     }
