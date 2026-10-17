@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/auth';
 import { getCondominiums, createCondominium } from '@/lib/api/community';
+import { getMyResidentStatus } from '@/lib/api/reservations';
 import type { CondominiumSummary, CondominiumStatus } from '@/lib/types/community';
 import Button from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
@@ -35,6 +36,8 @@ function SkeletonCard() {
 export default function CondominiumsPage() {
   const user = useAuthStore((s) => s.user);
   const [condos, setCondos] = useState<CondominiumSummary[]>([]);
+  // Prédio onde a pessoa mora (vínculo aprovado) — marcado na lista, como no app.
+  const [homeId, setHomeId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -52,6 +55,17 @@ export default function CondominiumsPage() {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => setDebouncedSearch(value), 300);
   };
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      for (const c of condos.slice(0, 20)) {
+        const me = await getMyResidentStatus(c.id).catch(() => null);
+        if (me?.status === 'Approved') { if (alive) setHomeId(c.id); return; }
+      }
+    })();
+    return () => { alive = false; };
+  }, [condos]);
 
   const load = () => {
     if (!user?.bairroId) return;
@@ -186,6 +200,12 @@ export default function CondominiumsPage() {
                   </span>
                 </div>
                 {c.addressLine && <p className="text-sm text-muted-fg line-clamp-1">{c.addressLine}</p>}
+                {c.id === homeId && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-secondary-light text-secondary text-xs font-semibold px-2 py-0.5 animate-fade-in">
+                    <svg aria-hidden className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 11h3v9h5v-6h4v6h5v-9h3z" /></svg>
+                    Você mora aqui
+                  </span>
+                )}
                 <div className="flex items-center justify-between pt-2 border-t border-border/50 text-xs font-medium text-muted-fg">
                   <span>{c.groupCount} {c.groupCount === 1 ? 'grupo' : 'grupos'}</span>
                   {c.sindicoName && <span className="text-secondary">Síndico: {c.sindicoName}</span>}
