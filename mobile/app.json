@@ -3,7 +3,7 @@
     "name": "Meu Vizinho",
     "slug": "meuvizinho",
     "scheme": ["meuvizinho", "com.meuvizinho.app"],
-    "version": "0.2.3",
+    "version": "0.2.4",
     "orientation": "portrait",
     "icon": "./assets/brand/icon.png",
     "userInterfaceStyle": "light",
