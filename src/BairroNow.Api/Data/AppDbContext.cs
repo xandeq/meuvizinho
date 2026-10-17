@@ -158,6 +158,12 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Details).HasMaxLength(2000);
             entity.Property(e => e.Timestamp).HasDefaultValueSql("GETUTCDATE()");
             entity.HasIndex(e => e.Timestamp);
+            // Webhook de pagamento: dois reenvios simultâneos da Kiwify (ex.: partida a frio do IIS)
+            // passavam juntos pela checagem "já processado?" — o índice faz o segundo falhar no banco.
+            entity.HasIndex(e => new { e.EntityType, e.EntityId })
+                .IsUnique()
+                .HasFilter("[EntityType] = N'KiwifyOrder'")
+                .HasDatabaseName("IX_AuditLogs_KiwifyOrder_Unique");
         });
 
         // Bairro
