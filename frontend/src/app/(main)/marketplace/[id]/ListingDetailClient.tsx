@@ -247,11 +247,14 @@ export default function ListingDetailClient() {
         </div>
       )}
 
+      {/* Mesma ordem e peso do app: antes três botões quebravam em duas linhas e "vendido" saía num
+          laranja fora da paleta. Ação principal em primary; remover continua vermelho, por último. */}
       {isOwner && (
-        <div className="flex flex-wrap gap-2">
+        <div className="space-y-2 pt-2 border-t border-border/50">
+          <p className="text-xs font-semibold text-muted-fg uppercase tracking-wide pt-2">Gerenciar anúncio</p>
           <Link
             href={`/marketplace/${listing.id}/edit/`}
-            className="border border-border/50 shadow-sm font-semibold px-4 py-2 rounded-xl hover:border-primary/30 hover:text-primary transition-all duration-200"
+            className="block text-center border-2 border-primary text-primary font-bold px-4 py-2.5 rounded-xl hover:bg-primary/5 transition-colors"
           >
             Editar
           </Link>
@@ -260,7 +263,7 @@ export default function ListingDetailClient() {
               type="button"
               onClick={onRenew}
               disabled={busy}
-              className="bg-accent text-white font-extrabold px-4 py-2 rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
+              className="w-full bg-accent text-white font-extrabold px-4 py-2.5 rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
             >
               {isExpired ? "Reativar anúncio" : "Renovar (+30 dias)"}
             </button>
@@ -270,7 +273,7 @@ export default function ListingDetailClient() {
               type="button"
               onClick={onMarkSold}
               disabled={busy}
-              className="bg-accent text-white font-extrabold px-4 py-2 rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
+              className="w-full bg-primary text-white font-extrabold px-4 py-2.5 rounded-xl hover:bg-primary-hover transition-colors disabled:opacity-50 active:scale-[0.98]"
             >
               Marcar como vendido
             </button>
@@ -279,9 +282,9 @@ export default function ListingDetailClient() {
             type="button"
             onClick={onDelete}
             disabled={busy}
-            className="bg-danger text-white font-extrabold px-4 py-2 rounded-xl disabled:opacity-50"
+            className="w-full bg-danger text-white font-extrabold px-4 py-2.5 rounded-xl hover:bg-danger-hover transition-colors disabled:opacity-50"
           >
-            Remover
+            Remover anúncio
           </button>
         </div>
       )}

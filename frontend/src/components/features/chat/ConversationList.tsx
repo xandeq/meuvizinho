@@ -110,7 +110,9 @@ export default function ConversationList({ conversations }: ConversationListProp
                       ? (c.otherUserDisplayName ?? "Vizinho")
                       : (c.listingTitle ?? "Anúncio")}
                   </span>
-                  {c.otherUserIsVerified && <VerifiedBadge verified size="sm" />}
+                  {/* Em conversa de anúncio o título é do anúncio: o selo (da pessoa) ia ao lado dele,
+                      espremendo o título ("Doacao de ..."). Agora fica junto do nome, na 3ª linha. */}
+                  {isDirect && c.otherUserIsVerified && <VerifiedBadge verified size="sm" />}
                   <span className={`ml-auto shrink-0 text-xs ${c.unreadCount > 0 ? "text-primary font-semibold" : "text-muted-fg"}`}>
                     {formatWhen(c.lastMessageAt)}
                   </span>
@@ -122,8 +124,9 @@ export default function ConversationList({ conversations }: ConversationListProp
                     : "Nenhuma mensagem ainda"}
                 </p>
                 {!isDirect && (
-                  <p className="text-xs text-muted-fg font-medium truncate mt-0.5">
-                    {c.otherUserDisplayName ?? "Vizinho"}
+                  <p className="flex items-center gap-1 text-xs text-muted-fg font-medium mt-0.5 min-w-0">
+                    <span className="truncate">{c.otherUserDisplayName ?? "Vizinho"}</span>
+                    {c.otherUserIsVerified && <VerifiedBadge verified compact />}
                   </p>
                 )}
               </div>

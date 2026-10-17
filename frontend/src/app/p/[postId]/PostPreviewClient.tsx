@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import GooglePlayBadge from "@/components/ui/GooglePlayBadge";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "https://api.bairronow.com.br";
 import { useAuthStore } from "@/lib/auth";
 import WhatsAppShareButton from "@/components/WhatsAppShareButton";
@@ -109,7 +110,7 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
     <div className="min-h-screen bg-bg">
       <header className="border-b-2 border-border px-6 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <Link href="/feed/" className="text-2xl font-extrabold text-primary">
+          <Link href="/" className="text-2xl font-extrabold text-primary">
             Meu Vizinho
           </Link>
           {!isAuthenticated && (
@@ -191,6 +192,11 @@ export default function PostPreviewClient({ postId }: { postId: string }) {
               >
                 Criar conta
               </Link>
+            </div>
+            {/* Quem chega pelo link do WhatsApp quase sempre está no celular: o app já está na Play. */}
+            <div className="flex flex-col items-center gap-2 pt-1">
+              <span className="text-xs font-medium text-fg/80">ou baixe o app</span>
+              <GooglePlayBadge />
             </div>
           </div>
         )}
