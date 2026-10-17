@@ -18,8 +18,7 @@ function relTime(date: string): string {
 
 
 // ─── per-type icon ───────────────────────────────────────────────────────────
-function TypeIcon({ type }: { type: NotificationType | string }) {
-  const base = "w-5 h-5 shrink-0";
+function TypeIcon({ type, base = "w-5 h-5 shrink-0" }: { type: NotificationType | string; base?: string }) {
   switch (type) {
     case "like":
       return (
@@ -185,8 +184,8 @@ export default function NotificationsPage() {
           </div>
         ) : (
           <ul className="divide-y divide-border/50">
-            {items.map((n) => (
-              <li key={n.id}>
+            {items.map((n, i) => (
+              <li key={n.id} className="animate-fade-up" style={{ animationDelay: `${i < 8 ? i * 35 : 0}ms` }}>
                 <Link
                   href={notificationHref(n)}
                   onClick={() => { void markRead(n.id); }}
@@ -195,7 +194,14 @@ export default function NotificationsPage() {
                     n.isRead ? "" : "bg-primary/5 border-l-2 border-primary",
                   ].join(" ")}
                 >
-                  <ActorAvatar actor={n.actor} />
+                  {/* Selo do tipo sobre o avatar: dá para ver de relance curtida, comentário, evento... —
+                      antes todo item tinha o mesmo avatar e o ícone pequeno ficava perdido à direita. */}
+                  <span className="relative shrink-0">
+                    <ActorAvatar actor={n.actor} />
+                    <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-card ring-2 ring-card flex items-center justify-center">
+                      <TypeIcon type={n.type} base="w-3.5 h-3.5 shrink-0" />
+                    </span>
+                  </span>
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-fg leading-snug">
@@ -207,7 +213,6 @@ export default function NotificationsPage() {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <TypeIcon type={n.type} />
                     {!n.isRead && (
                       <div className="w-2 h-2 rounded-full bg-primary" aria-label="Não lida" />
                     )}

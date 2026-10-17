@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useAuthStore } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import EmptyState from "@/components/ui/EmptyState";
 import api from "@/lib/api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -187,6 +189,7 @@ export default function EventsPage() {
   const token = useAuthStore((s) => s.accessToken);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const [tab, setTab] = useState<TabType>("upcoming");
 
   const fetchEvents = useCallback(
@@ -272,13 +275,17 @@ export default function EventsPage() {
           ))}
         </div>
       ) : events.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-muted-fg font-medium">
-            {tab === "upcoming"
-              ? "Sem eventos próximos no seu bairro."
-              : "Nenhum evento passado encontrado."}
-          </p>
-        </div>
+        // Antes só uma linha cinza; sem dizer que evento nasce num grupo, ninguém sabia como criar um.
+        <EmptyState
+          icon={<CalendarEmptyIcon />}
+          title={tab === "upcoming" ? "Nenhum evento marcado ainda" : "Nenhum evento passado"}
+          description={
+            tab === "upcoming"
+              ? "Eventos do bairro são criados dentro dos grupos. Que tal combinar o próximo encontro?"
+              : "Quando os eventos do bairro acontecerem, eles ficam guardados aqui."
+          }
+          action={tab === "upcoming" ? { label: "Ver grupos do bairro", onClick: () => router.push("/groups/") } : undefined}
+        />
       ) : (
         <div className="space-y-4">
           {events.map((ev) => (
@@ -291,5 +298,14 @@ export default function EventsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function CalendarEmptyIcon() {
+  return (
+    <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="3" />
+      <path d="M16 2v4M8 2v4M3 10h18M12 14v4M10 16h4" />
+    </svg>
   );
 }

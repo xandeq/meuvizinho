@@ -275,9 +275,9 @@ function BusinessSpotlight({ bairroId }: { bairroId: number }) {
               href={`/business/${biz.userId}/`}
               className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/50 shadow-sm bg-muted hover:border-accent/50 hover:bg-accent/5 transition-colors duration-150"
             >
-              <BusinessAvatarCircle name={biz.displayName ?? "N"} />
+              <BusinessAvatarCircle name={biz.businessName ?? biz.displayName ?? "N"} />
               <span className="text-xs font-semibold text-fg truncate max-w-[100px]">
-                {biz.displayName ?? "Negócio"}
+                {biz.businessName ?? biz.displayName ?? "Negócio"}
               </span>
             </Link>
           ))}

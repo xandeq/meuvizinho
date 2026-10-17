@@ -203,6 +203,13 @@ function GlobeIcon() {
   );
 }
 
+const SHORTCUTS = [
+  { href: "/map/", label: "Mapa do bairro", icon: "M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14" },
+  { href: "/groups/", label: "Grupos", icon: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
+  { href: "/events/", label: "Eventos", icon: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" },
+  { href: "/businesses/", label: "Negócios locais", icon: "M3 9l1-5h16l1 5M4 9v11h16V9M9 20v-6h6v6M3 9h18" },
+];
+
 export default function ProfilePage() {
   const userId = useAuthStore((s) => s.user?.id);
   const [profile, setProfile] = useState<ProfileDto | null>(null);
@@ -461,6 +468,29 @@ export default function ProfilePage() {
                 </Link>
               )}
             </div>
+
+            {/* Mapa, grupos, eventos e negócios não estão na barra de baixo do site: sem estes atalhos
+                quase ninguém os achava. */}
+            <nav aria-label="Atalhos do bairro" className="pt-4 border-t border-border/50">
+              <p className="text-xs font-semibold text-muted-fg uppercase tracking-wide mb-2">No seu bairro</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {SHORTCUTS.map((sc, i) => (
+                  <Link
+                    key={sc.href}
+                    href={sc.href}
+                    className="group flex items-center gap-3 rounded-xl bg-muted px-3 py-3 text-sm font-semibold text-fg hover:bg-primary/10 hover:text-primary transition-colors animate-fade-up"
+                    style={{ animationDelay: `${i * 40}ms` }}
+                  >
+                    <span aria-hidden className="w-8 h-8 rounded-lg bg-card flex items-center justify-center text-primary transition-transform group-hover:scale-110">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d={sc.icon} />
+                      </svg>
+                    </span>
+                    {sc.label}
+                  </Link>
+                ))}
+              </div>
+            </nav>
           </div>
         ) : (
           <div className="space-y-4">
