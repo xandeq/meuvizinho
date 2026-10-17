@@ -447,6 +447,8 @@ try
         KnownNetworks = { },
         KnownProxies = { }
     });
+    // Antes do rate limiter e do log de requisições: troca o IP da borda do Cloudflare pelo do usuário.
+    app.UseMiddleware<CloudflareClientIpMiddleware>();
     // CorrelationIdMiddleware runs FIRST so every subsequent log (including
     // exception logs) carries the ID for triage.
     app.UseMiddleware<CorrelationIdMiddleware>();
