@@ -729,6 +729,7 @@ public class GroupsController : ControllerBase
     {
         var userId = GetUserId();
         if (userId == null) return Unauthorized();
+        if (await GuardGroupPostAsync(id, postId, userId.Value, ct) is { } denied) return denied;
 
         var existing = await _db.GroupPostLikes
             .FirstOrDefaultAsync(l => l.GroupPostId == postId && l.UserId == userId.Value, ct);
@@ -749,6 +750,10 @@ public class GroupsController : ControllerBase
     [HttpGet("{id:int}/posts/{postId:int}/comments")]
     public async Task<IActionResult> GetComments(int id, int postId, CancellationToken ct = default)
     {
+        var userId = GetUserId();
+        if (userId == null) return Unauthorized();
+        if (await GuardGroupPostAsync(id, postId, userId.Value, ct) is { } denied) return denied;
+
         // Load top-level comments + replies together, then group client-side
         var allComments = await _db.GroupComments
             .AsNoTracking()
@@ -791,16 +796,18 @@ public class GroupsController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.Body) || req.Body.Length > 1000)
             return BadRequest(new { error = "O comentário deve ter entre 1 e 1000 caracteres." });
 
-        var isMember = await _db.GroupMembers
-            .AsNoTracking()
-            .AnyAsync(m => m.GroupId == id && m.UserId == userId.Value && m.Status == GroupMemberStatus.Active, ct);
-        if (!isMember) return Forbid();
+        if (await GuardGroupPostAsync(id, postId, userId.Value, ct) is { } denied) return denied;
 
         var author = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId.Value, ct);
         if (author == null || !author.IsVerified) return Forbid();
 
         if (_filter.Contains(req.Body))
             return BadRequest(new { error = "Comentário contém conteúdo não permitido." });
+
+        // Resposta só a comentário do mesmo post (antes qualquer id era aceito).
+        if (req.ParentCommentId is int parentId &&
+            !await _db.GroupComments.AsNoTracking().AnyAsync(c => c.Id == parentId && c.GroupPostId == postId && c.DeletedAt == null, ct))
+            return BadRequest(new { error = "Comentário respondido não existe neste post." });
 
         var comment = new GroupComment
         {
@@ -1149,6 +1156,22 @@ public class GroupsController : ControllerBase
             .ToListAsync(ct);
 
         return Ok(posts);
+    }
+
+    /// <summary>
+    /// Post de grupo só é visto/curtido/comentado por membro ativo, e o post precisa ser do grupo da
+    /// URL — sem isso, comentários de grupo privado abriam para qualquer logado (IDs sequenciais).
+    /// Devolve o resultado de negação, ou null quando o acesso é permitido.
+    /// </summary>
+    private async Task<IActionResult?> GuardGroupPostAsync(int groupId, int postId, Guid userId, CancellationToken ct)
+    {
+        var isMember = await _db.GroupMembers.AsNoTracking()
+            .AnyAsync(m => m.GroupId == groupId && m.UserId == userId && m.Status == GroupMemberStatus.Active, ct);
+        if (!isMember) return Forbid();
+
+        var postInGroup = await _db.GroupPosts.AsNoTracking()
+            .AnyAsync(p => p.Id == postId && p.GroupId == groupId && p.DeletedAt == null, ct);
+        return postInGroup ? null : NotFound();
     }
 
     private async Task<object?> BuildPollDto(int pollId, Guid userId, DateTime now, CancellationToken ct = default)

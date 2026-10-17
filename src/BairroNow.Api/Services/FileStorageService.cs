@@ -115,6 +115,12 @@ public class FileStorageService : IFileStorageService
     {
         ms.Position = 0;
         using var image = await Image.LoadAsync(ms, ct);
+        // Aplica a rotação do EXIF nos pixels e só então descarta os metadados: foto de celular traz o
+        // GPS de onde foi tirada (geralmente a casa da pessoa) e /uploads é público.
+        image.Mutate(x => x.AutoOrient());
+        image.Metadata.ExifProfile = null;
+        image.Metadata.XmpProfile = null;
+        image.Metadata.IptcProfile = null;
         const int maxSide = 1600;
         if (image.Width > maxSide || image.Height > maxSide)
         {

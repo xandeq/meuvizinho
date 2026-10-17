@@ -14,6 +14,10 @@ public class NotificationService : INotificationService
 {
     private const string ExpoUrl = "https://exp.host/--/api/v2/push/send";
     private const string ExpoClientName = "expo-push";
+    // Título do push no celular — antes saía "BairroNow" (nome antigo da marca).
+    private const string PushTitle = "Meu Vizinho";
+    // A Expo aceita até 100 mensagens por requisição.
+    private const int ExpoBatchLimit = 100;
 
     private readonly AppDbContext _db;
     private readonly IHubContext<NotificationHub> _hub;
@@ -197,8 +201,9 @@ public class NotificationService : INotificationService
             try { await _hub.Clients.User(uid.ToString()).SendAsync("notification", dto, ct); }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR notification to {UserId}", uid); }
 
-            _ = SendExpoPushBodyAsync(uid, body, NotificationTypes.GroupEvent, null, ct);
         }
+
+        _ = SendExpoPushBatchAsync(recipients, body, NotificationTypes.GroupEvent, null);
     }
 
     // Wave N: notify seller when their listing expires
@@ -415,8 +420,9 @@ public class NotificationService : INotificationService
             try { await _hub.Clients.User(recipient.Id.ToString()).SendAsync("notification", dto, ct); }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR security_alert to {UserId}", recipient.Id); }
 
-            _ = SendExpoPushBodyAsync(recipient.Id, body, NotificationTypes.SecurityAlert, alertId, ct);
         }
+
+        _ = SendExpoPushBatchAsync(recipients.Select(r => r.Id).ToList(), body, NotificationTypes.SecurityAlert, alertId);
     }
 
     // Wave P: DM push notification
@@ -604,9 +610,10 @@ public class NotificationService : INotificationService
             try { await _hub.Clients.User(uid.ToString()).SendAsync("notification", dto, ct); }
             catch (Exception ex) { _logger.LogWarning(ex, "Failed to push SignalR announcement to {UserId}", uid); }
 
-            _ = SendExpoPushBodyAsync(uid, body, NotificationTypes.AnnouncementPublished, announcementId, ct,
-                priority: isImportant ? "high" : null);
         }
+
+        _ = SendExpoPushBatchAsync(recipients, body, NotificationTypes.AnnouncementPublished, announcementId,
+            priority: isImportant ? "high" : null);
     }
 
     // Fire-and-forget entry point (`_ = SendExpoPushAsync(...)`): the caller's request
@@ -632,7 +639,7 @@ public class NotificationService : INotificationService
                 NotificationTypes.Comment => $"{actorName ?? "Alguém"} comentou no seu post",
                 NotificationTypes.Reply   => $"{actorName ?? "Alguém"} respondeu ao seu comentário",
                 NotificationTypes.Mention => $"{actorName ?? "Alguém"} te mencionou",
-                _                         => "Nova notificação no BairroNow"
+                _                         => "Nova notificação no Meu Vizinho"
             };
 
             var payload = new[]
@@ -640,7 +647,7 @@ public class NotificationService : INotificationService
                 new
                 {
                     to = recipient.ExpoPushToken,
-                    title = "BairroNow",
+                    title = PushTitle,
                     body,
                     data = new { type, postId }
                 }
@@ -686,7 +693,7 @@ public class NotificationService : INotificationService
                     new
                     {
                         to = recipient.ExpoPushToken,
-                        title = "BairroNow",
+                        title = PushTitle,
                         body,
                         data = new { type, refId }
                     }
@@ -696,7 +703,7 @@ public class NotificationService : INotificationService
                     new
                     {
                         to = recipient.ExpoPushToken,
-                        title = "BairroNow",
+                        title = PushTitle,
                         body,
                         data = new { type, refId },
                         priority,
@@ -717,6 +724,42 @@ public class NotificationService : INotificationService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Expo push failed for user {UserId}", recipientId);
+        }
+    }
+
+    // Disparo para muitos destinatários (alerta de segurança, comunicado, evento de grupo): 1 consulta
+    // para todos os tokens e 1 POST à Expo por bloco de 100 — antes era 1 consulta + 1 POST por pessoa
+    // (até 500 de cada no SQL compartilhado). Fire-and-forget como os demais: escopo próprio.
+    private async Task SendExpoPushBatchAsync(IReadOnlyCollection<Guid> recipientIds, string body, string type, int? refId, string? priority = null)
+    {
+        if (recipientIds.Count == 0) return;
+        try
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var ids = recipientIds.ToList();
+            var tokens = await db.Users.AsNoTracking()
+                .Where(u => ids.Contains(u.Id) && u.ExpoPushToken != null && u.ExpoPushToken != "")
+                .Select(u => u.ExpoPushToken!)
+                .Distinct()
+                .ToListAsync(CancellationToken.None);
+            if (tokens.Count == 0) return;
+
+            using var http = _httpClientFactory.CreateClient(ExpoClientName);
+            foreach (var chunk in tokens.Chunk(ExpoBatchLimit))
+            {
+                object payload = priority == null
+                    ? chunk.Select(to => new { to, title = PushTitle, body, data = new { type, refId } }).ToArray()
+                    : chunk.Select(to => (object)new { to, title = PushTitle, body, data = new { type, refId }, priority, sound = "default" }).ToArray();
+                using var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                using var response = await http.PostAsync(ExpoUrl, content, CancellationToken.None);
+                if (!response.IsSuccessStatusCode)
+                    _logger.LogWarning("Expo push em lote ({Count}) devolveu {Status} — tipo {Type}", chunk.Length, response.StatusCode, type);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Expo push em lote falhou — tipo {Type}", type);
         }
     }
 }

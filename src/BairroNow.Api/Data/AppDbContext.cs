@@ -310,6 +310,8 @@ public class AppDbContext : DbContext
                 .HasForeignKey(e => e.ActorUserId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(e => new { e.UserId, e.IsRead });
+            // O sininho filtra por UserId e ordena por CreatedAt DESC: sem isto, sort completo a cada abertura.
+            entity.HasIndex(e => new { e.UserId, e.CreatedAt });
         });
 
         // ─── Phase 4: Listing ───
@@ -512,6 +514,8 @@ public class AppDbContext : DbContext
             entity.Property(e => e.Category).HasConversion<string>().HasMaxLength(40);
             entity.HasOne(e => e.Group).WithMany(g => g.Posts).HasForeignKey(e => e.GroupId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Author).WithMany().HasForeignKey(e => e.AuthorId).OnDelete(DeleteBehavior.Restrict);
+            // Listagem do grupo: GroupId + ORDER BY CreatedAt DESC (Posts já tinha o equivalente por bairro).
+            entity.HasIndex(e => new { e.GroupId, e.CreatedAt });
         });
 
         // Phase 5 — GroupPostImage

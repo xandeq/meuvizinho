@@ -463,6 +463,11 @@ public class AuthService : IAuthService
             stored.Used = true;
             await _db.SaveChangesAsync(ct);
 
+            // Mesmo furo que o login com Google tinha: o link (que só exige acesso ao e-mail) não
+            // substitui o código do autenticador de um admin com verificação em duas etapas.
+            if (stored.User.IsAdmin && stored.User.TotpEnabled)
+                return (null, null, "Contas de administrador com verificação em duas etapas entram com e-mail, senha e código.");
+
             return await IssueTokensAsync(stored.User, "magic-link", ct);
         }
         catch (FormatException)

@@ -18,6 +18,8 @@ public class AuthRiskTests : IDisposable
 {
     private readonly AppDbContext _db;
     private readonly AuthService _service;
+    private readonly Mock<IEmailService> _email = new();
+    private string? _lastMagicUrl;
 
     public AuthRiskTests()
     {
@@ -32,7 +34,10 @@ public class AuthRiskTests : IDisposable
             ["Jwt:Issuer"] = "BairroNow",
             ["Jwt:Audience"] = "BairroNow",
         }).Build();
-        _service = new AuthService(_db, tokens.Object, Mock.Of<IEmailService>(), config,
+        _email.Setup(e => e.SendMagicLinkAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .Callback<string, string>((_, url) => _lastMagicUrl = url)
+            .Returns(Task.CompletedTask);
+        _service = new AuthService(_db, tokens.Object, _email.Object, config,
             Mock.Of<IHttpClientFactory>(), Mock.Of<ILogger<AuthService>>());
     }
 
@@ -171,5 +176,36 @@ public class AuthRiskTests : IDisposable
 
         error.Should().BeNull();
         response!.User.Email.Should().Be("ana@t.com");
+    }
+
+    [Fact]
+    public async Task MagicLink_AdminWithTotp_DoesNotBypassSecondFactor()
+    {
+        // O link mágico emitia sessão direto: quem lesse o e-mail do admin entrava sem o código.
+        AddUser("admin@t.com", admin: true, totp: true);
+        await _service.RequestMagicLinkAsync("admin@t.com");
+        var token = Uri.UnescapeDataString(_lastMagicUrl!.Split("token=")[1]);
+
+        var (response, refresh, error) = await _service.VerifyMagicLinkAsync(token);
+
+        response.Should().BeNull();
+        refresh.Should().BeNull();
+        error.Should().NotBeNullOrEmpty();
+        (await _db.RefreshTokens.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task MagicLink_RegularUser_SignsInOnce()
+    {
+        AddUser("ana@t.com");
+        await _service.RequestMagicLinkAsync("ana@t.com");
+        var token = Uri.UnescapeDataString(_lastMagicUrl!.Split("token=")[1]);
+
+        var (first, _, _) = await _service.VerifyMagicLinkAsync(token);
+        var (second, _, secondError) = await _service.VerifyMagicLinkAsync(token);
+
+        first.Should().NotBeNull();
+        second.Should().BeNull();
+        secondError.Should().NotBeNullOrEmpty();
     }
 }
