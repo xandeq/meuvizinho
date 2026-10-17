@@ -130,6 +130,11 @@ namespace BairroNow.Api.Migrations
 
                     b.HasIndex("Timestamp");
 
+                    b.HasIndex("EntityType", "EntityId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_AuditLogs_KiwifyOrder_Unique")
+                        .HasFilter("[EntityType] = N'KiwifyOrder'");
+
                     b.ToTable("AuditLogs");
                 });
 

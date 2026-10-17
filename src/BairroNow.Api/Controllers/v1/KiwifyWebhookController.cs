@@ -125,7 +125,21 @@ public class KiwifyWebhookController : ControllerBase
             Details = $"plan={user.Plan} expires={user.PlanExpiresAt:O}",
             Timestamp = now,
         });
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException)
+        {
+            // Só é "duplicado" se outra entrega do mesmo evento de fato gravou (índice único) — nada
+            // desta foi salvo. Qualquer outra falha sobe (500) para a Kiwify reenviar: responder 200
+            // aqui perderia o pagamento.
+            _db.ChangeTracker.Clear();
+            if (!await _db.AuditLogs.AnyAsync(a => a.EntityType == "KiwifyOrder" && a.EntityId == dedupKey, ct))
+                throw;
+            _logger.LogInformation("Kiwify webhook: evento {Key} processado em paralelo — ignorado", dedupKey);
+            return Ok(new { received = true, duplicate = true });
+        }
 
         return Ok(new { received = true, userFound = true });
     }
