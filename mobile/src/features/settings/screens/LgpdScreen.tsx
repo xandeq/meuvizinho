@@ -93,7 +93,7 @@ export default function LgpdScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.fg }]}>Meus Dados</Text>
+      {/* O cabeçalho da tela já diz "Meus Dados (LGPD)": o título repetido aqui foi removido. */}
       <Text style={[styles.description, { color: colors.mutedFg }]}>
         De acordo com a Lei Geral de Proteção de Dados (LGPD), você pode exportar ou solicitar a
         exclusão dos seus dados pessoais.
