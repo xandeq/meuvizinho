@@ -271,6 +271,13 @@ public class AuthService : IAuthService
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
         user.PasswordResetToken = null;
         user.PasswordResetTokenExpiry = null;
+        // Quem troca a senha por suspeita de invasão precisa derrubar as sessões abertas (antes o
+        // refresh token do invasor seguia válido), e o bloqueio por tentativas erradas deixa de valer.
+        user.FailedLoginAttempts = 0;
+        user.LockoutEnd = null;
+        var sessions = await _db.RefreshTokens.Where(t => t.UserId == user.Id && !t.IsRevoked).ToListAsync(ct);
+        foreach (var session in sessions)
+            session.IsRevoked = true;
         await _db.SaveChangesAsync(ct);
 
         return true;
@@ -296,6 +303,11 @@ public class AuthService : IAuthService
 
         if (user != null)
         {
+            // Admin com verificação em duas etapas: o Google não substitui o código do autenticador
+            // (antes este caminho emitia sessão direto, pulando o segundo fator).
+            if (user.IsAdmin && user.TotpEnabled)
+                return (null, null, "Contas de administrador com verificação em duas etapas entram com e-mail, senha e código.");
+
             if (user.GoogleId == null)
             {
                 user.GoogleId = googleId;
