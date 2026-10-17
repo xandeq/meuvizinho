@@ -60,17 +60,15 @@ function CheckIcon() {
 }
 
 function StarRow({ value, total }: { value: number | null; total: number }) {
-  const rounded = Math.round(value ?? 0);
+  // Antes: 5 estrelas vazias + "(0 avaliações)" quebrando em duas linhas no card estreito.
+  if (!total) {
+    return <span className="text-xs text-muted-fg whitespace-nowrap">Sem avaliações ainda</span>;
+  }
   return (
-    <span className="flex items-center gap-1 text-sm">
-      <span className="flex">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <span key={n} className={n <= rounded ? "text-accent" : "text-border"}>
-            ★
-          </span>
-        ))}
-      </span>
-      <span className="text-muted-fg text-xs">({total} avaliações)</span>
+    <span className="flex items-center gap-1 text-sm whitespace-nowrap" aria-label={`Nota ${(value ?? 0).toFixed(1)} de 5, ${total} avaliações`}>
+      <span className="text-accent" aria-hidden>★</span>
+      <span className="font-semibold text-fg">{(value ?? 0).toFixed(1).replace(".", ",")}</span>
+      <span className="text-muted-fg text-xs">· {total}</span>
     </span>
   );
 }
@@ -225,19 +223,21 @@ export default function BusinessesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((biz) => {
+          {filtered.map((biz, i) => {
             const name = biz.businessName ?? biz.displayName ?? "Negócio";
             return (
               <Link
                 key={biz.userId}
                 href={`/business/${biz.userId}/`}
-                className="block bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-md"
+                className="block bg-card rounded-2xl border border-border/50 shadow-sm p-5 space-y-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/30 hover:shadow-md animate-fade-up"
+                style={{ animationDelay: `${i < 8 ? i * 45 : 0}ms` }}
               >
                 {/* Avatar + name */}
                 <div className="flex items-center gap-3">
                   <AvatarCircle photoUrl={biz.photoUrl} name={name} />
                   <div className="min-w-0">
-                    <p className="font-bold text-fg text-sm leading-tight truncate">
+                    {/* Nome inteiro em até 2 linhas — "Carlos R..." não dizia de quem era o negócio. */}
+                    <p className="font-bold text-fg text-sm leading-tight line-clamp-2 break-words">
                       {name}
                     </p>
                     {biz.isVerified && (
