@@ -117,6 +117,24 @@ export function notificationIcon(type: string): string {
   }
 }
 
+// Cor do tipo (mesma lógica do site): antes todo ícone era azul — até o coração da curtida.
+export type NotificationTone = 'primary' | 'secondary' | 'accent' | 'danger';
+export function notificationTone(type: string): NotificationTone {
+  switch (type) {
+    case 'like':
+    case 'security_alert': return 'danger';
+    case 'annc_new':
+    case 'listing_expired':
+    case 'price_drop':
+    case 'NewRating': return 'accent';
+    case 'resv_pending':
+    case 'resv_reviewed':
+    case 'res_request':
+    case 'res_reviewed': return 'secondary';
+    default: return 'primary';
+  }
+}
+
 // Destino no app. Tipos de condomínio: postId = id do condomínio (annc_new: postId = comunicado,
 // groupId = condomínio). Gestão do síndico fica no site, então os pedidos abrem o condomínio.
 export function notificationRoute(n: NotificationItem): Href | null {

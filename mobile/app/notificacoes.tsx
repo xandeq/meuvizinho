@@ -7,12 +7,14 @@ import {
   selectUnread,
   notificationText,
   notificationIcon,
+  notificationTone,
   notificationRoute,
   type NotificationItem,
 } from '../src/lib/notifications-store';
 import { EmptyState } from '../src/components/EmptyState';
 import { ListSkeleton } from '../src/components/Skeleton';
 import { useTheme } from '../src/theme/ThemeContext';
+import { FadeInView } from '../src/lib/motion';
 import { fontFamily, radius } from '../src/theme/tokens';
 
 function timeAgo(iso: string): string {
@@ -42,9 +44,14 @@ export default function NotificacoesScreen() {
     if (route) router.push(route);
   };
 
-  const renderItem = ({ item }: { item: NotificationItem }) => {
+  const renderItem = ({ item, index }: { item: NotificationItem; index: number }) => {
     const text = notificationText(item);
+    const tone = notificationTone(item.type);
+    const toneColor = colors[tone];
+    // Linha não lida já é primaryLight: bolha azul-clara sumiria nela, então usa o card.
+    const toneBg = tone === 'primary' && !item.isRead ? colors.card : colors[`${tone}Light` as const];
     return (
+      <FadeInView delay={index < 8 ? index * 40 : 0}>
       <Pressable
         onPress={() => open(item)}
         accessibilityRole="button"
@@ -58,8 +65,8 @@ export default function NotificacoesScreen() {
           },
         ]}
       >
-        <View style={[styles.icon, { backgroundColor: item.isRead ? colors.muted : colors.card }]}>
-          <Ionicons name={notificationIcon(item.type) as keyof typeof Ionicons.glyphMap} size={20} color={colors.primary} />
+        <View style={[styles.icon, { backgroundColor: toneBg }]}>
+          <Ionicons name={notificationIcon(item.type) as keyof typeof Ionicons.glyphMap} size={20} color={toneColor} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.text, { color: colors.fg, fontFamily: item.isRead ? fontFamily.regular : fontFamily.semibold }]}>
@@ -69,6 +76,7 @@ export default function NotificacoesScreen() {
         </View>
         {!item.isRead ? <View style={[styles.dot, { backgroundColor: colors.primary }]} /> : null}
       </Pressable>
+      </FadeInView>
     );
   };
 

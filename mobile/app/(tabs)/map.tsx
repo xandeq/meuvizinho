@@ -81,7 +81,8 @@ export default function MapScreen() {
       lat: pin.lat,
       lng: pin.lng,
       // displayName vazio ("") passava pelo ?? e o pino ficava sem nome.
-      title: pin.displayName?.trim() || 'Vizinho',
+      // Conta de negócio aparece pelo nome do negócio (como no site), não pelo da pessoa.
+      title: pin.businessName?.trim() || pin.displayName?.trim() || 'Vizinho',
       subtitle: pin.isVerified ? 'Verificado' : pin.bio ?? null,
       color: pin.isVerified ? colors.secondary : colors.mutedFg,
     })),

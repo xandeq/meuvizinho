@@ -33,3 +33,16 @@ describe('notificações', () => {
     expect(notificationRoute({ ...base, type: 'comment', postId: 7 })).toBe('/post/7');
   });
 });
+
+describe('notificationTone', () => {
+  // Antes todo ícone de notificação era azul — até o coração da curtida.
+  it('dá cor ao tipo, igual ao site', () => {
+    const { notificationTone } = require('../notifications-store');
+    expect(notificationTone('like')).toBe('danger');
+    expect(notificationTone('security_alert')).toBe('danger');
+    expect(notificationTone('annc_new')).toBe('accent');
+    expect(notificationTone('resv_reviewed')).toBe('secondary');
+    expect(notificationTone('comment')).toBe('primary');
+    expect(notificationTone('qualquer-coisa')).toBe('primary');
+  });
+});
