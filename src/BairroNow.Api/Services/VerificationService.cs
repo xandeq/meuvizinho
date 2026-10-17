@@ -167,19 +167,18 @@ public class VerificationService : IVerificationService
 
     public async Task<bool> RejectAsync(int verificationId, Guid adminUserId, string reason, CancellationToken ct = default)
     {
-        var v = await _db.Verifications.FirstOrDefaultAsync(x => x.Id == verificationId, ct);
-        if (v == null) return false;
-
-        v.Status = VerificationStatus.Rejected;
-        v.ReviewedByUserId = adminUserId;
-        v.ReviewedAt = DateTime.UtcNow;
-        v.RejectionReason = reason;
+        // Mesma trava da aprovação: só sai de "pending". Antes, rejeitar um comprovante já aprovado
+        // gravava Status=rejected com o morador ainda verificado (e corria contra uma aprovação paralela).
+        var now = DateTime.UtcNow;
+        var claimed = await _db.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE Verifications SET Status = 'rejected', ReviewedByUserId = {adminUserId}, ReviewedAt = {now}, RejectionReason = {reason} WHERE Id = {verificationId} AND Status = 'pending'", ct);
+        if (claimed == 0) return false;
 
         _db.AuditLogs.Add(new AuditLog
         {
             Action = "verification.reject",
             EntityType = "Verification",
-            EntityId = v.Id.ToString(),
+            EntityId = verificationId.ToString(),
             UserId = adminUserId,
             IpAddress = "system",
             Details = reason
