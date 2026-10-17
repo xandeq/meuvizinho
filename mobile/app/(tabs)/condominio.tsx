@@ -87,7 +87,7 @@ export default function CondominiumsTab() {
           </View>
         </View>
       ) : null}
-      <CondominiumsScreen />
+      <CondominiumsScreen highlightId={mine?.condo.id} />
     </View>
   );
 }

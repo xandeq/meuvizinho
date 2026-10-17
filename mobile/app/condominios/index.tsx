@@ -21,7 +21,9 @@ const STATUS_COLOR: Record<CondominiumStatus, 'mutedFg' | 'accent' | 'secondary'
   Claimed: 'secondary',
 };
 
-export default function CondominiumsScreen() {
+// highlightId: prédio onde a pessoa mora (a aba Condomínio mostra o card "Seu condomínio" em cima e a
+// lista repetia o mesmo prédio sem nenhuma ligação entre os dois).
+export default function CondominiumsScreen({ highlightId }: { highlightId?: number } = {}) {
   const { colors } = useTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -129,6 +131,12 @@ export default function CondominiumsScreen() {
                   {item.unitsCount != null && (
                     <Text style={[styles.units, { color: colors.mutedFg }]}>{item.unitsCount} unidades</Text>
                   )}
+                  {item.id === highlightId && (
+                    <View style={[styles.statusBadge, styles.homeBadge, { backgroundColor: colors.secondaryLight }]}>
+                      <Ionicons name="home" size={11} color={colors.secondary} />
+                      <Text style={[styles.statusText, { color: colors.secondary }]}>Você mora aqui</Text>
+                    </View>
+                  )}
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={18} color={colors.mutedFg} />
@@ -187,13 +195,14 @@ export default function CondominiumsScreen() {
 }
 
 const styles = StyleSheet.create({
+  homeBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   container: { flex: 1 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   icon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   cardBody: { flex: 1 },
   name: { fontFamily: fontFamily.bold, fontSize: 15, marginBottom: 2 },
   address: { fontFamily: fontFamily.regular, fontSize: 12, marginBottom: 6 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 }, // wrap: o selo "Você mora aqui" saía da borda
   statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: radius.xl },
   statusText: { fontFamily: fontFamily.semibold, fontSize: 11 },
   units: { fontFamily: fontFamily.regular, fontSize: 11 },
