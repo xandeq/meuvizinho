@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using BairroNow.Api.Data;
+using BairroNow.Api.Models.Entities;
 using BairroNow.Api.Models.Enums;
 using BairroNow.Api.Services;
 
@@ -54,7 +55,14 @@ public class KiwifyWebhookController : ControllerBase
             return Unauthorized();
         }
 
-        using var doc = JsonDocument.Parse(rawBody);
+        JsonDocument doc;
+        try { doc = JsonDocument.Parse(rawBody); }
+        catch (JsonException)
+        {
+            _logger.LogWarning("Kiwify webhook: corpo não é JSON válido");
+            return BadRequest();
+        }
+        using var _ = doc;
         var (eventType, orderStatus, orderId, email) = KiwifyWebhookProcessor.Parse(doc.RootElement);
         var action = KiwifyWebhookProcessor.Classify(eventType, orderStatus);
 
@@ -80,6 +88,17 @@ public class KiwifyWebhookController : ControllerBase
             return Ok(new { received = true, userFound = false });
         }
 
+        // A Kiwify reenvia o evento quando não recebe 2xx a tempo: sem isto, o mesmo order_approved
+        // estendia o Premium duas vezes. Chave = pedido + evento (aprovação e estorno do mesmo pedido
+        // continuam sendo processados). O AuditLog fica também como trilha dos pagamentos.
+        var dedupKey = $"{orderId}:{eventType ?? orderStatus}";
+        if (dedupKey.Length > 100) dedupKey = dedupKey[..100];
+        if (await _db.AuditLogs.AnyAsync(a => a.EntityType == "KiwifyOrder" && a.EntityId == dedupKey, ct))
+        {
+            _logger.LogInformation("Kiwify webhook: evento repetido {Key} — ignorado", dedupKey);
+            return Ok(new { received = true, duplicate = true });
+        }
+
         var now = DateTime.UtcNow;
         if (action == KiwifyAction.GrantPremium)
         {
@@ -96,6 +115,16 @@ public class KiwifyWebhookController : ControllerBase
                 user.Id, eventType ?? orderStatus, orderId);
         }
         user.UpdatedAt = now;
+        _db.AuditLogs.Add(new AuditLog
+        {
+            Action = action == KiwifyAction.GrantPremium ? "kiwify.premium_granted" : "kiwify.premium_revoked",
+            EntityType = "KiwifyOrder",
+            EntityId = dedupKey,
+            UserId = user.Id,
+            IpAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "kiwify",
+            Details = $"plan={user.Plan} expires={user.PlanExpiresAt:O}",
+            Timestamp = now,
+        });
         await _db.SaveChangesAsync(ct);
 
         return Ok(new { received = true, userFound = true });

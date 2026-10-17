@@ -501,4 +501,34 @@ public class ListingServiceTests
         var expected = sort == "price_asc" ? seen.OrderBy(x => x.Price).ThenByDescending(x => x.Id) : seen.OrderByDescending(x => x.Price).ThenByDescending(x => x.Id);
         seen.Should().Equal(expected);
     }
+
+    // ── Autorização: só o vendedor mexe no próprio anúncio ──
+
+    [Fact]
+    public async Task OtherUser_CannotEditSellRenewOrDelete_AndListingStaysIntact()
+    {
+        var (svc, db, sellerId) = BuildSut();
+        var created = await svc.CreateAsync(sellerId, new CreateListingRequest
+        {
+            Title = "Bicicleta aro 26",
+            Description = "Bicicleta usada em bom estado, revisada",
+            Price = 300m,
+            CategoryCode = "moveis",
+            SubcategoryCode = "sala"
+        }, FakePhotos(1));
+        var stranger = Guid.NewGuid();
+
+        await Assert.ThrowsAsync<ListingForbiddenException>(() =>
+            svc.UpdateAsync(stranger, created.Id, new UpdateListingRequest { Price = 1m, Title = "Golpe" }));
+        await Assert.ThrowsAsync<ListingForbiddenException>(() => svc.MarkSoldAsync(stranger, created.Id));
+        await Assert.ThrowsAsync<ListingForbiddenException>(() => svc.RenewAsync(stranger, created.Id));
+        await Assert.ThrowsAsync<ListingForbiddenException>(() => svc.DeleteAsync(stranger, created.Id));
+
+        db.ChangeTracker.Clear();
+        var listing = await db.Listings.IgnoreQueryFilters().SingleAsync(l => l.Id == created.Id);
+        listing.Price.Should().Be(300m);
+        listing.Title.Should().Be("Bicicleta aro 26");
+        listing.Status.Should().Be(ListingStatus.Active);
+        listing.DeletedAt.Should().BeNull();
+    }
 }

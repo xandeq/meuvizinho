@@ -88,4 +88,21 @@ public class CommentServiceTests
             sut.Svc.CreateAsync(sut.CommenterId,
                 new CreateCommentRequest { PostId = sut.PostId, ParentCommentId = reply.Id, Body = "resposta de resposta" }));
     }
+
+    // ── Autorização: comentário só é editado/apagado por quem escreveu (nem o dono do post) ──
+
+    [Fact]
+    public async Task PostAuthor_CannotEditOrDeleteSomeoneElsesComment()
+    {
+        var sut = await BuildAsync();
+        var comment = await sut.Svc.CreateAsync(sut.CommenterId, new CreateCommentRequest { PostId = sut.PostId, Body = "concordo" });
+
+        await Assert.ThrowsAsync<FeedForbiddenException>(() => sut.Svc.UpdateAsync(sut.PostAuthorId, comment.Id, "editado por outro"));
+        await Assert.ThrowsAsync<FeedForbiddenException>(() => sut.Svc.DeleteAsync(sut.PostAuthorId, comment.Id));
+
+        sut.Db.ChangeTracker.Clear();
+        var stored = await sut.Db.Comments.IgnoreQueryFilters().SingleAsync(c => c.Id == comment.Id);
+        stored.Body.Should().Be("concordo");
+        stored.DeletedAt.Should().BeNull();
+    }
 }
