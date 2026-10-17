@@ -149,6 +149,21 @@ export default function CondominiumClient() {
         )}
       </div>
 
+      {/* Vínculo do morador: antes era uma pílula cinza perdida entre os botões de Áreas comuns. */}
+      {!condo.isMySindico && residency?.status === 'Approved' && (
+        <div className="flex items-center gap-2 rounded-xl bg-secondary/10 border border-secondary/20 px-4 py-3 text-sm text-secondary font-semibold animate-fade-up">
+          <svg aria-hidden className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
+          </svg>
+          <span>Você mora aqui{residency.unit ? ` · ${residency.unit}` : ''}</span>
+        </div>
+      )}
+      {!condo.isMySindico && residency?.status === 'Pending' && (
+        <div className="rounded-xl bg-accent/10 border border-accent/20 px-4 py-3 text-sm text-accent font-semibold">
+          Seu vínculo com este condomínio está em análise pelo síndico.
+        </div>
+      )}
+
       {/* Claim status / action */}
       {condo.isMySindico ? (
         <div className="rounded-xl bg-secondary/10 border border-secondary/20 px-4 py-3 text-sm text-secondary font-semibold">
@@ -210,15 +225,8 @@ export default function CondominiumClient() {
           ) : residency?.status === 'Approved' ? (
             <>
               <Link href={`/condominios/${condoId}/minhas-reservas`}><Button variant="secondary" size="sm">Minhas reservas</Button></Link>
-              <span className="inline-flex items-center rounded-xl bg-muted px-3 text-sm font-semibold text-muted-fg">
-                Morador{residency.unit ? ` · ${residency.unit}` : ''}
-              </span>
             </>
-          ) : residency?.status === 'Pending' ? (
-            <span className="inline-flex items-center rounded-xl bg-muted px-3 py-2 text-sm font-semibold text-muted-fg">
-              Vínculo em análise pelo síndico
-            </span>
-          ) : (
+          ) : residency?.status === 'Pending' ? null : (
             <Link href={`/condominios/${condoId}/vincular`}><Button variant="outline" size="sm">Vincular minha unidade</Button></Link>
           )}
         </div>
