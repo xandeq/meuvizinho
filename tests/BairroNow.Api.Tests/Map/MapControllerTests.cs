@@ -171,4 +171,25 @@ public class MapControllerTests
         var pins = (ok.Value as System.Collections.IEnumerable)!.Cast<object>().ToList();
         pins.Should().BeEmpty("unverified user should be excluded by filter=verified");
     }
+
+    [Fact]
+    public async Task GetPins_BusinessPin_CarriesBusinessName_ResidentPinDoesNot()
+    {
+        // O destaque "Negócios do Bairro" do feed mostrava o nome da pessoa ("Carlos Menezes") em vez do
+        // negócio ("Carlos Reparos"), diferente da página de Negócios.
+        using var db = NewDb();
+        var (biz, _) = SeedVerifiedUser(db);
+        biz.IsBusinessAccount = true;
+        biz.DisplayName = "Carlos Menezes";
+        biz.BusinessName = "Carlos Reparos";
+        var (resident, _) = SeedVerifiedUser(db);
+        resident.BusinessName = "não deveria vazar";
+        db.SaveChanges();
+
+        var ok = (OkObjectResult)await BuildController(db).GetPins(bairroId: 1, filter: null, ct: CancellationToken.None);
+        var pins = System.Text.Json.JsonSerializer.SerializeToElement(ok.Value).EnumerateArray().ToList();
+
+        pins.Single(p => p.GetProperty("UserId").GetGuid() == biz.Id).GetProperty("BusinessName").GetString().Should().Be("Carlos Reparos");
+        pins.Single(p => p.GetProperty("UserId").GetGuid() == resident.Id).GetProperty("BusinessName").ValueKind.Should().Be(System.Text.Json.JsonValueKind.Null);
+    }
 }

@@ -473,7 +473,7 @@ export default function ProfilePage() {
                 quase ninguém os achava. */}
             <nav aria-label="Atalhos do bairro" className="pt-4 border-t border-border/50">
               <p className="text-xs font-semibold text-muted-fg uppercase tracking-wide mb-2">No seu bairro</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {SHORTCUTS.map((sc, i) => (
                   <Link
                     key={sc.href}

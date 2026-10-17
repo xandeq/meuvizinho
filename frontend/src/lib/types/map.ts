@@ -4,6 +4,7 @@ export interface MapPin {
   photoUrl: string | null;
   isVerified: boolean;
   isBusinessAccount?: boolean;
+  businessName?: string | null;
   bio: string | null;
   lat: number;
   lng: number;

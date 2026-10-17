@@ -52,6 +52,8 @@ public class MapController : ControllerBase
                       u.PhotoUrl,
                       u.IsVerified,
                       u.IsBusinessAccount,
+                      // Nome do negócio só para conta de negócio (dado público do perfil comercial).
+                      BusinessName = u.IsBusinessAccount ? u.BusinessName : null,
                       u.Bio,
                       RawLat = v.ApprovedLat,
                       RawLng = v.ApprovedLng
@@ -69,6 +71,7 @@ public class MapController : ControllerBase
                 p.PhotoUrl,
                 p.IsVerified,
                 p.IsBusinessAccount,
+                p.BusinessName,
                 p.Bio,
                 Lat = fLat,
                 Lng = fLng
