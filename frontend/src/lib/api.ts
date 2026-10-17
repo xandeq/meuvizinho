@@ -46,7 +46,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/register'];
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/refresh', '/auth/register', '/auth/exchange'];
 
 // Um refresh por vez: o backend rotaciona o refresh token e trata reuso como
 // roubo (revoga todos). Vários 401/403 simultâneos disparavam vários

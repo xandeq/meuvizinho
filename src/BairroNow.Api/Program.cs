@@ -232,7 +232,14 @@ try
                 var authService = ctx.HttpContext.RequestServices.GetRequiredService<IAuthService>();
                 var frontendUrl = ctx.HttpContext.RequestServices.GetRequiredService<IConfiguration>()["FrontendUrl"] ?? "https://bairronow.com.br";
                 var result = await authService.GoogleSignInAsync(email, googleId);
-                ctx.Response.Redirect($"{frontendUrl}/auth/callback?token={result.Response?.AccessToken}&refresh={result.RefreshToken}");
+                // Antes: ?token=&refresh= (refresh de 7 dias na URL). Agora só um código de uso único.
+                if (result.Error != null || result.Response == null)
+                {
+                    ctx.Response.Redirect($"{frontendUrl}/login/?error=google");
+                    return;
+                }
+                var handoff = ctx.HttpContext.RequestServices.GetRequiredService<LoginHandoff>();
+                ctx.Response.Redirect($"{frontendUrl}/auth/callback/?code={handoff.Create(result.Response, result.RefreshToken!)}");
             };
         });
     }
@@ -368,6 +375,7 @@ try
     // Auth Services
     builder.Services.AddScoped<ITokenService, TokenService>();
     builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddSingleton<LoginHandoff>();
     builder.Services.AddScoped<IEmailService, ResendEmailService>();
 
     // Named HttpClient "resend" with resilience — Resend API occasionally 502s

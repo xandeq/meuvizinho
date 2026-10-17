@@ -14,6 +14,27 @@ function CallbackHandler() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // O redirect agora traz só um código de uso único (sem token na URL): troca por XHR, e o cookie de
+    // refresh é gravado nessa resposta, na partição do site.
+    const code = params.get("code");
+    if (code) {
+      const exchange = async () => {
+        try {
+          const { data } = await api.post<AuthResponse>("/api/v1/auth/exchange", { code });
+          // Tira o código da barra de endereço/histórico assim que ele foi usado.
+          window.history.replaceState(null, "", "/auth/callback/");
+          useAuthStore.getState().setAccessToken(data.accessToken);
+          login(data.accessToken, data.user);
+          router.replace(data.user.isVerified ? "/feed/" : "/cep-lookup/");
+        } catch {
+          setError("Link de acesso expirado. Entre de novo.");
+        }
+      };
+      exchange();
+      return;
+    }
+
+    // Compatibilidade com links antigos (?token=) enquanto houver algum em trânsito.
     const token = params.get("token");
     if (!token) {
       // eslint-disable-next-line react-hooks/set-state-in-effect

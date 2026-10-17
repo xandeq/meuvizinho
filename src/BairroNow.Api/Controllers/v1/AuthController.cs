@@ -20,17 +20,20 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IValidator<RegisterRequest> _registerValidator;
     private readonly IValidator<ResetPasswordRequest> _resetValidator;
+    private readonly LoginHandoff _handoff;
 
     public AuthController(
         IAuthService authService,
         IConfiguration configuration,
         IValidator<RegisterRequest> registerValidator,
-        IValidator<ResetPasswordRequest> resetValidator)
+        IValidator<ResetPasswordRequest> resetValidator,
+        LoginHandoff handoff)
     {
         _authService = authService;
         _configuration = configuration;
         _registerValidator = registerValidator;
         _resetValidator = resetValidator;
+        _handoff = handoff;
     }
 
     [HttpPost("register")]
@@ -155,10 +158,9 @@ public class AuthController : ControllerBase
         if (error != null)
             return Unauthorized(new { error });
 
-        SetRefreshTokenCookie(refreshToken!);
-
+        // Sem token na URL: código de uso único, trocado pelo site em POST /auth/exchange.
         var frontendUrl = _configuration["FrontendUrl"] ?? "https://bairronow.com.br";
-        return Redirect($"{frontendUrl}/auth/callback/?token={response!.AccessToken}");
+        return Redirect($"{frontendUrl}/auth/callback/?code={_handoff.Create(response!, refreshToken!)}");
     }
 
     [HttpPost("google/mobile")]
@@ -200,10 +202,30 @@ public class AuthController : ControllerBase
 
         var (response, refreshToken, error) = await _authService.VerifyMagicLinkAsync(token, ct);
         if (error != null)
-            return Redirect($"{frontendUrl}/auth/magic-link/?error=invalid");
+        {
+            // Admin com 2FA via link: dizer o caminho certo em vez de "link inválido".
+            var reason = error.Contains("administrador", StringComparison.OrdinalIgnoreCase) ? "totp" : "invalid";
+            return Redirect($"{frontendUrl}/auth/magic-link/?error={reason}");
+        }
+
+        // Antes: ?token=<access token> na URL (histórico, logs do Cloudflare, Referer) e o cookie de refresh
+        // gravado nesta navegação direta à API — como é Partitioned, ficava numa partição que o site não lê.
+        return Redirect($"{frontendUrl}/auth/callback/?code={_handoff.Create(response!, refreshToken!)}");
+    }
+
+    /// <summary>
+    /// Troca o código de uso único do redirect pela sessão. Chamado por XHR do site: o cookie de refresh
+    /// gravado aqui fica na partição do site, que é de onde virão os refreshes seguintes.
+    /// </summary>
+    [HttpPost("exchange")]
+    [EnableRateLimiting("public")]
+    public IActionResult Exchange([FromBody] LoginExchangeRequest request)
+    {
+        if (!_handoff.TryRedeem(request.Code, out var response, out var refreshToken))
+            return Unauthorized(new { error = "Link de acesso expirado. Entre de novo." });
 
         SetRefreshTokenCookie(refreshToken!);
-        return Redirect($"{frontendUrl}/auth/callback/?token={response!.AccessToken}");
+        return Ok(response);
     }
 
     [HttpPost("refresh")]
@@ -358,6 +380,7 @@ public class AuthController : ControllerBase
 // ── Request DTOs ──
 
 public record TotpVerifyRequest(string TempToken, string Code);
+public record LoginExchangeRequest(string? Code);
 public record GoogleMobileRequest(string IdToken);
 public record MagicLinkRequestDto(string Email);
 

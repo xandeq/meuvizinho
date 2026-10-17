@@ -27,7 +27,9 @@ function MagicLinkForm() {
   const [error, setError] = useState<string | null>(
     urlError === "invalid"
       ? "Link inválido ou expirado. Tente novamente."
-      : null
+      : urlError === "totp"
+        ? "Contas de administrador com verificação em duas etapas entram com e-mail, senha e código."
+        : null
   );
 
   const handleSubmit = async (e: React.FormEvent) => {

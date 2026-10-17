@@ -19,7 +19,8 @@ public class AuthControllerValidationTests
     private readonly Mock<IAuthService> _auth = new();
 
     private AuthController Controller() =>
-        new(_auth.Object, new ConfigurationBuilder().Build(), new RegisterRequestValidator(), new ResetPasswordRequestValidator());
+        new(_auth.Object, new ConfigurationBuilder().Build(), new RegisterRequestValidator(), new ResetPasswordRequestValidator(),
+            new LoginHandoff(new Microsoft.Extensions.Caching.Memory.MemoryCache(new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions())));
 
     [Fact]
     public async Task Register_WeakPassword_Returns400_AndDoesNotCreateAccount()
