@@ -69,13 +69,14 @@ public class SecurityAlertsController : ControllerBase
                 Kind = a.Kind.ToString(),
                 a.Description,
                 a.LocationDescription,
-                a.Latitude,
-                a.Longitude,
+                // Visitante sem login: o ponto vira ≈110 m (o alerta muitas vezes é a casa de quem avisou).
+                Latitude = me == null && a.Latitude != null ? Math.Round(a.Latitude.Value, 3) : a.Latitude,
+                Longitude = me == null && a.Longitude != null ? Math.Round(a.Longitude.Value, 3) : a.Longitude,
                 Status = a.Status.ToString(),
                 a.UpvoteCount,
                 // Para o botão "Eu também vi" já vir marcado.
                 UpvotedByMe = me != null && _db.SecurityAlertUpvotes.Any(u => u.SecurityAlertId == a.Id && u.UserId == me),
-                ReportedBy = a.ReportedByUser != null ? a.ReportedByUser.DisplayName : null,
+                ReportedBy = me != null && a.ReportedByUser != null ? a.ReportedByUser.DisplayName : null,
                 a.CreatedAt,
                 a.ResolvedAt,
             })
@@ -90,6 +91,7 @@ public class SecurityAlertsController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> Get(int id, CancellationToken ct = default)
     {
+        var me = GetUserId();
         var a = await _db.SecurityAlerts
             .AsNoTracking()
             .Where(x => x.Id == id && x.DeletedAt == null)
@@ -100,13 +102,13 @@ public class SecurityAlertsController : ControllerBase
                 Kind = x.Kind.ToString(),
                 x.Description,
                 x.LocationDescription,
-                x.Latitude,
-                x.Longitude,
+                Latitude = me == null && x.Latitude != null ? Math.Round(x.Latitude.Value, 3) : x.Latitude,
+                Longitude = me == null && x.Longitude != null ? Math.Round(x.Longitude.Value, 3) : x.Longitude,
                 Status = x.Status.ToString(),
                 x.ResolutionNote,
                 x.UpvoteCount,
-                x.ReportedByUserId,
-                ReportedBy = x.ReportedByUser != null ? x.ReportedByUser.DisplayName : null,
+                ReportedByUserId = me != null ? x.ReportedByUserId : null,
+                ReportedBy = me != null && x.ReportedByUser != null ? x.ReportedByUser.DisplayName : null,
                 x.CreatedAt,
                 x.ResolvedAt,
             })
