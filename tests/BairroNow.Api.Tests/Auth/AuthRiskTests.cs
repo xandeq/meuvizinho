@@ -208,4 +208,52 @@ public class AuthRiskTests : IDisposable
         second.Should().BeNull();
         secondError.Should().NotBeNullOrEmpty();
     }
+
+    // ── Banimento: nenhuma porta de entrada pode emitir sessão para conta banida ──
+
+    private void Ban(User u) { u.IsBanned = true; u.IsActive = false; _db.SaveChanges(); }
+
+    [Fact]
+    public async Task BannedUser_CannotSignInWithGoogle()
+    {
+        var user = AddUser("ana@t.com");
+        Ban(user);
+
+        var (response, refresh, error) = await _service.GoogleSignInAsync("ana@t.com", "google-sub-9");
+
+        response.Should().BeNull();
+        refresh.Should().BeNull();
+        error.Should().NotBeNullOrEmpty();
+        (await _db.RefreshTokens.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task BannedUser_CannotSignInWithMagicLink()
+    {
+        var user = AddUser("ana@t.com");
+        await _service.RequestMagicLinkAsync("ana@t.com");
+        Ban(user);
+        var token = Uri.UnescapeDataString(_lastMagicUrl!.Split("token=")[1]);
+
+        var (response, _, error) = await _service.VerifyMagicLinkAsync(token);
+
+        response.Should().BeNull();
+        error.Should().NotBeNullOrEmpty();
+        (await _db.RefreshTokens.CountAsync()).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task BannedUser_CannotRefreshSession()
+    {
+        // Defesa em profundidade: mesmo que algum refresh token tenha escapado da revogação do ban.
+        var user = AddUser("ana@t.com");
+        var (_, refresh, _, _, _) = await _service.LoginAsync(new LoginRequest("ana@t.com", "SenhaAntiga1!"), "127.0.0.1");
+        user.IsBanned = true;
+        await _db.SaveChangesAsync();
+
+        var (response, _, error) = await _service.RefreshAsync(refresh!, "127.0.0.1");
+
+        response.Should().BeNull();
+        error.Should().NotBeNullOrEmpty();
+    }
 }

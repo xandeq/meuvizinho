@@ -151,6 +151,14 @@ public class AuthService : IAuthService
         if (storedToken == null)
             return (null, null, "Token invalido.");
 
+        // Conta banida não renova sessão, mesmo com refresh token que tenha escapado da revogação do ban.
+        if (storedToken.User is { IsBanned: true })
+        {
+            storedToken.IsRevoked = true;
+            await _db.SaveChangesAsync(ct);
+            return (null, null, "Conta banida.");
+        }
+
         if (storedToken.IsRevoked)
         {
             if (storedToken.ReplacedByTokenId is Guid successorId)
@@ -288,6 +296,11 @@ public class AuthService : IAuthService
     public async Task<(AuthResponse? Response, string? RefreshToken, string? Error)> GoogleSignInAsync(string email, string googleId, CancellationToken ct = default)
     {
         var normalizedEmail = email.ToLowerInvariant();
+        // O filtro global esconde contas inativas (banidas): sem olhar por fora dele, o Google tentava
+        // criar outra conta com o e-mail do banido em vez de recusar.
+        if (await _db.Users.IgnoreQueryFilters().AnyAsync(u => u.Email == normalizedEmail && u.IsBanned, ct))
+            return (null, null, "Conta banida.");
+
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
         if (user == null)
         {
@@ -303,6 +316,10 @@ public class AuthService : IAuthService
 
         if (user != null)
         {
+            // Banido não volta pela porta do Google (só o login por senha checava).
+            if (user.IsBanned)
+                return (null, null, "Conta banida.");
+
             // Admin com verificação em duas etapas: o Google não substitui o código do autenticador
             // (antes este caminho emitia sessão direto, pulando o segundo fator).
             if (user.IsAdmin && user.TotpEnabled)
@@ -462,6 +479,9 @@ public class AuthService : IAuthService
 
             stored.Used = true;
             await _db.SaveChangesAsync(ct);
+
+            if (stored.User.IsBanned)
+                return (null, null, "Conta banida.");
 
             // Mesmo furo que o login com Google tinha: o link (que só exige acesso ao e-mail) não
             // substitui o código do autenticador de um admin com verificação em duas etapas.
