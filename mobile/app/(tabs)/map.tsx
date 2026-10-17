@@ -80,7 +80,8 @@ export default function MapScreen() {
       id: pin.userId,
       lat: pin.lat,
       lng: pin.lng,
-      title: pin.displayName ?? 'Vizinho',
+      // displayName vazio ("") passava pelo ?? e o pino ficava sem nome.
+      title: pin.displayName?.trim() || 'Vizinho',
       subtitle: pin.isVerified ? 'Verificado' : pin.bio ?? null,
       color: pin.isVerified ? colors.secondary : colors.mutedFg,
     })),
