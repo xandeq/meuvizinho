@@ -114,4 +114,22 @@ public class PostServiceTests
         var hidden = await db.Posts.IgnoreQueryFilters().AsNoTracking().FirstAsync(p => p.Id == created.Id);
         hidden.DeletedAt.Should().NotBeNull();
     }
+
+    // ── Autorização: só o autor edita ou apaga o post ──
+
+    [Fact]
+    public async Task OtherUser_CannotEditOrDeletePost_AndPostStaysIntact()
+    {
+        var (svc, db, userId) = BuildSut();
+        var created = await svc.CreateAsync(userId, new CreatePostRequest { Category = PostCategory.Dica, Body = "Feira amanha na praca" }, null);
+        var stranger = Guid.NewGuid();
+
+        await Assert.ThrowsAsync<FeedForbiddenException>(() => svc.UpdateAsync(stranger, created.Id, "texto trocado"));
+        await Assert.ThrowsAsync<FeedForbiddenException>(() => svc.DeleteAsync(stranger, created.Id));
+
+        db.ChangeTracker.Clear();
+        var post = await db.Posts.IgnoreQueryFilters().SingleAsync(p => p.Id == created.Id);
+        post.Body.Should().Be("Feira amanha na praca");
+        post.DeletedAt.Should().BeNull();
+    }
 }
